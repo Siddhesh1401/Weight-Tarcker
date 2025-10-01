@@ -1,5 +1,8 @@
 // API service for communicating with the backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000/api' 
+    : `${window.location.origin}/api`);
 const DEFAULT_USER_ID = 'user_001'; // For now, using a single user
 
 interface ApiResponse<T> {
