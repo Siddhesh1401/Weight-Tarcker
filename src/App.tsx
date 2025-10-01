@@ -1,0 +1,414 @@
+import { useState, useEffect } from 'react';
+import Dashboard from './components/Dashboard';
+import History from './components/History';
+import Progress from './components/Progress';
+import Settings from './components/Settings';
+import BottomNav from './components/BottomNav';
+import MealLog from './components/MealLog';
+import CheatMealLog from './components/CheatMealLog';
+import MealTypeSelector from './components/MealTypeSelector';
+import WeightLog from './components/WeightLog';
+import WaterLog from './components/WaterLog';
+import SleepLog from './components/SleepLog';
+import Toast from './components/Toast';
+import { MealEntry, WeightLog as WeightLogType, WaterLog as WaterLogType, SleepLog as SleepLogType, UserSettings, MealType } from './types';
+import { mockMeals, mockWeights, defaultSettings } from './data/mockData';
+import { logApi, settingsApi } from './services/api';
+import { useDarkMode } from './contexts/DarkModeContext';
+
+function App() {
+  const { darkMode } = useDarkMode();
+  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [meals, setMeals] = useState<MealEntry[]>(mockMeals);
+  const [weights, setWeights] = useState<WeightLogType[]>(mockWeights);
+  const [waterLogs, setWaterLogs] = useState<WaterLogType[]>([]);
+  const [sleepLogs, setSleepLogs] = useState<SleepLogType[]>([]);
+  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
+  const [activeLogType, setActiveLogType] = useState<MealType | null>(null);
+  const [showMealTypeSelector, setShowMealTypeSelector] = useState(false);
+  const [showRegularMeal, setShowRegularMeal] = useState(false);
+  const [showCheatMeal, setShowCheatMeal] = useState(false);
+  const [isOnline, setIsOnline] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Load data from backend on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Try to fetch from backend
+        const [logsData, settingsData] = await Promise.all([
+          logApi.getLogs().catch(() => null),
+          settingsApi.getSettings().catch(() => null),
+        ]);
+
+        if (logsData) {
+          setIsOnline(true);
+          
+          // Transform backend logs to frontend format
+          const mealLogs: MealEntry[] = logsData
+            .filter((log: any) => log.meal_type !== 'weight')
+            .map((log: any) => ({
+              id: log._id,
+              date: log.date,
+              mealType: log.meal_type,
+              description: log.meal_notes,
+              hadTea: log.tea_biscuit,
+              isCheatMeal: log.cheat_meal,
+              timestamp: log.timestamp,
+            }));
+
+          const weightLogs: WeightLogType[] = logsData
+            .filter((log: any) => log.weight !== null && log.weight > 0)
+            .map((log: any) => ({
+              id: log._id,
+              date: log.date,
+              weight: log.weight,
+              timestamp: log.timestamp,
+            }));
+
+          setMeals(mealLogs);
+          setWeights(weightLogs);
+        } else {
+          // Backend not available, use mock data
+          setIsOnline(false);
+          console.log('Backend not available, using mock data');
+        }
+
+        if (settingsData) {
+          setSettings({
+            goalWeight: settingsData.goal_weight,
+            breakfastTime: defaultSettings.breakfastTime,
+            lunchTime: defaultSettings.lunchTime,
+            snacksTime: defaultSettings.snacksTime,
+            dinnerTime: defaultSettings.dinnerTime,
+            notificationsEnabled: defaultSettings.notificationsEnabled,
+          });
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setIsOnline(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const handleQuickLog = (type: MealType) => {
+    setActiveLogType(type);
+    
+    // For meals, show the type selector (Regular vs Cheat)
+    if (['breakfast', 'lunch', 'snacks', 'dinner', 'other'].includes(type)) {
+      setShowMealTypeSelector(true);
+    }
+    // For weight, water, sleep - show directly
+  };
+
+  const handleSaveMeal = async (description: string, hadTea?: boolean, isCheatMeal?: boolean) => {
+    if (!activeLogType || activeLogType === 'weight') return;
+
+    const now = new Date();
+    const newMeal: MealEntry = {
+      id: Date.now().toString(),
+      date: now.toISOString().split('T')[0],
+      mealType: activeLogType,
+      description,
+      hadTea,
+      isCheatMeal,
+      timestamp: now.toISOString(),
+    };
+
+    // Optimistically update UI
+    setMeals([...meals, newMeal]);
+    setActiveLogType(null);
+    setToastMessage('🍽️ Meal logged successfully!');
+
+    // Save to backend if online
+    if (isOnline) {
+      try {
+        await logApi.saveLog({
+          date: newMeal.date,
+          meal_type: newMeal.mealType,
+          meal_notes: description,
+          tea_biscuit: hadTea,
+          cheat_meal: isCheatMeal,
+        });
+        console.log('✅ Meal saved to backend');
+      } catch (error) {
+        console.error('Failed to save meal to backend:', error);
+      }
+    }
+  };
+
+  const handleSaveWeight = async (weight: number) => {
+    const now = new Date();
+    const newWeight: WeightLogType = {
+      id: Date.now().toString(),
+      date: now.toISOString().split('T')[0],
+      weight,
+      timestamp: now.toISOString(),
+    };
+
+    // Optimistically update UI
+    setWeights([...weights, newWeight]);
+    setActiveLogType(null);
+    setToastMessage('⚖️ Weight logged successfully!');
+
+    // Save to backend if online
+    if (isOnline) {
+      try {
+        await logApi.saveLog({
+          date: newWeight.date,
+          meal_type: 'weight',
+          weight: weight,
+        });
+        console.log('✅ Weight saved to backend');
+      } catch (error) {
+        console.error('Failed to save weight to backend:', error);
+      }
+    }
+  };
+
+  const handleSaveWater = async (glasses: number) => {
+    const now = new Date();
+    const newWater: WaterLogType = {
+      id: Date.now().toString(),
+      date: now.toISOString().split('T')[0],
+      glasses,
+      timestamp: now.toISOString(),
+    };
+
+    setWaterLogs([...waterLogs, newWater]);
+    setActiveLogType(null);
+    setToastMessage('💧 Water logged successfully!');
+
+    if (isOnline) {
+      try {
+        await logApi.saveLog({
+          date: newWater.date,
+          meal_type: 'water',
+          water_glasses: glasses,
+        });
+        console.log('✅ Water saved to backend');
+      } catch (error) {
+        console.error('Failed to save water to backend:', error);
+      }
+    }
+  };
+
+  const handleSaveSleep = async (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent') => {
+    const now = new Date();
+    const newSleep: SleepLogType = {
+      id: Date.now().toString(),
+      date: now.toISOString().split('T')[0],
+      hours,
+      quality,
+      timestamp: now.toISOString(),
+    };
+
+    setSleepLogs([...sleepLogs, newSleep]);
+    setActiveLogType(null);
+    setToastMessage('😴 Sleep logged successfully!');
+
+    if (isOnline) {
+      try {
+        await logApi.saveLog({
+          date: newSleep.date,
+          meal_type: 'sleep',
+          sleep_hours: hours,
+          sleep_quality: quality,
+        });
+        console.log('✅ Sleep saved to backend');
+      } catch (error) {
+        console.error('Failed to save sleep to backend:', error);
+      }
+    }
+  };
+
+  const handleSaveSettings = async (newSettings: UserSettings) => {
+    setSettings(newSettings);
+    setCurrentPage('dashboard');
+    setToastMessage('⚙️ Settings saved successfully!');
+
+    // Save to backend if online
+    if (isOnline) {
+      try {
+        await settingsApi.saveSettings({
+          goal_weight: newSettings.goalWeight,
+          height: newSettings.height,
+          current_weight: newSettings.currentWeight,
+          water_goal: newSettings.waterGoal,
+          sleep_goal: newSettings.sleepGoal,
+        });
+        console.log('✅ Settings saved to backend');
+      } catch (error) {
+        console.error('Failed to save settings to backend:', error);
+      }
+    }
+  };
+
+  const handleNavigate = (page: string) => {
+    setCurrentPage(page);
+  };
+
+  const handleDeleteMeal = (id: string) => {
+    setMeals(meals.filter(m => m.id !== id));
+    setToastMessage('🗑️ Meal deleted');
+  };
+
+  const handleDeleteWeight = (id: string) => {
+    setWeights(weights.filter(w => w.id !== id));
+    setToastMessage('🗑️ Weight deleted');
+  };
+
+  const handleDeleteWater = (id: string) => {
+    setWaterLogs(waterLogs.filter(w => w.id !== id));
+    setToastMessage('🗑️ Water log deleted');
+  };
+
+  const handleDeleteSleep = (id: string) => {
+    setSleepLogs(sleepLogs.filter(s => s.id !== id));
+    setToastMessage('🗑️ Sleep log deleted');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading your data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`min-h-screen pb-24 transition-colors ${darkMode ? 'dark bg-gray-900' : 'bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50'}`}>
+      {/* Connection Status Indicator */}
+      {!isOnline && (
+        <div className="bg-yellow-100 border-b border-yellow-200 px-4 py-2 text-center">
+          <p className="text-sm text-yellow-800">
+            ⚠️ Offline mode - Changes won't be saved to server
+          </p>
+        </div>
+      )}
+      
+      <div className="max-w-md mx-auto px-4 py-6">
+        {currentPage === 'dashboard' && (
+          <Dashboard
+            meals={meals}
+            weights={weights}
+            waterLogs={waterLogs}
+            sleepLogs={sleepLogs}
+            settings={settings}
+            onQuickLog={handleQuickLog}
+          />
+        )}
+
+        {currentPage === 'history' && (
+          <History 
+            meals={meals} 
+            weights={weights}
+            waterLogs={waterLogs}
+            sleepLogs={sleepLogs}
+            onDeleteMeal={handleDeleteMeal}
+            onDeleteWeight={handleDeleteWeight}
+            onDeleteWater={handleDeleteWater}
+            onDeleteSleep={handleDeleteSleep}
+          />
+        )}
+
+        {currentPage === 'progress' && (
+          <Progress meals={meals} weights={weights} />
+        )}
+
+        {currentPage === 'settings' && (
+          <Settings
+            settings={settings}
+            onSave={handleSaveSettings}
+            onCancel={() => setCurrentPage('dashboard')}
+          />
+        )}
+      </div>
+
+      {showMealTypeSelector && activeLogType && ['breakfast', 'lunch', 'snacks', 'dinner', 'other'].includes(activeLogType) && (
+        <MealTypeSelector
+          mealType={activeLogType}
+          onSelectRegular={() => {
+            setShowMealTypeSelector(false);
+            setShowRegularMeal(true);
+          }}
+          onSelectCheat={() => {
+            setShowMealTypeSelector(false);
+            setShowCheatMeal(true);
+          }}
+          onCancel={() => {
+            setShowMealTypeSelector(false);
+            setActiveLogType(null);
+          }}
+        />
+      )}
+
+      {showRegularMeal && activeLogType && ['breakfast', 'lunch', 'snacks', 'dinner', 'other'].includes(activeLogType) && (
+        <MealLog
+          mealType={activeLogType}
+          onSave={handleSaveMeal}
+          onCancel={() => {
+            setShowRegularMeal(false);
+            setActiveLogType(null);
+          }}
+        />
+      )}
+
+      {showCheatMeal && activeLogType && ['breakfast', 'lunch', 'snacks', 'dinner', 'other'].includes(activeLogType) && (
+        <CheatMealLog
+          mealType={activeLogType}
+          onSave={(description, hadTea) => {
+            handleSaveMeal(description, hadTea, true); // Always mark as cheat meal
+            setShowCheatMeal(false);
+          }}
+          onCancel={() => {
+            setShowCheatMeal(false);
+            setActiveLogType(null);
+          }}
+        />
+      )}
+
+      {activeLogType === 'weight' && (
+        <WeightLog
+          onSave={handleSaveWeight}
+          onCancel={() => setActiveLogType(null)}
+        />
+      )}
+
+      {activeLogType === 'water' && (
+        <WaterLog
+          onSave={handleSaveWater}
+          onCancel={() => setActiveLogType(null)}
+        />
+      )}
+
+      {activeLogType === 'sleep' && (
+        <SleepLog
+          onSave={handleSaveSleep}
+          onCancel={() => setActiveLogType(null)}
+        />
+      )}
+
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          onClose={() => setToastMessage(null)}
+        />
+      )}
+
+      <BottomNav currentPage={currentPage} onNavigate={handleNavigate} />
+    </div>
+  );
+}
+
+export default App;
