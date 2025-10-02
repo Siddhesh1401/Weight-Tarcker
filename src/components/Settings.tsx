@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, Save, Target, Clock, Bell, Moon, Sun, BookOpen, Download, Trash2, AlertTriangle } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Target, Clock, Bell, Moon, Sun, BookOpen, Download, Trash2, AlertTriangle, Database } from 'lucide-react';
 import { UserSettings } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import ExportButton from './ExportButton';
@@ -12,7 +12,7 @@ interface SettingsProps {
   onDeleteAllData?: () => void;
 }
 
-type SettingsTab = 'main' | 'diet' | 'export';
+type SettingsTab = 'main' | 'diet' | 'data' | 'export';
 
 export default function Settings({ settings, onSave, onCancel, onDeleteAllData }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('main');
@@ -37,6 +37,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   const tabs = [
     { id: 'main' as SettingsTab, label: 'Settings', icon: SettingsIcon },
     { id: 'diet' as SettingsTab, label: 'Diet Plan', icon: BookOpen },
+    { id: 'data' as SettingsTab, label: 'Data', icon: Database },
     { id: 'export' as SettingsTab, label: 'Export', icon: Download },
   ];
 
@@ -55,22 +56,21 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
 
       {/* Tab Navigation */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-600">
-        <div className="flex gap-1">
-          {tabs.map((tab) => {
+        <div className="grid grid-cols-2 gap-2">
+          {tabs.map((tab, index) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
                   activeTab === tab.id
-                    ? 'bg-emerald-500 text-white shadow-md'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    ? 'bg-emerald-500 text-white shadow-md border-emerald-500'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600'
                 }`}
               >
                 <Icon size={18} />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
+                <span>{tab.label}</span>
               </button>
             );
           })}
@@ -220,17 +220,8 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
 
         {activeTab === 'diet' && <DietPlan />}
 
-        {activeTab === 'export' && (
+        {activeTab === 'data' && (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <Download className="text-emerald-500" size={20} />
-                <h3 className="font-semibold text-gray-800 dark:text-gray-200">Export Your Data</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Download all your logs and progress data</p>
-              <ExportButton />
-            </div>
-
             {/* Danger Zone */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border-2 border-red-200 dark:border-red-800">
               <div className="flex items-center gap-2 mb-4">
@@ -294,6 +285,17 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'export' && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <Download className="text-emerald-500" size={20} />
+              <h3 className="font-semibold text-gray-800 dark:text-gray-200">Export Your Data</h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Download all your logs and progress data</p>
+            <ExportButton />
           </div>
         )}
       </div>
