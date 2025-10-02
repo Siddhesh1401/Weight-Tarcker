@@ -216,14 +216,14 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
   };
 
   return (
-    <div className="space-y-6 pb-6">
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 shadow-sm">
+    <div className="space-y-6 pb-6 animate-fadeIn">
+      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-3xl p-6 shadow-lg border border-emerald-100 dark:border-gray-600">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Calendar className="text-emerald-600" size={28} />
+            <Calendar className="text-emerald-600 dark:text-emerald-400" size={28} />
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">History</h1>
-              <p className="text-gray-600 text-sm">View your past logs</p>
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">History</h1>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">View your past logs</p>
             </div>
           </div>
           <button
@@ -231,7 +231,7 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
               setExportType('all');
               setShowExportModal(true);
             }}
-            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all transform hover:scale-[1.02] shadow-lg"
           >
             <Download size={18} />
             Export All
@@ -240,22 +240,22 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
       </div>
 
       {sortedDates.length === 0 ? (
-        <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
-          <Calendar className="mx-auto text-gray-400 mb-4" size={48} />
-          <p className="text-gray-600">No logs yet. Start tracking!</p>
+        <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-100 dark:border-gray-600 text-center">
+          <Calendar className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
+          <p className="text-gray-600 dark:text-gray-400">No logs yet. Start tracking!</p>
         </div>
       ) : (
         <>
           {/* Filter Dropdown */}
           {!selectedDate && (
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-100 dark:border-gray-600">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-800">Select a Date</h2>
+                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Select a Date</h2>
                 <div className="relative">
                   <select
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value as any)}
-                    className="appearance-none bg-white border-2 border-gray-200 rounded-lg px-4 py-2 pr-8 font-semibold text-gray-700 hover:border-emerald-500 focus:border-emerald-500 focus:outline-none"
+                    className="appearance-none bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-2xl px-5 py-3 pr-10 font-semibold text-gray-700 dark:text-gray-200 hover:border-emerald-500 dark:hover:border-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-colors"
                   >
                     <option value="all">All Logs</option>
                     <option value="meals">Meals Only</option>
@@ -263,7 +263,7 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                     <option value="water">Water Only</option>
                     <option value="sleep">Sleep Only</option>
                   </select>
-                  <Filter className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                  <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" size={18} />
                 </div>
               </div>
             </div>
@@ -271,7 +271,7 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
 
           {/* Date List */}
           {!selectedDate && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {sortedDates.filter(date => {
                 if (filterType === 'all') return true;
 
@@ -290,16 +290,16 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                   <button
                     key={date}
                     onClick={() => setSelectedDate(date)}
-                    className="w-full bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all text-left"
+                    className="w-full bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all text-left border border-gray-100 dark:border-gray-600 hover:border-emerald-200 dark:hover:border-emerald-700"
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-bold text-gray-800">{formatDate(date)}</h3>
-                        <p className="text-sm text-gray-600">{date}</p>
+                        <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg">{formatDate(date)}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{date}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-emerald-600">{logCount} logs</span>
-                        <ChevronRight size={20} className="text-gray-400" />
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 rounded-full">{logCount} logs</span>
+                        <ChevronRight size={20} className="text-gray-400 dark:text-gray-500" />
                       </div>
                     </div>
                   </button>
@@ -312,11 +312,11 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
           {selectedDate && (() => {
             const selectedLogs = getLogsForDate(selectedDate);
             return (
-              <div className="space-y-4">
+              <div className="space-y-4 animate-fadeIn">
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => setSelectedDate(null)}
-                    className="flex items-center gap-2 text-emerald-600 font-semibold hover:text-emerald-700"
+                    className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
                   >
                     <ChevronLeft size={20} />
                     Back to dates
@@ -327,37 +327,37 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                       setExportType('single');
                       setShowExportModal(true);
                     }}
-                    className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+                    className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all transform hover:scale-[1.02] shadow-lg"
                   >
                     <Download size={18} />
                     Export Day
                   </button>
                 </div>
 
-                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4">
-                  <h2 className="text-xl font-bold text-gray-800">{formatDate(selectedDate)}</h2>
-                  <p className="text-sm text-gray-600">{selectedDate}</p>
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl p-5 border border-emerald-100 dark:border-gray-600">
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{formatDate(selectedDate)}</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{selectedDate}</p>
                 </div>
 
                 {/* Weight */}
                 {selectedLogs.weight && (
-                  <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-emerald-200">
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg border-2 border-emerald-200 dark:border-emerald-700">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Scale size={20} className="text-emerald-600" />
-                        <span className="font-semibold text-gray-700">Weight</span>
+                      <div className="flex items-center gap-3">
+                        <Scale size={22} className="text-emerald-600 dark:text-emerald-400" />
+                        <span className="font-semibold text-gray-700 dark:text-gray-200">Weight</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-xl font-bold text-emerald-600">{selectedLogs.weight!.weight} kg</span>
+                        <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{selectedLogs.weight!.weight} kg</span>
                         <button
                           onClick={() => setDeleteItem({ 
                             type: 'Weight', 
                             id: selectedLogs.weight!.id, 
                             description: `${selectedLogs.weight!.weight} kg` 
                           })}
-                          className="text-rose-500 hover:text-rose-700 p-1"
+                          className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={20} />
                         </button>
                       </div>
                     </div>
@@ -366,23 +366,23 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
 
                 {/* Water */}
                 {selectedLogs.water.map((water) => (
-                  <div key={water.id} className="bg-white rounded-xl p-4 shadow-sm border-2 border-blue-200">
+                  <div key={water.id} className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg border-2 border-blue-200 dark:border-blue-700">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Droplets size={20} className="text-blue-600" />
-                        <span className="font-semibold text-gray-700">Water</span>
+                      <div className="flex items-center gap-3">
+                        <Droplets size={22} className="text-blue-600 dark:text-blue-400" />
+                        <span className="font-semibold text-gray-700 dark:text-gray-200">Water</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-xl font-bold text-blue-600">{water.glasses} glasses</span>
+                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{water.glasses} glasses</span>
                         <button
                           onClick={() => setDeleteItem({ 
                             type: 'Water', 
                             id: water.id, 
                             description: `${water.glasses} glasses` 
                           })}
-                          className="text-rose-500 hover:text-rose-700 p-1"
+                          className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={20} />
                         </button>
                       </div>
                     </div>
@@ -391,16 +391,16 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
 
                 {/* Sleep */}
                 {selectedLogs.sleep && (
-                  <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-indigo-200">
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg border-2 border-indigo-200 dark:border-indigo-700">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Moon size={20} className="text-indigo-600" />
-                        <span className="font-semibold text-gray-700">Sleep</span>
+                      <div className="flex items-center gap-3">
+                        <Moon size={22} className="text-indigo-600 dark:text-indigo-400" />
+                        <span className="font-semibold text-gray-700 dark:text-gray-200">Sleep</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
-                          <span className="text-xl font-bold text-indigo-600">{selectedLogs.sleep!.hours}h</span>
-                          <span className="text-sm text-gray-600 ml-2 capitalize">({selectedLogs.sleep!.quality})</span>
+                          <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{selectedLogs.sleep!.hours}h</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400 ml-2 capitalize">({selectedLogs.sleep!.quality})</span>
                         </div>
                         <button
                           onClick={() => setDeleteItem({ 
@@ -408,9 +408,9 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                             id: selectedLogs.sleep!.id, 
                             description: `${selectedLogs.sleep!.hours}h (${selectedLogs.sleep!.quality})` 
                           })}
-                          className="text-rose-500 hover:text-rose-700 p-1"
+                          className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={20} />
                         </button>
                       </div>
                     </div>
@@ -419,28 +419,32 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
 
                 {/* Meals */}
                 {selectedLogs.meals.length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="font-semibold text-gray-800">Meals</h3>
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg">Meals</h3>
                     {selectedLogs.meals.map((meal) => {
                       const isCheat = meal.isCheatMeal;
                       return (
                         <div 
                           key={meal.id} 
-                          className={`rounded-xl p-4 shadow-sm ${isCheat ? 'bg-rose-50 border-2 border-rose-200' : 'bg-gray-50'}`}
+                          className={`rounded-2xl p-5 shadow-lg border-2 transition-all ${
+                            isCheat 
+                              ? 'bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-700' 
+                              : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
+                          }`}
                         >
-                          <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs font-semibold text-gray-500 uppercase">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">
                                   {meal.mealType}
                                 </span>
-                                {meal.hadTea && <Coffee size={14} className="text-amber-600" />}
-                                {isCheat && <Pizza size={14} className="text-rose-500" />}
+                                {meal.hadTea && <Coffee size={16} className="text-amber-600 dark:text-amber-400" />}
+                                {isCheat && <Pizza size={16} className="text-rose-500 dark:text-rose-400" />}
                               </div>
-                              <p className="text-sm text-gray-800">{meal.description}</p>
+                              <p className="text-sm text-gray-800 dark:text-gray-200">{meal.description}</p>
                             </div>
                             <div className="flex flex-col items-end gap-2">
-                              <span className="text-xs text-gray-500">
+                              <span className="text-sm text-gray-500 dark:text-gray-400">
                                 {new Date(meal.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                               </span>
                               <button
@@ -449,9 +453,9 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                                   id: meal.id, 
                                   description: `${meal.mealType}: ${meal.description}` 
                                 })}
-                                className="text-rose-500 hover:text-rose-700 p-1"
+                                className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
                               >
-                                <Trash2 size={16} />
+                                <Trash2 size={18} />
                               </button>
                             </div>
                           </div>
@@ -462,8 +466,8 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                 )}
 
                 {selectedLogs.meals.length === 0 && !selectedLogs.weight && selectedLogs.water.length === 0 && !selectedLogs.sleep && (
-                  <div className="bg-white rounded-xl p-8 shadow-sm text-center">
-                    <p className="text-gray-600">No logs for this date</p>
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-100 dark:border-gray-600 text-center">
+                    <p className="text-gray-600 dark:text-gray-400">No logs for this date</p>
                   </div>
                 )}
               </div>

@@ -20,22 +20,22 @@ export default function DeleteConfirmation({ itemType, itemDescription, onConfir
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md">
-        <div className="bg-gradient-to-r from-rose-50 to-red-50 rounded-t-3xl p-6 border-b border-rose-100">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-600">
+        <div className="bg-gradient-to-r from-rose-50 to-red-50 dark:from-rose-900/30 dark:to-red-900/30 rounded-t-3xl p-6 border-b border-rose-100 dark:border-rose-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-rose-100 p-2 rounded-xl">
-                <AlertTriangle className="text-rose-600" size={24} />
+              <div className="bg-rose-100 dark:bg-rose-900 p-2 rounded-xl">
+                <AlertTriangle className="text-rose-600 dark:text-rose-400" size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">Delete {itemType}?</h2>
-                <p className="text-sm text-gray-600">This action cannot be undone</p>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Delete {itemType}?</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone</p>
               </div>
             </div>
             <button
               onClick={onCancel}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
             >
               <X size={24} />
             </button>
@@ -43,51 +43,40 @@ export default function DeleteConfirmation({ itemType, itemDescription, onConfir
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <div className="bg-rose-50 border-2 border-rose-200 rounded-xl p-4">
-            <p className="text-sm text-rose-800 font-medium mb-2">
+          <div className="bg-rose-50 dark:bg-rose-900/30 border-2 border-rose-200 dark:border-rose-700 rounded-xl p-4">
+            <p className="text-sm text-rose-800 dark:text-rose-200 font-medium mb-2">
               ⚠️ You are about to delete:
             </p>
-            <p className="text-sm text-gray-800 font-semibold">
+            <p className="text-sm text-gray-800 dark:text-gray-200 font-semibold">
               {itemDescription}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Type <span className="text-rose-600 font-bold">{CONFIRM_WORD}</span> to confirm
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Type "{CONFIRM_WORD}" to confirm:
             </label>
             <input
               type="text"
               value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
-              placeholder="Type DELETE"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rose-500 focus:outline-none text-base uppercase"
-              autoFocus
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={`Type "${CONFIRM_WORD}"`}
+              className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-xl focus:border-rose-500 dark:focus:border-rose-400 focus:outline-none"
+              required
             />
-          </div>
-
-          <div className="bg-gray-50 rounded-xl p-4">
-            <p className="text-xs text-gray-600">
-              💡 <strong>Tip:</strong> Make sure you really want to delete this log. This action is permanent and cannot be reversed.
-            </p>
           </div>
 
           <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl hover:bg-gray-300 transition-colors"
+              className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-3 px-6 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={confirmText !== CONFIRM_WORD}
-              className={`flex-1 font-bold py-3 px-6 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${
-                confirmText === CONFIRM_WORD
-                  ? 'bg-gradient-to-r from-rose-500 to-red-500 text-white hover:shadow-lg transform hover:scale-[1.02]'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
+              className="flex-1 bg-gradient-to-r from-rose-500 to-red-500 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2"
             >
               <Trash2 size={20} />
               Delete

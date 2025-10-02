@@ -27,21 +27,21 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md">
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-3xl p-6 border-b border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-600">
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-t-3xl p-6 border-b border-gray-100 dark:border-gray-600">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-indigo-100 p-2 rounded-xl">
-                <Moon className="text-indigo-600" size={24} />
+              <div className="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-xl">
+                <Moon className="text-indigo-600 dark:text-indigo-400" size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">Log Sleep</h2>
-                <p className="text-sm text-gray-600">Track your rest</p>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Log Sleep</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Track your rest</p>
               </div>
             </div>
             <button
               onClick={onCancel}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
             >
               <X size={24} />
             </button>
@@ -50,7 +50,7 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Hours of Sleep
             </label>
             <div className="flex items-center gap-3">
@@ -60,16 +60,16 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
                 value={hours}
                 onChange={(e) => setHours(e.target.value)}
                 placeholder="Enter hours"
-                className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none text-lg"
+                className="flex-1 px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-xl focus:border-indigo-500 dark:focus:border-indigo-400 focus:outline-none text-lg"
                 required
                 autoFocus
               />
-              <span className="text-gray-600 font-medium text-lg">hours</span>
+              <span className="text-gray-600 dark:text-gray-400 font-medium text-lg">hours</span>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
               Sleep Quality
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -80,12 +80,12 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
                   onClick={() => setQuality(q.value)}
                   className={`p-4 rounded-xl border-2 transition-all ${
                     quality === q.value
-                      ? 'border-indigo-500 bg-indigo-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
+                      : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                   }`}
                 >
                   <div className="text-3xl mb-1">{q.emoji}</div>
-                  <div className="text-sm font-semibold text-gray-700">{q.label}</div>
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-200">{q.label}</div>
                 </button>
               ))}
             </div>
@@ -95,7 +95,7 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl hover:bg-gray-300 transition-colors"
+              className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-3 px-6 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
               Cancel
             </button>

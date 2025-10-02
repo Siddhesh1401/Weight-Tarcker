@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Dashboard from './components/Dashboard';
 import History from './components/History';
-import Progress from './components/Progress';
+import ProgressDashboard from './components/ProgressDashboard';
 import Settings from './components/Settings';
 import BottomNav from './components/BottomNav';
 import MealLog from './components/MealLog';
@@ -11,13 +11,12 @@ import WeightLog from './components/WeightLog';
 import WaterLog from './components/WaterLog';
 import SleepLog from './components/SleepLog';
 import Toast from './components/Toast';
+import DarkModeToggle from './components/DarkModeToggle';
 import { MealEntry, WeightLog as WeightLogType, WaterLog as WaterLogType, SleepLog as SleepLogType, UserSettings, MealType } from './types';
 import { mockMeals, mockWeights, defaultSettings } from './data/mockData';
 import { logApi, settingsApi } from './services/api';
-import { useDarkMode } from './contexts/DarkModeContext';
 
 function App() {
-  const { darkMode } = useDarkMode();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [meals, setMeals] = useState<MealEntry[]>(mockMeals);
   const [weights, setWeights] = useState<WeightLogType[]>(mockWeights);
@@ -277,27 +276,32 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading your data...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 flex items-center justify-center">
+        <div className="text-center animate-fadeIn">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-400 mx-auto mb-4"></div>
+          <p className="text-gray-300 font-medium">Loading your data...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen pb-24 transition-colors ${darkMode ? 'dark bg-gray-900' : 'bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50'}`}>
+    <div className={`min-h-screen pb-24 transition-colors bg-gray-50 dark:bg-gray-900`}>
+      {/* Dark Mode Toggle - Top Right Corner */}
+      <div className="fixed top-4 right-4 z-50">
+        <DarkModeToggle className="animate-fadeIn" />
+      </div>
+
       {/* Connection Status Indicator */}
       {!isOnline && (
-        <div className="bg-yellow-100 border-b border-yellow-200 px-4 py-2 text-center">
-          <p className="text-sm text-yellow-800">
+        <div className="bg-yellow-100 border-b border-yellow-200 px-4 py-2 text-center animate-slideDown dark:bg-yellow-900/30 dark:border-yellow-700 dark:text-yellow-200">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200">
             ⚠️ Offline mode - Changes won't be saved to server
           </p>
         </div>
       )}
       
-      <div className="max-w-md mx-auto px-4 py-6">
+      <div className="max-w-md mx-auto px-4 py-6 animate-fadeIn bg-white dark:bg-gray-800 rounded-2xl shadow-xl mx-4 mb-4 border border-gray-100 dark:border-gray-700">
         {currentPage === 'dashboard' && (
           <Dashboard
             meals={meals}
@@ -323,7 +327,7 @@ function App() {
         )}
 
         {currentPage === 'progress' && (
-          <Progress meals={meals} weights={weights} />
+          <ProgressDashboard meals={meals} weights={weights} />
         )}
 
         {currentPage === 'settings' && (

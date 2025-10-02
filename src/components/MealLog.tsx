@@ -100,21 +100,21 @@ export default function MealLog({ mealType, onSave, onCancel }: MealLogProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-t-3xl p-6 border-b border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-gray-100 dark:border-gray-600">
+        <div className="sticky top-0 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-t-3xl p-6 border-b border-gray-100 dark:border-gray-600">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`bg-${config.color}-100 p-2 rounded-xl`}>
-                <Icon className={`text-${config.color}-600`} size={24} />
+              <div className={`bg-${config.color}-100 dark:bg-${config.color}-900 p-2 rounded-xl`}>
+                <Icon className={`text-${config.color}-600 dark:text-${config.color}-400`} size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">Log {config.title}</h2>
-                <p className="text-sm text-gray-600">What did you have?</p>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Log {config.title}</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">What did you have?</p>
               </div>
             </div>
             <button
               onClick={onCancel}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
             >
               <X size={24} />
             </button>
@@ -124,13 +124,13 @@ export default function MealLog({ mealType, onSave, onCancel }: MealLogProps) {
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-semibold text-gray-700">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Select Your {config.title}
               </label>
               <button
                 type="button"
                 onClick={() => setShowPresetManager(true)}
-                className="flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700"
+                className="flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
               >
                 <Settings size={14} />
                 Manage
@@ -142,17 +142,17 @@ export default function MealLog({ mealType, onSave, onCancel }: MealLogProps) {
                   key={preset}
                   className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
                     selectedPresets.includes(preset)
-                      ? 'border-emerald-500 bg-emerald-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30'
+                      : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={selectedPresets.includes(preset)}
                     onChange={() => togglePreset(preset)}
-                    className="w-4 h-4 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500"
+                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-emerald-500 focus:ring-emerald-500"
                   />
-                  <span className="text-sm text-gray-800">{preset}</span>
+                  <span className="text-sm text-gray-800 dark:text-gray-200">{preset}</span>
                 </label>
               ))}
             </div>
@@ -162,7 +162,7 @@ export default function MealLog({ mealType, onSave, onCancel }: MealLogProps) {
             <button
               type="button"
               onClick={() => setShowCustomInput(!showCustomInput)}
-              className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 mb-2"
+              className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 mb-2"
             >
               {showCustomInput ? '- Hide Custom Input' : '+ Add Other/Custom Meal'}
             </button>
@@ -173,7 +173,7 @@ export default function MealLog({ mealType, onSave, onCancel }: MealLogProps) {
                 onChange={(e) => setCustomMeal(e.target.value)}
                 placeholder="Describe your custom meal..."
                 rows={3}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none resize-none text-base"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-xl focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none resize-none text-base"
               />
             )}
           </div>
@@ -182,7 +182,7 @@ export default function MealLog({ mealType, onSave, onCancel }: MealLogProps) {
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl hover:bg-gray-300 transition-colors"
+              className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-3 px-6 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
               Cancel
             </button>

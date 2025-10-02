@@ -77,17 +77,17 @@ export default function MealPresetManager({ mealType, onClose }: MealPresetManag
   const visibleDefaults = defaultPresets.filter(p => !hiddenDefaults.includes(p));
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col border border-gray-100 dark:border-gray-600">
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 p-6 border-b border-gray-100 dark:border-gray-600">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">Manage Presets</h2>
-              <p className="text-sm text-gray-600 capitalize">{mealType} Options</p>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Manage Presets</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">{mealType} Options</p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
             >
               <X size={24} />
             </button>
@@ -96,8 +96,8 @@ export default function MealPresetManager({ mealType, onClose }: MealPresetManag
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {/* Add New Preset */}
-          <div className="bg-emerald-50 rounded-xl p-4 border-2 border-emerald-200">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <div className="bg-emerald-50 dark:bg-emerald-900/30 rounded-xl p-4 border-2 border-emerald-200 dark:border-emerald-700">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Add New Preset
             </label>
             <div className="flex gap-2">
@@ -107,11 +107,11 @@ export default function MealPresetManager({ mealType, onClose }: MealPresetManag
                 onChange={(e) => setNewPreset(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
                 placeholder="e.g., Smoothie bowl"
-                className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:outline-none"
+                className="flex-1 px-4 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none"
               />
               <button
                 onClick={handleAdd}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white p-2 rounded-lg transition-colors"
+                className="bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white p-2 rounded-lg transition-colors"
               >
                 <Plus size={20} />
               </button>
@@ -120,9 +120,9 @@ export default function MealPresetManager({ mealType, onClose }: MealPresetManag
 
           {/* Default Presets List */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Default Presets</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Default Presets</h3>
             {visibleDefaults.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
                 All default presets hidden
               </p>
             ) : (
@@ -130,12 +130,12 @@ export default function MealPresetManager({ mealType, onClose }: MealPresetManag
                 {visibleDefaults.map((preset) => (
                   <div
                     key={preset}
-                    className="bg-gray-50 border-2 border-gray-200 rounded-lg p-3 flex items-center gap-2"
+                    className="bg-gray-50 dark:bg-gray-700/50 border-2 border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center gap-2"
                   >
-                    <span className="flex-1 text-sm text-gray-800">{preset}</span>
+                    <span className="flex-1 text-sm text-gray-800 dark:text-gray-200">{preset}</span>
                     <button
                       onClick={() => handleHideDefault(preset)}
-                      className="text-gray-500 hover:text-rose-600 p-1"
+                      className="text-gray-500 hover:text-rose-600 dark:text-gray-400 dark:hover:text-rose-300 p-1"
                       title="Hide this preset"
                     >
                       <X size={18} />
@@ -148,9 +148,9 @@ export default function MealPresetManager({ mealType, onClose }: MealPresetManag
 
           {/* Custom Presets List */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Your Custom Presets</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Your Custom Presets</h3>
             {customPresets.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
                 No custom presets yet. Add one above!
               </p>
             ) : (
@@ -158,7 +158,7 @@ export default function MealPresetManager({ mealType, onClose }: MealPresetManag
                 {customPresets.map((preset, index) => (
                   <div
                     key={index}
-                    className="bg-white border-2 border-gray-200 rounded-lg p-3 flex items-center gap-2"
+                    className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center gap-2"
                   >
                     {editingIndex === index ? (
                       <>
@@ -167,34 +167,34 @@ export default function MealPresetManager({ mealType, onClose }: MealPresetManag
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && handleSaveEdit()}
-                          className="flex-1 px-3 py-1 border-2 border-emerald-500 rounded focus:outline-none"
+                          className="flex-1 px-3 py-1 border-2 border-emerald-500 dark:border-emerald-400 rounded focus:outline-none bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                           autoFocus
                         />
                         <button
                           onClick={handleSaveEdit}
-                          className="text-emerald-600 hover:text-emerald-700 p-1"
+                          className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 p-1"
                         >
                           <Save size={18} />
                         </button>
                         <button
                           onClick={handleCancelEdit}
-                          className="text-gray-600 hover:text-gray-700 p-1"
+                          className="text-gray-600 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-400 p-1"
                         >
                           <X size={18} />
                         </button>
                       </>
                     ) : (
                       <>
-                        <span className="flex-1 text-sm text-gray-800">{preset}</span>
+                        <span className="flex-1 text-sm text-gray-800 dark:text-gray-200">{preset}</span>
                         <button
                           onClick={() => handleEdit(index)}
-                          className="text-blue-600 hover:text-blue-700 p-1"
+                          className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1"
                         >
                           <Edit2 size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(index)}
-                          className="text-rose-600 hover:text-rose-700 p-1"
+                          className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -207,10 +207,10 @@ export default function MealPresetManager({ mealType, onClose }: MealPresetManag
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-100">
+        <div className="p-6 border-t border-gray-100 dark:border-gray-600">
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200"
+            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 dark:from-emerald-600 dark:to-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200"
           >
             Done
           </button>

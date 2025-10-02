@@ -13,14 +13,14 @@ export default function ExportButton() {
     <div className="flex gap-2">
       <button
         onClick={() => handleExport('csv')}
-        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors"
+        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
       >
         <Download size={18} />
         Export CSV
       </button>
       <button
         onClick={() => handleExport('json')}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors"
+        className="flex items-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
       >
         <Download size={18} />
         Export JSON

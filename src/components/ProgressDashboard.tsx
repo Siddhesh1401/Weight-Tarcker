@@ -1,0 +1,286 @@
+import { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Activity, Droplets, Moon, Target, TrendingUp, Award } from 'lucide-react';
+import WeightChart from './WeightChart';
+import { MealEntry, WeightLog as WeightLogType } from '../types';
+
+interface ProgressData {
+  totalMeals: number;
+  totalWater: number;
+  totalSleep: number;
+  avgSleep: number;
+  weightProgress: number;
+  weeklyGoal: {
+    meals: number;
+    water: number;
+    sleep: number;
+  };
+  recentWeights: Array<{
+    date: string;
+    weight: number;
+  }>;
+  mealDistribution: Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+}
+
+interface ProgressDashboardProps {
+  className?: string;
+  meals?: MealEntry[];
+  weights?: WeightLogType[];
+}
+
+export default function ProgressDashboard({ className = '', meals = [], weights = [] }: ProgressDashboardProps) {
+  const [progressData, setProgressData] = useState<ProgressData>({
+    totalMeals: 0,
+    totalWater: 0,
+    totalSleep: 0,
+    avgSleep: 0,
+    weightProgress: 0,
+    weeklyGoal: {
+      meals: 21, // 3 meals/day * 7 days
+      water: 56, // 8 glasses/day * 7 days
+      sleep: 56  // 8 hours/day * 7 days
+    },
+    recentWeights: [],
+    mealDistribution: [
+      { name: 'Breakfast', value: 0, color: '#fbbf24' },
+      { name: 'Lunch', value: 0, color: '#f59e0b' },
+      { name: 'Snacks', value: 0, color: '#d97706' },
+      { name: 'Dinner', value: 0, color: '#b45309' }
+    ]
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProgressData();
+  }, []);
+
+  const fetchProgressData = async () => {
+    try {
+      setLoading(true);
+      // In a real app, this would fetch from your API
+      // For now, using mock data
+      const mockData: ProgressData = {
+        totalMeals: 45,
+        totalWater: 120,
+        totalSleep: 48,
+        avgSleep: 7.2,
+        weightProgress: -2.5,
+        weeklyGoal: {
+          meals: 21,
+          water: 56,
+          sleep: 56
+        },
+        recentWeights: [
+          { date: '2025-01-01', weight: 75 },
+          { date: '2025-01-02', weight: 74.8 },
+          { date: '2025-01-03', weight: 74.5 },
+          { date: '2025-01-04', weight: 74.2 },
+          { date: '2025-01-05', weight: 73.9 },
+          { date: '2025-01-06', weight: 73.5 },
+          { date: '2025-01-07', weight: 73.0 }
+        ],
+        mealDistribution: [
+          { name: 'Breakfast', value: 15, color: '#fbbf24' },
+          { name: 'Lunch', value: 18, color: '#f59e0b' },
+          { name: 'Snacks', value: 8, color: '#d97706' },
+          { name: 'Dinner', value: 4, color: '#b45309' }
+        ]
+      };
+
+      setProgressData(mockData);
+    } catch (error) {
+      console.error('Error fetching progress data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={`bg-white rounded-2xl p-6 shadow-sm ${className}`}>
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-32 bg-gray-200 rounded"></div>
+          <div className="h-24 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`space-y-6 ${className}`}>
+      {/* Header */}
+      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-3xl p-6 shadow-xl border border-emerald-100 dark:border-gray-600 animate-fadeIn">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-emerald-100 dark:bg-emerald-900 p-3 rounded-2xl smooth-hover hover:bg-emerald-200 dark:hover:bg-emerald-800">
+              <TrendingUp className="text-emerald-600 dark:text-emerald-400" size={28} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Progress Dashboard</h1>
+              <p className="text-gray-600 dark:text-gray-400">Track your health journey</p>
+            </div>
+          </div>
+          <Award className="text-emerald-500 dark:text-emerald-400 animate-bounce" size={32} />
+        </div>
+      </div>
+
+      {/* Weight Chart */}
+      <div className="animate-slideUp">
+        <WeightChart data={progressData.recentWeights} />
+      </div>
+
+      {/* Activity Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Meals */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border-2 border-orange-200 dark:border-orange-300 animate-slideUp stagger-item smooth-hover hover:shadow-lg hover:-translate-y-1">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-orange-100 dark:bg-orange-900 p-2 rounded-xl">
+              <Activity className="text-orange-600 dark:text-orange-400" size={20} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-800 dark:text-gray-200">Meals</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">This week</p>
+            </div>
+          </div>
+          <div className="text-center mb-4">
+            <span className="text-5xl font-bold text-orange-600 dark:text-orange-400">
+              {progressData.totalMeals}
+            </span>
+          </div>
+          <div className="w-full bg-orange-100 dark:bg-orange-900 rounded-full h-2 mb-3">
+            <div
+              className="bg-orange-500 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${Math.min((progressData.totalMeals / progressData.weeklyGoal.meals) * 100, 100)}%` }}
+            ></div>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 leading-tight text-center">
+            {Math.max(0, progressData.weeklyGoal.meals - progressData.totalMeals)} more to reach goal
+          </p>
+        </div>
+
+        {/* Water */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border-2 border-blue-200 dark:border-blue-300 animate-slideUp stagger-item smooth-hover hover:shadow-lg hover:-translate-y-1">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-xl">
+              <Droplets className="text-blue-600 dark:text-blue-400" size={20} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-800 dark:text-gray-200">Water</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Glasses this week</p>
+            </div>
+          </div>
+          <div className="text-center mb-4">
+            <span className="text-5xl font-bold text-blue-600 dark:text-blue-400">
+              {progressData.totalWater}
+            </span>
+          </div>
+          <div className="w-full bg-blue-100 dark:bg-blue-900 rounded-full h-2 mb-3">
+            <div
+              className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${Math.min((progressData.totalWater / progressData.weeklyGoal.water) * 100, 100)}%` }}
+            ></div>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 leading-tight text-center">
+            {Math.max(0, progressData.weeklyGoal.water - progressData.totalWater)} more glasses to reach goal
+          </p>
+        </div>
+
+        {/* Sleep */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border-2 border-indigo-200 dark:border-indigo-300 animate-slideUp stagger-item smooth-hover hover:shadow-lg hover:-translate-y-1">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-xl">
+              <Moon className="text-indigo-600 dark:text-indigo-400" size={20} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-800 dark:text-gray-200">Sleep</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Hours this week</p>
+            </div>
+          </div>
+          <div className="text-center mb-4">
+            <span className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">
+              {progressData.totalSleep}h
+            </span>
+          </div>
+          <div className="w-full bg-indigo-100 dark:bg-indigo-900 rounded-full h-2 mb-3">
+            <div
+              className="bg-indigo-500 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${Math.min((progressData.totalSleep / progressData.weeklyGoal.sleep) * 100, 100)}%` }}
+            ></div>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 leading-tight text-center">
+            Avg: {progressData.avgSleep}h/night
+          </p>
+        </div>
+      </div>
+
+      {/* Meal Distribution */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm animate-slideUp">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">Meal Distribution</h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={progressData.mealDistribution}
+                cx="50%"
+                cy="50%"
+                innerRadius={40}
+                outerRadius={80}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {progressData.mealDistribution.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value: number, name: string) => [`${value} meals`, name]}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Legend */}
+        <div className="flex flex-wrap justify-center gap-4 mt-4">
+          {progressData.mealDistribution.map((item, index) => (
+            <div key={index} className="flex items-center gap-2 animate-fadeIn">
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: item.color }}
+              ></div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{item.name}</span>
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">({item.value})</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900 dark:to-emerald-800 rounded-xl p-4 text-center animate-slideUp stagger-item smooth-hover hover:scale-105 transition-transform duration-200">
+          <p className="text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-wide font-semibold">Avg Sleep</p>
+          <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{progressData.avgSleep}h</p>
+        </div>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-xl p-4 text-center animate-slideUp stagger-item smooth-hover hover:scale-105 transition-transform duration-200">
+          <p className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-wide font-semibold">Water/Day</p>
+          <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{(progressData.totalWater / 7).toFixed(1)}</p>
+        </div>
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 rounded-xl p-4 text-center animate-slideUp stagger-item smooth-hover hover:scale-105 transition-transform duration-200">
+          <p className="text-xs text-orange-600 dark:text-orange-400 uppercase tracking-wide font-semibold">Meals/Day</p>
+          <p className="text-xl font-bold text-orange-700 dark:text-orange-300">{(progressData.totalMeals / 7).toFixed(1)}</p>
+        </div>
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-xl p-4 text-center animate-slideUp stagger-item smooth-hover hover:scale-105 transition-transform duration-200">
+          <p className="text-xs text-purple-600 dark:text-purple-400 uppercase tracking-wide font-semibold">Weight Change</p>
+          <p className={`text-xl font-bold ${progressData.weightProgress < 0 ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+            {progressData.weightProgress > 0 ? '+' : ''}{progressData.weightProgress}kg
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -21,16 +21,16 @@ export default function MealTypeSelector({ mealType, onSelectRegular, onSelectCh
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md">
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-t-3xl p-6 border-b border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-600">
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-t-3xl p-6 border-b border-gray-100 dark:border-gray-600">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">Log {config.title}</h2>
-              <p className="text-sm text-gray-600">Choose meal type</p>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Log {config.title}</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Choose meal type</p>
             </div>
             <button
               onClick={onCancel}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
             >
               <X size={24} />
             </button>
@@ -38,13 +38,13 @@ export default function MealTypeSelector({ mealType, onSelectRegular, onSelectCh
         </div>
 
         <div className="p-6 space-y-4">
-          <p className="text-center text-gray-600 mb-6">
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
             Is this a regular meal or a cheat meal?
           </p>
 
           <button
             onClick={onSelectRegular}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-6 px-6 rounded-2xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-3"
+            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 dark:from-emerald-600 dark:to-emerald-700 text-white font-bold py-6 px-6 rounded-2xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-3"
           >
             <Utensils size={28} />
             <div className="text-left">
@@ -55,7 +55,7 @@ export default function MealTypeSelector({ mealType, onSelectRegular, onSelectCh
 
           <button
             onClick={onSelectCheat}
-            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold py-6 px-6 rounded-2xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-3"
+            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 dark:from-rose-600 dark:to-pink-700 text-white font-bold py-6 px-6 rounded-2xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-3"
           >
             <Pizza size={28} />
             <div className="text-left">
@@ -66,7 +66,7 @@ export default function MealTypeSelector({ mealType, onSelectRegular, onSelectCh
 
           <button
             onClick={onCancel}
-            className="w-full bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl hover:bg-gray-300 transition-colors mt-4"
+            className="w-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-3 px-6 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors mt-4"
           >
             Cancel
           </button>

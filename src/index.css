@@ -6,7 +6,7 @@
   .animate-slide-in {
     animation: slideIn 0.3s ease-out;
   }
-  
+
   @keyframes slideIn {
     from {
       transform: translateX(100%);
@@ -16,5 +16,162 @@
       transform: translateX(0);
       opacity: 1;
     }
+  }
+
+  /* Fade In Animation */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  /* Slide Up Animation */
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-slideUp {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  /* Modal Enter Animation */
+  @keyframes modalEnter {
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+  .animate-modalEnter {
+    animation: modalEnter 0.3s ease-out;
+  }
+
+  /* Bouncing animation for notifications */
+  @keyframes bounceIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  .animate-bounceIn {
+    animation: bounceIn 0.6s ease-out;
+  }
+
+  /* Stagger animation for lists */
+  .stagger-item:nth-child(1) { animation-delay: 0.1s; }
+  .stagger-item:nth-child(2) { animation-delay: 0.2s; }
+  .stagger-item:nth-child(3) { animation-delay: 0.3s; }
+  .stagger-item:nth-child(4) { animation-delay: 0.4s; }
+  .stagger-item:nth-child(5) { animation-delay: 0.5s; }
+
+  /* Smooth hover effects */
+  .smooth-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Enhanced dark mode styling */
+  .dark {
+    color-scheme: dark;
+  }
+
+  /* Better dark backgrounds with subtle gradients */
+  .dark-bg-primary {
+    background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+  }
+
+  .dark-bg-secondary {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  }
+
+  .dark-bg-tertiary {
+    background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+  }
+
+  /* Better dark borders */
+  .dark-border-primary {
+    @apply border-gray-600;
+  }
+
+  .dark-border-secondary {
+    @apply border-gray-700;
+  }
+
+  /* Enhanced text colors for dark mode */
+  .dark-text-primary {
+    @apply text-gray-100;
+  }
+
+  .dark-text-secondary {
+    @apply text-gray-200;
+  }
+
+  .dark-text-muted {
+    @apply text-gray-400;
+  }
+
+  /* Better card styling for dark mode */
+  .dark-card {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    @apply border-gray-600 shadow-2xl;
+  }
+
+  /* Improved gradient backgrounds for dark mode */
+  .dark-gradient-primary {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+
+  .dark-gradient-secondary {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  }
+
+  /* Better hover effects for dark mode */
+  .dark-hover {
+    @apply hover:bg-gray-700 hover:border-gray-600 transition-all duration-200;
+  }
+
+  /* Enhanced focus states for dark mode */
+  .dark-focus {
+    @apply focus:border-emerald-400 focus:ring-emerald-400/30;
+  }
+
+  /* Improved scrollbar for dark mode */
+  .dark-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .dark-scrollbar::-webkit-scrollbar-track {
+    background: #374151;
+    border-radius: 3px;
+  }
+
+  .dark-scrollbar::-webkit-scrollbar-thumb {
+    background: #6b7280;
+    border-radius: 3px;
+  }
+
+  .dark-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
   }
 }
