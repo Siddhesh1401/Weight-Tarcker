@@ -274,6 +274,14 @@ function App() {
     setToastMessage('🗑️ Sleep log deleted');
   };
 
+  const handleDeleteAllData = () => {
+    setMeals([]);
+    setWeights([]);
+    setWaterLogs([]);
+    setSleepLogs([]);
+    setToastMessage('🗑️ All data deleted');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 flex items-center justify-center">
@@ -335,6 +343,7 @@ function App() {
             settings={settings}
             onSave={handleSaveSettings}
             onCancel={() => setCurrentPage('dashboard')}
+            onDeleteAllData={handleDeleteAllData}
           />
         )}
       </div>

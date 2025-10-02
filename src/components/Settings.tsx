@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, Save, Target, Clock, Bell, Moon, Sun, BookOpen, Download } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Target, Clock, Bell, Moon, Sun, BookOpen, Download, Trash2, AlertTriangle } from 'lucide-react';
 import { UserSettings } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import ExportButton from './ExportButton';
@@ -9,18 +9,29 @@ interface SettingsProps {
   settings: UserSettings;
   onSave: (settings: UserSettings) => void;
   onCancel: () => void;
+  onDeleteAllData?: () => void;
 }
 
 type SettingsTab = 'main' | 'diet' | 'export';
 
-export default function Settings({ settings, onSave, onCancel }: SettingsProps) {
+export default function Settings({ settings, onSave, onCancel, onDeleteAllData }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('main');
   const [formData, setFormData] = useState(settings);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const { theme, toggleTheme } = useTheme();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
+  };
+
+  const handleDeleteAllData = () => {
+    if (deleteConfirmText === 'DELETE ALL DATA') {
+      onDeleteAllData?.();
+      setShowDeleteConfirm(false);
+      setDeleteConfirmText('');
+    }
   };
 
   const tabs = [
@@ -210,13 +221,79 @@ export default function Settings({ settings, onSave, onCancel }: SettingsProps) 
         {activeTab === 'diet' && <DietPlan />}
 
         {activeTab === 'export' && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <Download className="text-emerald-500" size={20} />
-              <h3 className="font-semibold text-gray-800 dark:text-gray-200">Export Your Data</h3>
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <Download className="text-emerald-500" size={20} />
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200">Export Your Data</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Download all your logs and progress data</p>
+              <ExportButton />
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Download all your logs and progress data</p>
-            <ExportButton />
+
+            {/* Danger Zone */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border-2 border-red-200 dark:border-red-800">
+              <div className="flex items-center gap-2 mb-4">
+                <AlertTriangle className="text-red-500" size={20} />
+                <h3 className="font-semibold text-red-700 dark:text-red-400">Danger Zone</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                ⚠️ This action cannot be undone. All your data will be permanently deleted.
+              </p>
+
+              {!showDeleteConfirm ? (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex items-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition-colors shadow-md hover:shadow-lg"
+                >
+                  <Trash2 size={18} />
+                  Delete All Data
+                </button>
+              ) : (
+                <div className="space-y-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border-2 border-red-200 dark:border-red-700">
+                  <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+                    <AlertTriangle size={20} />
+                    <span className="font-semibold">Confirm Deletion</span>
+                  </div>
+
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    Type <strong className="text-red-600 dark:text-red-400">"DELETE ALL DATA"</strong> to confirm:
+                  </p>
+
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder="Type DELETE ALL DATA"
+                    className="w-full px-4 py-3 border-2 border-red-300 dark:border-red-600 dark:bg-gray-700 dark:text-gray-200 rounded-xl focus:border-red-500 focus:outline-none"
+                  />
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setShowDeleteConfirm(false);
+                        setDeleteConfirmText('');
+                      }}
+                      className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteAllData}
+                      disabled={deleteConfirmText !== 'DELETE ALL DATA'}
+                      className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 ${
+                        deleteConfirmText === 'DELETE ALL DATA'
+                          ? 'bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg'
+                          : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      <Trash2 size={18} />
+                      Delete Everything
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
