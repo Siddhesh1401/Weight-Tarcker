@@ -3,6 +3,7 @@ import { Settings as SettingsIcon, Save, Target, Clock, Bell, Moon, Sun } from '
 import { UserSettings } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import ExportButton from './ExportButton';
+import DietPlan from './DietPlan';
 
 interface SettingsProps {
   settings: UserSettings;
@@ -144,6 +145,8 @@ export default function Settings({ settings, onSave, onCancel }: SettingsProps) 
             </div>
           </button>
         </div>
+
+        <DietPlan />
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
           <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">Export Your Data</h3>
