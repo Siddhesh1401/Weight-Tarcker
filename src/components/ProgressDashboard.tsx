@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Activity, Droplets, Moon, Target, TrendingUp, Award } from 'lucide-react';
+import { PieChart, Pie, Cell } from 'recharts';
+import { Activity, Droplets, Moon, TrendingUp, Award } from 'lucide-react';
 import WeightChart from './WeightChart';
 import { MealEntry, WeightLog as WeightLogType } from '../types';
 
@@ -53,64 +53,80 @@ export default function ProgressDashboard({ className = '', meals = [], weights 
     ]
   });
 
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
-    fetchProgressData();
-  }, []);
+    calculateProgressData();
+  }, [meals, weights]);
 
-  const fetchProgressData = async () => {
-    try {
-      setLoading(true);
-      // In a real app, this would fetch from your API
-      // For now, using mock data
-      const mockData: ProgressData = {
-        totalMeals: 45,
-        totalWater: 120,
-        totalSleep: 48,
-        avgSleep: 7.2,
-        weightProgress: -2.5,
-        weeklyGoal: {
-          meals: 21,
-          water: 56,
-          sleep: 56
-        },
-        recentWeights: [
-          { date: '2025-01-01', weight: 75 },
-          { date: '2025-01-02', weight: 74.8 },
-          { date: '2025-01-03', weight: 74.5 },
-          { date: '2025-01-04', weight: 74.2 },
-          { date: '2025-01-05', weight: 73.9 },
-          { date: '2025-01-06', weight: 73.5 },
-          { date: '2025-01-07', weight: 73.0 }
-        ],
-        mealDistribution: [
-          { name: 'Breakfast', value: 15, color: '#fbbf24' },
-          { name: 'Lunch', value: 18, color: '#f59e0b' },
-          { name: 'Snacks', value: 8, color: '#d97706' },
-          { name: 'Dinner', value: 4, color: '#b45309' }
-        ]
-      };
+  const calculateProgressData = () => {
+    // Get current week data (last 7 days)
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-      setProgressData(mockData);
-    } catch (error) {
-      console.error('Error fetching progress data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const weekMeals = meals.filter(meal => {
+      const mealDate = new Date(meal.date);
+      return mealDate >= weekAgo && mealDate <= now;
+    });
 
-  if (loading) {
-    return (
-      <div className={`bg-white rounded-2xl p-6 shadow-sm ${className}`}>
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-24 bg-gray-200 rounded"></div>
-        </div>
-      </div>
+    const weekWeights = weights.filter(weight => {
+      const weightDate = new Date(weight.date);
+      return weightDate >= weekAgo && weightDate <= now;
+    });
+
+    // Calculate totals
+    const totalMeals = weekMeals.length;
+
+    // For water, we need to handle the case where water is logged as a meal type
+    // In the current implementation, water might be logged differently
+    const totalWater = 0; // Will need to be calculated from water logs when available
+
+    const weekSleepEntries = meals.filter(meal =>
+      meal.mealType === 'sleep' &&
+      new Date(meal.date) >= weekAgo &&
+      new Date(meal.date) <= now
     );
-  }
+
+    const totalSleep = weekSleepEntries.reduce((sum, meal) => {
+      const match = meal.description.match(/(\d+)/);
+      return sum + (match ? parseInt(match[1]) : 0);
+    }, 0);
+
+    const avgSleep = weekSleepEntries.length > 0 ? totalSleep / weekSleepEntries.length : 0;
+
+    // Weight progress (latest - oldest in the week)
+    const sortedWeights = [...weekWeights].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const weightProgress = sortedWeights.length >= 2
+      ? sortedWeights[sortedWeights.length - 1].weight - sortedWeights[0].weight
+      : 0;
+
+    // Recent weights for chart (last 7 entries)
+    const recentWeights = sortedWeights.slice(-7).map(weight => ({
+      date: weight.date,
+      weight: weight.weight
+    }));
+
+    // Meal distribution
+    const mealTypes = ['breakfast', 'lunch', 'snacks', 'dinner'];
+    const mealDistribution = mealTypes.map((type, index) => ({
+      name: type.charAt(0).toUpperCase() + type.slice(1),
+      value: weekMeals.filter(meal => meal.mealType === type).length,
+      color: ['#fbbf24', '#f59e0b', '#d97706', '#b45309'][index]
+    }));
+
+    setProgressData({
+      totalMeals,
+      totalWater,
+      totalSleep,
+      avgSleep: Math.round(avgSleep * 10) / 10,
+      weightProgress,
+      weeklyGoal: {
+        meals: 21, // 3 meals/day * 7 days
+        water: 56, // 8 glasses/day * 7 days
+        sleep: 56  // 8 hours/day * 7 days
+      },
+      recentWeights,
+      mealDistribution
+    });
+  };
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -223,26 +239,19 @@ export default function ProgressDashboard({ className = '', meals = [], weights 
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm animate-slideUp">
         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">Meal Distribution</h3>
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={progressData.mealDistribution}
-                cx="50%"
-                cy="50%"
-                innerRadius={40}
-                outerRadius={80}
-                paddingAngle={2}
-                dataKey="value"
-              >
-                {progressData.mealDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value: number, name: string) => [`${value} meals`, name]}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="text-6xl mb-4">
+                {progressData.mealDistribution.some(item => item.value > 0) ? '🥗' : '📊'}
+              </div>
+              <p className="text-gray-600 dark:text-gray-400">
+                {progressData.totalMeals > 0
+                  ? 'Your meal distribution will appear here'
+                  : 'Log some meals to see your distribution'
+                }
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Legend */}
