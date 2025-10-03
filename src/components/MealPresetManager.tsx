@@ -18,6 +18,7 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
   const [editValue, setEditValue] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const defaultPresets = mealPresets[mealType] || [];
 
@@ -44,17 +45,73 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
 
       try {
         setIsLoading(true);
+        
+        // First, try to load from backend
         const templates = await templatesApi.getTemplates(mealType);
-        setCustomPresets(templates.map((template: any) => ({
-          id: template._id,
-          name: template.name,
-          mealType: template.meal_type,
-          description: template.description,
-          isFavorite: template.is_favorite,
-          useCount: template.use_count
-        })));
+        
+        // Check localStorage for presets that might need to be migrated
+        const savedCustom = localStorage.getItem(`custom_presets_${mealType}`);
+        if (savedCustom) {
+          const localPresets: string[] = JSON.parse(savedCustom);
+          const templateNames = templates.map((t: any) => t.name);
+          
+          // Find presets that exist in localStorage but not in backend
+          const presetsToMigrate = localPresets.filter(name => !templateNames.includes(name));
+          
+          // Migrate them to backend
+          if (presetsToMigrate.length > 0) {
+            console.log('Migrating local presets to backend:', presetsToMigrate);
+            for (const presetName of presetsToMigrate) {
+              try {
+                await templatesApi.createTemplate({
+                  name: presetName,
+                  meal_type: mealType,
+                  description: presetName,
+                  is_favorite: false
+                });
+              } catch (err) {
+                console.error('Failed to migrate preset:', presetName, err);
+              }
+            }
+            
+            // Reload templates after migration
+            const updatedTemplates = await templatesApi.getTemplates(mealType);
+            setCustomPresets(updatedTemplates.map((template: any) => ({
+              id: template._id,
+              name: template.name,
+              mealType: template.meal_type,
+              description: template.description,
+              isFavorite: template.is_favorite,
+              useCount: template.use_count
+            })));
+            
+            // Clear localStorage after successful migration
+            localStorage.removeItem(`custom_presets_${mealType}`);
+          } else {
+            // No migration needed, just set the templates
+            setCustomPresets(templates.map((template: any) => ({
+              id: template._id,
+              name: template.name,
+              mealType: template.meal_type,
+              description: template.description,
+              isFavorite: template.is_favorite,
+              useCount: template.use_count
+            })));
+          }
+        } else {
+          // No localStorage data, just use backend templates
+          setCustomPresets(templates.map((template: any) => ({
+            id: template._id,
+            name: template.name,
+            mealType: template.meal_type,
+            description: template.description,
+            isFavorite: template.is_favorite,
+            useCount: template.use_count
+          })));
+        }
       } catch (error) {
         console.error('Failed to load presets:', error);
+        setSyncError('Failed to connect to server. Using offline mode.');
         // Fallback to localStorage
         const savedCustom = localStorage.getItem(`custom_presets_${mealType}`);
         if (savedCustom) {
@@ -225,7 +282,20 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Manage Presets</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">{mealType} Options</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">{mealType} Options</p>
+                {isOnline ? (
+                  <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    Synced
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                    Offline
+                  </span>
+                )}
+              </div>
             </div>
             <button
               onClick={onClose}
@@ -244,6 +314,13 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
             </div>
           ) : (
             <>
+              {/* Sync Error Message */}
+              {syncError && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-700 rounded-xl p-3">
+                  <p className="text-sm text-amber-800 dark:text-amber-300">{syncError}</p>
+                </div>
+              )}
+
               {/* Add New Preset */}
               <div className="bg-emerald-50 dark:bg-emerald-900/30 rounded-xl p-4 border-2 border-emerald-200 dark:border-emerald-700">
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
