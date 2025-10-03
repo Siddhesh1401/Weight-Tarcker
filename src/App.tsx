@@ -107,7 +107,7 @@ function App() {
     // For weight, water, sleep - show directly
   };
 
-  const handleSaveMeal = async (description: string, hadTea?: boolean, isCheatMeal?: boolean) => {
+  const handleSaveMeal = async (description: string, hadTea?: boolean, isCheatMeal?: boolean, time?: string) => {
     if (!activeLogType || activeLogType === 'weight') return;
 
     const now = new Date();
@@ -119,6 +119,7 @@ function App() {
       hadTea,
       isCheatMeal,
       timestamp: now.toISOString(),
+      time: time || now.toTimeString().slice(0, 5), // Use provided time or current time
     };
 
     // Optimistically update UI
@@ -135,6 +136,7 @@ function App() {
           meal_notes: description,
           tea_biscuit: hadTea,
           cheat_meal: isCheatMeal,
+          time: time || now.toTimeString().slice(0, 5),
         });
         console.log('✅ Meal saved to backend');
       } catch (error) {
@@ -143,13 +145,14 @@ function App() {
     }
   };
 
-  const handleSaveWeight = async (weight: number) => {
+  const handleSaveWeight = async (weight: number, time?: string) => {
     const now = new Date();
     const newWeight: WeightLogType = {
       id: Date.now().toString(),
       date: now.toISOString().split('T')[0],
       weight,
       timestamp: now.toISOString(),
+      time: time || now.toTimeString().slice(0, 5),
     };
 
     // Optimistically update UI
@@ -164,6 +167,7 @@ function App() {
           date: newWeight.date,
           meal_type: 'weight',
           weight: weight,
+          time: time || now.toTimeString().slice(0, 5),
         });
         console.log('✅ Weight saved to backend');
       } catch (error) {
@@ -172,13 +176,14 @@ function App() {
     }
   };
 
-  const handleSaveWater = async (glasses: number) => {
+  const handleSaveWater = async (glasses: number, time?: string) => {
     const now = new Date();
     const newWater: WaterLogType = {
       id: Date.now().toString(),
       date: now.toISOString().split('T')[0],
       glasses,
       timestamp: now.toISOString(),
+      time: time || now.toTimeString().slice(0, 5),
     };
 
     setWaterLogs([...waterLogs, newWater]);
@@ -191,6 +196,7 @@ function App() {
           date: newWater.date,
           meal_type: 'water',
           water_glasses: glasses,
+          time: time || now.toTimeString().slice(0, 5),
         });
         console.log('✅ Water saved to backend');
       } catch (error) {
@@ -199,7 +205,7 @@ function App() {
     }
   };
 
-  const handleSaveSleep = async (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent') => {
+  const handleSaveSleep = async (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent', time?: string) => {
     const now = new Date();
     const newSleep: SleepLogType = {
       id: Date.now().toString(),
@@ -207,6 +213,7 @@ function App() {
       hours,
       quality,
       timestamp: now.toISOString(),
+      time: time || now.toTimeString().slice(0, 5),
     };
 
     setSleepLogs([...sleepLogs, newSleep]);
@@ -220,6 +227,7 @@ function App() {
           meal_type: 'sleep',
           sleep_hours: hours,
           sleep_quality: quality,
+          time: time || now.toTimeString().slice(0, 5),
         });
         console.log('✅ Sleep saved to backend');
       } catch (error) {
@@ -421,8 +429,8 @@ function App() {
       {showCheatMeal && activeLogType && ['breakfast', 'lunch', 'snacks', 'dinner', 'other'].includes(activeLogType) && (
         <CheatMealLog
           mealType={activeLogType}
-          onSave={(description, hadTea) => {
-            handleSaveMeal(description, hadTea, true); // Always mark as cheat meal
+          onSave={(description, hadTea, time) => {
+            handleSaveMeal(description, hadTea, true, time); // Always mark as cheat meal, pass time
             setShowCheatMeal(false);
           }}
           onCancel={() => {

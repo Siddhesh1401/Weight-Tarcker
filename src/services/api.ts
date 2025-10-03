@@ -58,6 +58,7 @@ export const logApi = {
     water_glasses?: number;
     sleep_hours?: number;
     sleep_quality?: string;
+    time?: string; // HH:MM format
   }) {
     return apiCall('/log', {
       method: 'POST',

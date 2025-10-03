@@ -1,20 +1,25 @@
 import { useState } from 'react';
 import { Save, Moon, X } from 'lucide-react';
+import TimePicker from './TimePicker';
 
 interface SleepLogProps {
-  onSave: (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent') => void;
+  onSave: (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent', time?: string) => void;
   onCancel: () => void;
 }
 
 export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
   const [hours, setHours] = useState('8');
   const [quality, setQuality] = useState<'poor' | 'fair' | 'good' | 'excellent'>('good');
+  const [logTime, setLogTime] = useState(() => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // HH:MM format
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const hoursValue = parseFloat(hours);
     if (hoursValue > 0) {
-      onSave(hoursValue, quality);
+      onSave(hoursValue, quality, logTime);
     }
   };
 
@@ -90,6 +95,12 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
               ))}
             </div>
           </div>
+
+          <TimePicker
+            value={logTime}
+            onChange={setLogTime}
+            label="Wake Up Time"
+          />
 
           <div className="flex gap-3 pt-2">
             <button

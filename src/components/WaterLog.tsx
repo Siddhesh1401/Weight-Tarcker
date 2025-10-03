@@ -1,19 +1,24 @@
 import { useState } from 'react';
 import { Save, Droplets, X } from 'lucide-react';
+import TimePicker from './TimePicker';
 
 interface WaterLogProps {
-  onSave: (glasses: number) => void;
+  onSave: (glasses: number, time?: string) => void;
   onCancel: () => void;
   currentGlasses?: number;
 }
 
 export default function WaterLog({ onSave, onCancel, currentGlasses = 0 }: WaterLogProps) {
   const [glasses, setGlasses] = useState(currentGlasses);
+  const [logTime, setLogTime] = useState(() => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // HH:MM format
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (glasses > 0) {
-      onSave(glasses);
+      onSave(glasses, logTime);
     }
   };
 
@@ -85,6 +90,12 @@ export default function WaterLog({ onSave, onCancel, currentGlasses = 0 }: Water
               </button>
             ))}
           </div>
+
+          <TimePicker
+            value={logTime}
+            onChange={setLogTime}
+            label="Time of Entry"
+          />
 
           <div className="flex gap-3 pt-2">
             <button

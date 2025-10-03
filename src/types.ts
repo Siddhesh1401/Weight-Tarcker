@@ -8,6 +8,7 @@ export interface MealEntry {
   hadTea?: boolean;
   isCheatMeal?: boolean;
   timestamp: string;
+  time?: string; // HH:MM format
 }
 
 export interface WeightLog {
@@ -15,6 +16,7 @@ export interface WeightLog {
   date: string;
   weight: number;
   timestamp: string;
+  time?: string; // HH:MM format
 }
 
 export interface WaterLog {
@@ -22,6 +24,7 @@ export interface WaterLog {
   date: string;
   glasses: number;
   timestamp: string;
+  time?: string; // HH:MM format
 }
 
 export interface SleepLog {
@@ -30,6 +33,7 @@ export interface SleepLog {
   hours: number;
   quality: 'poor' | 'fair' | 'good' | 'excellent';
   timestamp: string;
+  time?: string; // HH:MM format
 }
 
 export interface MealTemplate {

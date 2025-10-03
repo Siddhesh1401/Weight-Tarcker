@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Save, Pizza, X } from 'lucide-react';
 import { MealType } from '../types';
+import TimePicker from './TimePicker';
 
 interface CheatMealLogProps {
   mealType: MealType;
-  onSave: (description: string, hadTea?: boolean) => void;
+  onSave: (description: string, hadTea?: boolean, time?: string) => void;
   onCancel: () => void;
 }
 
@@ -18,13 +19,17 @@ const mealConfig = {
 
 export default function CheatMealLog({ mealType, onSave, onCancel }: CheatMealLogProps) {
   const [description, setDescription] = useState('');
+  const [logTime, setLogTime] = useState(() => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // HH:MM format
+  });
 
   const config = mealConfig[mealType as keyof typeof mealConfig];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (description.trim()) {
-      onSave(description, false); // No tea option
+      onSave(description, false, logTime); // Pass time
     }
   };
 
@@ -72,6 +77,12 @@ export default function CheatMealLog({ mealType, onSave, onCancel }: CheatMealLo
               autoFocus
             />
           </div>
+
+          <TimePicker
+            value={logTime}
+            onChange={setLogTime}
+            label="Time of Meal"
+          />
 
           <div className="flex gap-3 pt-2">
             <button

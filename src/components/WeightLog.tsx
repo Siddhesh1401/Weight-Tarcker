@@ -1,19 +1,24 @@
 import { useState } from 'react';
 import { Save, Scale, X } from 'lucide-react';
+import TimePicker from './TimePicker';
 
 interface WeightLogProps {
-  onSave: (weight: number) => void;
+  onSave: (weight: number, time?: string) => void;
   onCancel: () => void;
 }
 
 export default function WeightLog({ onSave, onCancel }: WeightLogProps) {
   const [weight, setWeight] = useState('');
+  const [logTime, setLogTime] = useState(() => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // HH:MM format
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const weightValue = parseFloat(weight);
     if (weightValue > 0) {
-      onSave(weightValue);
+      onSave(weightValue, logTime);
     }
   };
 
@@ -59,6 +64,12 @@ export default function WeightLog({ onSave, onCancel }: WeightLogProps) {
               <span className="text-gray-600 dark:text-gray-400 font-medium text-lg">kg</span>
             </div>
           </div>
+
+          <TimePicker
+            value={logTime}
+            onChange={setLogTime}
+            label="Time of Measurement"
+          />
 
           <div className="flex gap-3 pt-2">
             <button

@@ -3,11 +3,12 @@ import { Save, Utensils, X, Settings } from 'lucide-react';
 import { MealType } from '../types';
 import { mealPresets } from '../data/mealPresets';
 import MealPresetManager from './MealPresetManager';
+import TimePicker from './TimePicker';
 import { templatesApi, settingsApi } from '../services/api';
 
 interface MealLogProps {
   mealType: MealType;
-  onSave: (description: string, hadTea?: boolean, isCheatMeal?: boolean) => void;
+  onSave: (description: string, hadTea?: boolean, isCheatMeal?: boolean, time?: string) => void;
   onCancel: () => void;
   isOnline?: boolean;
 }
@@ -51,6 +52,10 @@ export default function MealLog({ mealType, onSave, onCancel, isOnline = false }
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [showPresetManager, setShowPresetManager] = useState(false);
   const [customPresets, setCustomPresets] = useState<string[]>([]);
+  const [logTime, setLogTime] = useState(() => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // HH:MM format
+  });
 
   const config = mealConfig[mealType as keyof typeof mealConfig];
   const Icon = config.icon;
@@ -140,7 +145,7 @@ export default function MealLog({ mealType, onSave, onCancel, isOnline = false }
     }
     
     if (finalDescription) {
-      onSave(finalDescription, false, false); // Regular meal, not cheat
+      onSave(finalDescription, false, false, logTime); // Pass time to parent
     }
   };
 
@@ -223,6 +228,13 @@ export default function MealLog({ mealType, onSave, onCancel, isOnline = false }
               />
             )}
           </div>
+
+          <TimePicker
+            value={logTime}
+            onChange={setLogTime}
+            label="Time of Meal"
+            className="mt-2"
+          />
 
           <div className="flex gap-3 pt-2">
             <button

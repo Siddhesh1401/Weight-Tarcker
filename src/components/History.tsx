@@ -56,6 +56,20 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
     });
   };
 
+  const formatTime = (time?: string, timestamp?: string) => {
+    if (time) {
+      // Convert HH:MM to 12-hour format
+      const [hours, minutes] = time.split(':').map(Number);
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    }
+    if (timestamp) {
+      return new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+    return '';
+  };
+
   const handleExport = (format: 'csv' | 'json' | 'pdf') => {
     if (exportType === 'all') {
       exportAllData(format);
@@ -345,7 +359,14 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Scale size={22} className="text-emerald-600 dark:text-emerald-400" />
-                        <span className="font-semibold text-gray-700 dark:text-gray-200">Weight</span>
+                        <div>
+                          <span className="font-semibold text-gray-700 dark:text-gray-200">Weight</span>
+                          {selectedLogs.weight.time && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {formatTime(selectedLogs.weight.time, selectedLogs.weight.timestamp)}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{selectedLogs.weight!.weight} kg</span>
@@ -370,7 +391,14 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Droplets size={22} className="text-blue-600 dark:text-blue-400" />
-                        <span className="font-semibold text-gray-700 dark:text-gray-200">Water</span>
+                        <div>
+                          <span className="font-semibold text-gray-700 dark:text-gray-200">Water</span>
+                          {water.time && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {formatTime(water.time, water.timestamp)}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{water.glasses} glasses</span>
@@ -395,7 +423,14 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Moon size={22} className="text-indigo-600 dark:text-indigo-400" />
-                        <span className="font-semibold text-gray-700 dark:text-gray-200">Sleep</span>
+                        <div>
+                          <span className="font-semibold text-gray-700 dark:text-gray-200">Sleep</span>
+                          {selectedLogs.sleep.time && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {formatTime(selectedLogs.sleep.time, selectedLogs.sleep.timestamp)}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
@@ -445,7 +480,7 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                             </div>
                             <div className="flex flex-col items-end gap-2">
                               <span className="text-sm text-gray-500 dark:text-gray-400">
-                                {new Date(meal.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                                {formatTime(meal.time, meal.timestamp)}
                               </span>
                               <button
                                 onClick={() => setDeleteItem({ 

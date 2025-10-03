@@ -47,6 +47,13 @@ const logSchema = new mongoose.Schema({
     enum: ['poor', 'fair', 'good', 'excellent', null],
     default: null
   },
+  time: {
+    type: String,
+    default: () => {
+      const now = new Date();
+      return now.toTimeString().slice(0, 5); // HH:MM format
+    }
+  },
   timestamp: {
     type: Date,
     default: Date.now
