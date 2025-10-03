@@ -38,6 +38,25 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 8
   },
+  // Hidden default presets (which built-in presets user has hidden)
+  hidden_presets: {
+    breakfast: {
+      type: [String],
+      default: []
+    },
+    lunch: {
+      type: [String],
+      default: []
+    },
+    snacks: {
+      type: [String],
+      default: []
+    },
+    dinner: {
+      type: [String],
+      default: []
+    }
+  },
   created_at: {
     type: Date,
     default: Date.now

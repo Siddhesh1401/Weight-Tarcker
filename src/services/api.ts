@@ -156,6 +156,12 @@ export const settingsApi = {
     current_weight?: number;
     water_goal?: number;
     sleep_goal?: number;
+    hidden_presets?: {
+      breakfast?: string[];
+      lunch?: string[];
+      snacks?: string[];
+      dinner?: string[];
+    };
   }) {
     return apiCall('/settings', {
       method: 'POST',

@@ -3,7 +3,7 @@ import { Save, Utensils, X, Settings } from 'lucide-react';
 import { MealType } from '../types';
 import { mealPresets } from '../data/mealPresets';
 import MealPresetManager from './MealPresetManager';
-import { templatesApi } from '../services/api';
+import { templatesApi, settingsApi } from '../services/api';
 
 interface MealLogProps {
   mealType: MealType;
@@ -79,9 +79,22 @@ export default function MealLog({ mealType, onSave, onCancel, isOnline = false }
         const templates = await templatesApi.getTemplates(mealType);
         const templateNames = templates.map((template: any) => template.name);
         
-        // Also load hidden defaults from localStorage (this stays local)
-        const savedHidden = localStorage.getItem(`hidden_defaults_${mealType}`);
-        const hiddenDefaults: string[] = savedHidden ? JSON.parse(savedHidden) : [];
+        // Load hidden defaults from backend
+        let hiddenDefaults: string[] = [];
+        try {
+          const userSettings: any = await settingsApi.getSettings();
+          if (userSettings?.hidden_presets?.[mealType]) {
+            hiddenDefaults = userSettings.hidden_presets[mealType];
+          }
+        } catch (err) {
+          console.error('Failed to load hidden presets from backend:', err);
+          // Fallback to localStorage
+          const savedHidden = localStorage.getItem(`hidden_defaults_${mealType}`);
+          if (savedHidden) {
+            hiddenDefaults = JSON.parse(savedHidden);
+          }
+        }
+        
         const visibleDefaults = defaultPresets.filter(p => !hiddenDefaults.includes(p));
         
         // Combine visible defaults with backend templates

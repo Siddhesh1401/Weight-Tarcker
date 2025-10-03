@@ -6,7 +6,7 @@ const router = express.Router();
 // POST /api/settings - Save/update goal weight + user settings
 router.post('/settings', async (req, res) => {
   try {
-    const { user_id, name, email, goal_weight, height, current_weight, water_goal, sleep_goal } = req.body;
+    const { user_id, name, email, goal_weight, height, current_weight, water_goal, sleep_goal, hidden_presets } = req.body;
 
     if (!user_id) {
       return res.status(400).json({
@@ -27,6 +27,7 @@ router.post('/settings', async (req, res) => {
       if (current_weight) user.current_weight = current_weight;
       if (water_goal) user.water_goal = water_goal;
       if (sleep_goal) user.sleep_goal = sleep_goal;
+      if (hidden_presets) user.hidden_presets = hidden_presets;
       
       await user.save();
     } else {
@@ -39,7 +40,13 @@ router.post('/settings', async (req, res) => {
         height: height || null,
         current_weight: current_weight || null,
         water_goal: water_goal || 8,
-        sleep_goal: sleep_goal || 8
+        sleep_goal: sleep_goal || 8,
+        hidden_presets: hidden_presets || {
+          breakfast: [],
+          lunch: [],
+          snacks: [],
+          dinner: []
+        }
       });
       
       await user.save();

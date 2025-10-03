@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Save, X, Loader2 } from 'lucide-react';
 import { mealPresets } from '../data/mealPresets';
-import { templatesApi } from '../services/api';
+import { templatesApi, settingsApi } from '../services/api';
 import { MealTemplate } from '../types';
 
 interface MealPresetManagerProps {
@@ -132,11 +132,50 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
 
     loadPresets();
 
-    // Load hidden defaults from localStorage (this stays local)
-    const savedHidden = localStorage.getItem(`hidden_defaults_${mealType}`);
-    if (savedHidden) {
-      setHiddenDefaults(JSON.parse(savedHidden));
-    }
+    // Load hidden defaults from backend or localStorage
+    const loadHiddenPresets = async () => {
+      if (!isOnline) {
+        // Load from localStorage if offline
+        const savedHidden = localStorage.getItem(`hidden_defaults_${mealType}`);
+        if (savedHidden) {
+          setHiddenDefaults(JSON.parse(savedHidden));
+        }
+        return;
+      }
+
+      try {
+        // Load from backend
+        const userSettings: any = await settingsApi.getSettings();
+        if (userSettings?.hidden_presets?.[mealType]) {
+          setHiddenDefaults(userSettings.hidden_presets[mealType]);
+          // Also save to localStorage as backup
+          localStorage.setItem(`hidden_defaults_${mealType}`, JSON.stringify(userSettings.hidden_presets[mealType]));
+        } else {
+          // Migrate from localStorage if backend doesn't have it yet
+          const savedHidden = localStorage.getItem(`hidden_defaults_${mealType}`);
+          if (savedHidden) {
+            const hiddenList = JSON.parse(savedHidden);
+            setHiddenDefaults(hiddenList);
+            // Save to backend
+            const currentSettings: any = await settingsApi.getSettings();
+            const updatedHiddenPresets = {
+              ...currentSettings.hidden_presets,
+              [mealType]: hiddenList
+            };
+            await settingsApi.saveSettings({ hidden_presets: updatedHiddenPresets });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load hidden presets:', error);
+        // Fallback to localStorage
+        const savedHidden = localStorage.getItem(`hidden_defaults_${mealType}`);
+        if (savedHidden) {
+          setHiddenDefaults(JSON.parse(savedHidden));
+        }
+      }
+    };
+
+    loadHiddenPresets();
   }, [mealType, isOnline]);
 
   const handleAdd = async () => {
@@ -267,10 +306,26 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
     setEditValue('');
   };
 
-  const handleHideDefault = (preset: string) => {
+  const handleHideDefault = async (preset: string) => {
     const updated = [...hiddenDefaults, preset];
-    localStorage.setItem(`hidden_defaults_${mealType}`, JSON.stringify(updated));
     setHiddenDefaults(updated);
+    
+    // Save to localStorage as backup
+    localStorage.setItem(`hidden_defaults_${mealType}`, JSON.stringify(updated));
+    
+    // Save to backend if online
+    if (isOnline) {
+      try {
+        const currentSettings: any = await settingsApi.getSettings();
+        const updatedHiddenPresets = {
+          ...currentSettings.hidden_presets,
+          [mealType]: updated
+        };
+        await settingsApi.saveSettings({ hidden_presets: updatedHiddenPresets });
+      } catch (error) {
+        console.error('Failed to sync hidden presets to backend:', error);
+      }
+    }
   };
 
   const visibleDefaults = defaultPresets.filter(p => !hiddenDefaults.includes(p));
