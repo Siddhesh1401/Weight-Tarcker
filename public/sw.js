@@ -1,6 +1,7 @@
 // Service Worker for Weight Tracker PWA
-const CACHE_NAME = 'weight-tracker-v1';
-const STATIC_CACHE = 'weight-tracker-static-v1';
+const CACHE_VERSION = 'v2'; // Increment this when you want to force cache refresh
+const CACHE_NAME = `weight-tracker-${CACHE_VERSION}`;
+const STATIC_CACHE = `weight-tracker-static-${CACHE_VERSION}`;
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
@@ -39,18 +40,52 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - Network first for HTML, cache first for assets
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        return response || fetch(event.request);
-      })
-      .catch(() => {
-        // Return offline page if available
-        return caches.match('/index.html');
-      })
-  );
+  const { request } = event;
+  const url = new URL(request.url);
+  
+  // For HTML files and API calls, always use network first
+  if (request.method === 'GET' && 
+      (request.headers.get('accept')?.includes('text/html') || 
+       url.pathname.startsWith('/api/'))) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // Clone and cache the response
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone);
+          });
+          return response;
+        })
+        .catch(() => {
+          // Fallback to cache if network fails
+          return caches.match(request).then((response) => {
+            return response || caches.match('/index.html');
+          });
+        })
+    );
+  } else {
+    // For other assets (JS, CSS, images), use cache first
+    event.respondWith(
+      caches.match(request)
+        .then((response) => {
+          return response || fetch(request).then((fetchResponse) => {
+            // Cache new assets
+            const responseClone = fetchResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            });
+            return fetchResponse;
+          });
+        })
+        .catch(() => {
+          // Return offline page if available
+          return caches.match('/index.html');
+        })
+    );
+  }
 });
 
 // Push notification event
