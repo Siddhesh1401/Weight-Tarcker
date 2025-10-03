@@ -15,6 +15,7 @@ import DarkModeToggle from './components/DarkModeToggle';
 import { MealEntry, WeightLog as WeightLogType, WaterLog as WaterLogType, SleepLog as SleepLogType, UserSettings, MealType } from './types';
 import { mockMeals, mockWeights, defaultSettings } from './data/mockData';
 import { logApi, settingsApi } from './services/api';
+import notificationService from './services/notifications';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -30,6 +31,18 @@ function App() {
   const [isOnline, setIsOnline] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Auto-start notifications on app load
+  useEffect(() => {
+    // Give the app time to fully initialize
+    const timer = setTimeout(() => {
+      notificationService.startAll().catch(err => {
+        console.log('Notification auto-start skipped:', err);
+      });
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Load data from backend on mount
   useEffect(() => {

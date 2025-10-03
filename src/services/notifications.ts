@@ -106,8 +106,11 @@ class NotificationService {
 
   // Show a notification immediately
   showNotification(title: string, options?: NotificationOptions) {
+    console.log(`📢 Attempting to show notification: ${title}`);
+    
     if (!this.isSupported()) {
-      console.warn('Notifications not supported or not permitted');
+      console.warn('❌ Notifications not supported or not permitted');
+      console.warn('Permission status:', Notification?.permission);
       return;
     }
 
@@ -119,11 +122,14 @@ class NotificationService {
       ...options,
     };
 
+    console.log('✅ Showing notification with options:', defaultOptions);
     new Notification(title, defaultOptions as NotificationOptions);
   }
 
   // Schedule a notification at a specific time
   scheduleNotification(tag: string, time: string, title: string, body: string) {
+    console.log(`🔔 Scheduling ${tag} for ${time}`);
+    
     const now = new Date();
     const [hours, minutes] = time.split(':').map(Number);
     
@@ -136,6 +142,7 @@ class NotificationService {
     }
 
     const delay = scheduledTime.getTime() - now.getTime();
+    console.log(`⏰ ${tag} delay: ${delay}ms (${(delay/1000/60).toFixed(1)} minutes) - will fire at ${scheduledTime.toLocaleString()}`);
 
     // Clear existing timer if any
     const existingTimer = this.timers.get(tag);
@@ -145,6 +152,7 @@ class NotificationService {
 
     // Schedule new timer
     const timer = window.setTimeout(() => {
+      console.log(`🔔 Firing scheduled notification: ${tag}`);
       this.showNotification(title, {
         body,
         tag,
@@ -156,7 +164,7 @@ class NotificationService {
     }, delay);
 
     this.timers.set(tag, timer);
-    console.log(`Scheduled ${tag} for ${scheduledTime.toLocaleString()}`);
+    console.log(`✅ ${tag} scheduled successfully`);
   }
 
   // Schedule recurring notification
@@ -182,22 +190,27 @@ class NotificationService {
 
   // Start all notifications based on settings
   async startAll() {
+    console.log('🚀 Starting notification service...');
+    console.log('Settings:', this.settings);
+    
     if (!this.settings.enabled) {
-      console.log('Notifications are disabled');
+      console.log('⏸️ Notifications are disabled in settings');
       return;
     }
 
     const hasPermission = await this.requestPermission();
     if (!hasPermission) {
-      console.log('Notification permission not granted');
+      console.log('❌ Notification permission not granted');
       return;
     }
+    console.log('✅ Permission granted');
 
     // Register service worker
     await this.registerServiceWorker();
 
     // Clear all existing timers
     this.clearAll();
+    console.log('🧹 Cleared old notification timers');
 
     // Schedule meal reminders
     this.scheduleNotification(
@@ -261,7 +274,8 @@ class NotificationService {
       );
     }
 
-    console.log('All notifications scheduled successfully');
+    console.log('✨ All notifications scheduled successfully!');
+    console.log(`📊 Active timers: ${this.timers.size}`);
   }
 
   // Stop all notifications

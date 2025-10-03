@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BellRing, BellOff } from 'lucide-react';
 import notificationService, { NotificationSettings as NotifSettings } from '../services/notifications';
 
@@ -47,6 +47,31 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
     updateSettings(presets[preset]);
   };
 
+  // Auto-restart notifications when settings change
+  useEffect(() => {
+    if (notifSettings.enabled) {
+      // Small delay to ensure settings are saved
+      const timer = setTimeout(() => {
+        notificationService.startAll();
+        console.log('🔄 Notifications restarted with new settings');
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [
+    notifSettings.enabled,
+    notifSettings.breakfastTime,
+    notifSettings.lunchTime,
+    notifSettings.dinnerTime,
+    notifSettings.waterReminder,
+    notifSettings.waterInterval,
+    notifSettings.weightReminder,
+    notifSettings.weightTime,
+    notifSettings.sleepReminder,
+    notifSettings.sleepTime,
+    notifSettings.motivationalQuotes,
+    notifSettings.quoteTime,
+  ]);
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-600">
       {/* Header */}
@@ -66,11 +91,16 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
                 const hasPermission = await notificationService.requestPermission();
                 if (hasPermission) {
                   updateSettings({ enabled: true });
+                  // Start scheduling all notifications
+                  await notificationService.startAll();
+                  console.log('✅ Notifications enabled and started!');
                 } else {
                   alert('Please enable notifications in your browser settings');
                 }
               } else {
                 updateSettings({ enabled: false });
+                notificationService.stopAll();
+                console.log('🔕 Notifications disabled');
               }
             }}
             className="sr-only peer"
@@ -84,11 +114,33 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
           {/* Test Notification Button */}
           <button
             type="button"
-            onClick={() => notificationService.testNotification()}
+            onClick={async () => {
+              console.log('🧪 Testing notification system...');
+              console.log('📱 Permission:', Notification.permission);
+              console.log('⚙️ Settings:', notificationService.getSettings());
+              console.log('🔔 Service Worker:', await navigator.serviceWorker.getRegistration());
+              
+              // Test immediate notification
+              notificationService.testNotification();
+              
+              // Test scheduled notification in 5 seconds
+              console.log('⏰ Scheduling test notification for 5 seconds from now...');
+              setTimeout(() => {
+                if (Notification.permission === 'granted') {
+                  new Notification('⏰ 5-Second Test', {
+                    body: 'This notification fired 5 seconds after test button click!',
+                    icon: '/favicon.svg',
+                    badge: '/favicon.svg',
+                    tag: 'test-5s',
+                  });
+                  console.log('✅ 5-second test notification sent');
+                }
+              }, 5000);
+            }}
             className="w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 font-medium"
           >
             <BellRing size={18} />
-            Test Notification
+            Test Notification (Check Console)
           </button>
 
           {/* Quick Presets */}
