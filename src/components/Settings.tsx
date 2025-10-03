@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import { Settings as SettingsIcon, Save, Target, Clock, Bell, Moon, Sun, BookOpen, Download, Trash2, AlertTriangle, Database } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Settings as SettingsIcon, Save, Target, Clock, Moon, Sun, BookOpen, Download, Trash2, AlertTriangle, Database, Bell } from 'lucide-react';
 import { UserSettings } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import ExportButton from './ExportButton';
 import DietPlan from './DietPlan';
+import NotificationSettings from './NotificationSettings';
+import notificationService, { NotificationSettings as NotifSettings } from '../services/notifications';
 
 interface SettingsProps {
   settings: UserSettings;
@@ -12,14 +14,22 @@ interface SettingsProps {
   onDeleteAllData?: () => void;
 }
 
-type SettingsTab = 'main' | 'diet' | 'data' | 'export';
+type SettingsTab = 'main' | 'notifications' | 'diet' | 'data' | 'export';
 
 export default function Settings({ settings, onSave, onCancel, onDeleteAllData }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('main');
   const [formData, setFormData] = useState(settings);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [notifSettings, setNotifSettings] = useState<NotifSettings>(notificationService.getSettings());
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    // Initialize notifications if enabled
+    if (notifSettings.enabled) {
+      notificationService.startAll();
+    }
+  }, [notifSettings.enabled]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +46,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
 
   const tabs = [
     { id: 'main' as SettingsTab, label: 'Settings', icon: SettingsIcon },
+    { id: 'notifications' as SettingsTab, label: 'Notifications', icon: Bell },
     { id: 'diet' as SettingsTab, label: 'Diet Plan', icon: BookOpen },
     { id: 'data' as SettingsTab, label: 'Data', icon: Database },
     { id: 'export' as SettingsTab, label: 'Export', icon: Download },
@@ -55,18 +66,18 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
       </div>
 
       {/* Tab Navigation */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-600">
-        <div className="grid grid-cols-2 gap-2">
-          {tabs.map((tab, index) => {
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-200 dark:border-gray-600">
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 border-2 flex-1 min-w-[140px] ${
                   activeTab === tab.id
-                    ? 'bg-emerald-500 text-white shadow-md border-emerald-500'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg border-emerald-400 transform scale-[1.02]'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-gray-600 hover:border-emerald-300 dark:hover:border-emerald-600 border-gray-300 dark:border-gray-600 hover:shadow-md'
                 }`}
               >
                 <Icon size={18} />
@@ -154,30 +165,6 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
               </div>
             </div>
 
-            {/* Notifications */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <Bell className="text-emerald-500" size={20} />
-                <h3 className="font-semibold text-gray-800 dark:text-gray-200">Notifications</h3>
-              </div>
-
-              <label className="flex items-center justify-between cursor-pointer">
-                <div>
-                  <p className="font-medium text-gray-800 dark:text-gray-200">Enable Reminders</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Get notified to log your meals</p>
-                </div>
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={formData.notificationsEnabled}
-                    onChange={(e) => setFormData({ ...formData, notificationsEnabled: e.target.checked })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-14 h-8 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div>
-                </div>
-              </label>
-            </div>
-
             {/* Theme Toggle */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
@@ -219,6 +206,20 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
         )}
 
         {activeTab === 'diet' && <DietPlan />}
+
+        {activeTab === 'notifications' && (
+          <div className="space-y-6">
+            <NotificationSettings 
+              settings={notifSettings}
+              onUpdate={(newSettings) => {
+                setNotifSettings(newSettings);
+                if (newSettings.enabled) {
+                  notificationService.startAll();
+                }
+              }}
+            />
+          </div>
+        )}
 
         {activeTab === 'data' && (
           <div className="space-y-6">
