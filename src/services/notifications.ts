@@ -105,7 +105,7 @@ class NotificationService {
   }
 
   // Show a notification immediately
-  showNotification(title: string, options?: NotificationOptions) {
+  async showNotification(title: string, options?: NotificationOptions) {
     console.log(`📢 Attempting to show notification: ${title}`);
     
     if (!this.isSupported()) {
@@ -123,7 +123,22 @@ class NotificationService {
     };
 
     console.log('✅ Showing notification with options:', defaultOptions);
-    new Notification(title, defaultOptions as NotificationOptions);
+    
+    // Use Service Worker notification for PWAs (better on Android)
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(title, defaultOptions as NotificationOptions);
+        console.log('✅ Service Worker notification shown');
+      } catch (error) {
+        console.error('❌ Service Worker notification failed, trying fallback:', error);
+        // Fallback to regular notification
+        new Notification(title, defaultOptions as NotificationOptions);
+      }
+    } else {
+      // Fallback for browsers without service worker
+      new Notification(title, defaultOptions as NotificationOptions);
+    }
   }
 
   // Schedule a notification at a specific time
@@ -348,8 +363,8 @@ class NotificationService {
   }
 
   // Test notification (for debugging)
-  testNotification() {
-    this.showNotification('🎉 Test Notification', {
+  async testNotification() {
+    await this.showNotification('🎉 Test Notification', {
       body: 'Your notifications are working perfectly!',
       tag: 'test',
       requireInteraction: true,

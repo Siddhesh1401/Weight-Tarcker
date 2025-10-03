@@ -121,19 +121,24 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
               console.log('🔔 Service Worker:', await navigator.serviceWorker.getRegistration());
               
               // Test immediate notification
-              notificationService.testNotification();
+              await notificationService.testNotification();
               
-              // Test scheduled notification in 5 seconds
+              // Test scheduled notification in 5 seconds using Service Worker
               console.log('⏰ Scheduling test notification for 5 seconds from now...');
-              setTimeout(() => {
+              setTimeout(async () => {
                 if (Notification.permission === 'granted') {
-                  new Notification('⏰ 5-Second Test', {
-                    body: 'This notification fired 5 seconds after test button click!',
-                    icon: '/favicon.svg',
-                    badge: '/favicon.svg',
-                    tag: 'test-5s',
-                  });
-                  console.log('✅ 5-second test notification sent');
+                  try {
+                    const registration = await navigator.serviceWorker.ready;
+                    await registration.showNotification('⏰ 5-Second Test', {
+                      body: 'This notification fired 5 seconds after test button click!',
+                      icon: '/favicon.svg',
+                      badge: '/favicon.svg',
+                      tag: 'test-5s',
+                    });
+                    console.log('✅ 5-second test notification sent via Service Worker');
+                  } catch (error) {
+                    console.error('❌ Error showing 5-second test:', error);
+                  }
                 }
               }, 5000);
             }}
