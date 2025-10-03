@@ -3,11 +3,13 @@ import { Save, Utensils, X, Settings } from 'lucide-react';
 import { MealType } from '../types';
 import { mealPresets } from '../data/mealPresets';
 import MealPresetManager from './MealPresetManager';
+import { templatesApi } from '../services/api';
 
 interface MealLogProps {
   mealType: MealType;
   onSave: (description: string, hadTea?: boolean, isCheatMeal?: boolean) => void;
   onCancel: () => void;
+  isOnline?: boolean;
 }
 
 const mealConfig = {
@@ -43,7 +45,7 @@ const mealConfig = {
   },
 };
 
-export default function MealLog({ mealType, onSave, onCancel }: MealLogProps) {
+export default function MealLog({ mealType, onSave, onCancel, isOnline = false }: MealLogProps) {
   const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
   const [customMeal, setCustomMeal] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
@@ -54,19 +56,50 @@ export default function MealLog({ mealType, onSave, onCancel }: MealLogProps) {
   const Icon = config.icon;
   const defaultPresets = mealPresets[mealType as keyof typeof mealPresets] || [];
   
-  // Load custom presets and hidden defaults from localStorage
+  // Load custom presets and hidden defaults
   useEffect(() => {
-    const savedCustom = localStorage.getItem(`custom_presets_${mealType}`);
-    const savedHidden = localStorage.getItem(`hidden_defaults_${mealType}`);
-    const hiddenDefaults: string[] = savedHidden ? JSON.parse(savedHidden) : [];
-    
-    // Filter out hidden defaults
-    const visibleDefaults = defaultPresets.filter(p => !hiddenDefaults.includes(p));
-    const customList = savedCustom ? JSON.parse(savedCustom) : [];
-    
-    // Combine visible defaults with custom presets
-    setCustomPresets([...visibleDefaults, ...customList]);
-  }, [mealType, showPresetManager, defaultPresets]); // Reload when manager closes
+    const loadPresets = async () => {
+      if (!isOnline) {
+        // Load from localStorage if offline
+        const savedCustom = localStorage.getItem(`custom_presets_${mealType}`);
+        const savedHidden = localStorage.getItem(`hidden_defaults_${mealType}`);
+        const hiddenDefaults: string[] = savedHidden ? JSON.parse(savedHidden) : [];
+        
+        // Filter out hidden defaults
+        const visibleDefaults = defaultPresets.filter(p => !hiddenDefaults.includes(p));
+        const customList = savedCustom ? JSON.parse(savedCustom) : [];
+        
+        // Combine visible defaults with custom presets
+        setCustomPresets([...visibleDefaults, ...customList]);
+        return;
+      }
+
+      try {
+        // Load from backend
+        const templates = await templatesApi.getTemplates(mealType);
+        const templateNames = templates.map((template: any) => template.name);
+        
+        // Also load hidden defaults from localStorage (this stays local)
+        const savedHidden = localStorage.getItem(`hidden_defaults_${mealType}`);
+        const hiddenDefaults: string[] = savedHidden ? JSON.parse(savedHidden) : [];
+        const visibleDefaults = defaultPresets.filter(p => !hiddenDefaults.includes(p));
+        
+        // Combine visible defaults with backend templates
+        setCustomPresets([...visibleDefaults, ...templateNames]);
+      } catch (error) {
+        console.error('Failed to load presets:', error);
+        // Fallback to localStorage
+        const savedCustom = localStorage.getItem(`custom_presets_${mealType}`);
+        const savedHidden = localStorage.getItem(`hidden_defaults_${mealType}`);
+        const hiddenDefaults: string[] = savedHidden ? JSON.parse(savedHidden) : [];
+        const visibleDefaults = defaultPresets.filter(p => !hiddenDefaults.includes(p));
+        const customList = savedCustom ? JSON.parse(savedCustom) : [];
+        setCustomPresets([...visibleDefaults, ...customList]);
+      }
+    };
+
+    loadPresets();
+  }, [mealType, showPresetManager, defaultPresets, isOnline]); // Reload when manager closes or online status changes
   
   const allPresets = customPresets;
 
@@ -201,6 +234,7 @@ export default function MealLog({ mealType, onSave, onCancel }: MealLogProps) {
         <MealPresetManager
           mealType={mealType as 'breakfast' | 'lunch' | 'snacks' | 'dinner'}
           onClose={() => setShowPresetManager(false)}
+          isOnline={isOnline}
         />
       )}
     </div>

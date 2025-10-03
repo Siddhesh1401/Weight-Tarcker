@@ -414,6 +414,7 @@ function App() {
             setShowRegularMeal(false);
             setActiveLogType(null);
           }}
+          isOnline={isOnline}
         />
       )}
 

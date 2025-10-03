@@ -74,20 +74,27 @@ router.post('/templates', async (req, res) => {
   }
 });
 
-// PUT /api/templates/:id - Update template (increment use count)
+// PUT /api/templates/:id - Update template details
 router.put('/templates/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { is_favorite } = req.body;
+    const { user_id, name, description, is_favorite } = req.body;
 
-    const update = { $inc: { use_count: 1 } };
-    if (is_favorite !== undefined) {
-      update.is_favorite = is_favorite;
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'user_id is required'
+      });
     }
 
-    const template = await MealTemplate.findByIdAndUpdate(
-      id,
-      update,
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (is_favorite !== undefined) updateData.is_favorite = is_favorite;
+
+    const template = await MealTemplate.findOneAndUpdate(
+      { _id: id, user_id },
+      updateData,
       { new: true }
     );
 
@@ -112,12 +119,60 @@ router.put('/templates/:id', async (req, res) => {
   }
 });
 
+// POST /api/templates/:id/use - Increment use count
+router.post('/templates/:id/use', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id } = req.body;
+
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'user_id is required'
+      });
+    }
+
+    const template = await MealTemplate.findOneAndUpdate(
+      { _id: id, user_id },
+      { $inc: { use_count: 1 } },
+      { new: true }
+    );
+
+    if (!template) {
+      return res.status(404).json({
+        success: false,
+        message: 'Template not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: template
+    });
+  } catch (error) {
+    console.error('Error incrementing use count:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to increment use count',
+      error: error.message
+    });
+  }
+});
+
 // DELETE /api/templates/:id - Delete a template
 router.delete('/templates/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const { user_id } = req.query;
 
-    const template = await MealTemplate.findByIdAndDelete(id);
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'user_id is required'
+      });
+    }
+
+    const template = await MealTemplate.findOneAndDelete({ _id: id, user_id });
 
     if (!template) {
       return res.status(404).json({

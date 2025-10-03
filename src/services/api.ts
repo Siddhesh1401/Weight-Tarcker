@@ -167,6 +167,81 @@ export const settingsApi = {
   },
 };
 
+// Templates API
+export const templatesApi = {
+  // Get all templates for a user (optionally filtered by meal_type)
+  async getTemplates(mealType?: string) {
+    const params = new URLSearchParams({
+      user_id: DEFAULT_USER_ID,
+    });
+    if (mealType) {
+      params.append('meal_type', mealType);
+    }
+
+    return apiCall<{
+      _id: string;
+      name: string;
+      meal_type: string;
+      description: string;
+      is_favorite: boolean;
+      use_count: number;
+      created_at: string;
+    }[]>(`/templates?${params.toString()}`);
+  },
+
+  // Create a new template
+  async createTemplate(template: {
+    name: string;
+    meal_type: string;
+    description: string;
+    is_favorite?: boolean;
+  }) {
+    return apiCall('/templates', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: DEFAULT_USER_ID,
+        ...template,
+      }),
+    });
+  },
+
+  // Update a template
+  async updateTemplate(id: string, updates: {
+    name?: string;
+    description?: string;
+    is_favorite?: boolean;
+  }) {
+    return apiCall(`/templates/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        user_id: DEFAULT_USER_ID,
+        ...updates,
+      }),
+    });
+  },
+
+  // Delete a template
+  async deleteTemplate(id: string) {
+    const params = new URLSearchParams({
+      user_id: DEFAULT_USER_ID,
+    });
+
+    return apiCall(`/templates/${id}?${params.toString()}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Increment use count for a template
+  async incrementUseCount(id: string) {
+    return apiCall(`/templates/${id}/use`, {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: DEFAULT_USER_ID,
+      }),
+    });
+  },
+};
+
 // Health check
 export const healthCheck = async (): Promise<boolean> => {
   try {
