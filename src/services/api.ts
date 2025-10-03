@@ -106,6 +106,28 @@ export const logApi = {
       };
     }>(`/progress?${params.toString()}`);
   },
+
+  // Delete a specific log entry
+  async deleteLog(id: string) {
+    const params = new URLSearchParams({
+      user_id: DEFAULT_USER_ID,
+    });
+
+    return apiCall(`/log/${id}?${params.toString()}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Delete all logs for the user
+  async deleteAllLogs() {
+    const params = new URLSearchParams({
+      user_id: DEFAULT_USER_ID,
+    });
+
+    return apiCall(`/logs?${params.toString()}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 // Settings API

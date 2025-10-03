@@ -254,32 +254,72 @@ function App() {
     setCurrentPage(page);
   };
 
-  const handleDeleteMeal = (id: string) => {
-    setMeals(meals.filter(m => m.id !== id));
-    setToastMessage('🗑️ Meal deleted');
+  const handleDeleteMeal = async (id: string) => {
+    try {
+      if (isOnline) {
+        await logApi.deleteLog(id);
+      }
+      setMeals(meals.filter(m => m.id !== id));
+      setToastMessage('🗑️ Meal deleted');
+    } catch (error) {
+      console.error('Failed to delete meal:', error);
+      setToastMessage('❌ Failed to delete meal');
+    }
   };
 
-  const handleDeleteWeight = (id: string) => {
-    setWeights(weights.filter(w => w.id !== id));
-    setToastMessage('🗑️ Weight deleted');
+  const handleDeleteWeight = async (id: string) => {
+    try {
+      if (isOnline) {
+        await logApi.deleteLog(id);
+      }
+      setWeights(weights.filter(w => w.id !== id));
+      setToastMessage('🗑️ Weight deleted');
+    } catch (error) {
+      console.error('Failed to delete weight:', error);
+      setToastMessage('❌ Failed to delete weight');
+    }
   };
 
-  const handleDeleteWater = (id: string) => {
-    setWaterLogs(waterLogs.filter(w => w.id !== id));
-    setToastMessage('🗑️ Water log deleted');
+  const handleDeleteWater = async (id: string) => {
+    try {
+      if (isOnline) {
+        await logApi.deleteLog(id);
+      }
+      setWaterLogs(waterLogs.filter(w => w.id !== id));
+      setToastMessage('🗑️ Water log deleted');
+    } catch (error) {
+      console.error('Failed to delete water log:', error);
+      setToastMessage('❌ Failed to delete water log');
+    }
   };
 
-  const handleDeleteSleep = (id: string) => {
-    setSleepLogs(sleepLogs.filter(s => s.id !== id));
-    setToastMessage('🗑️ Sleep log deleted');
+  const handleDeleteSleep = async (id: string) => {
+    try {
+      if (isOnline) {
+        await logApi.deleteLog(id);
+      }
+      setSleepLogs(sleepLogs.filter(s => s.id !== id));
+      setToastMessage('🗑️ Sleep log deleted');
+    } catch (error) {
+      console.error('Failed to delete sleep log:', error);
+      setToastMessage('❌ Failed to delete sleep log');
+    }
   };
 
-  const handleDeleteAllData = () => {
-    setMeals([]);
-    setWeights([]);
-    setWaterLogs([]);
-    setSleepLogs([]);
-    setToastMessage('🗑️ All data deleted');
+  const handleDeleteAllData = async () => {
+    try {
+      if (isOnline) {
+        await logApi.deleteAllLogs();
+      }
+      setMeals([]);
+      setWeights([]);
+      setWaterLogs([]);
+      setSleepLogs([]);
+      setToastMessage('🗑️ All data deleted');
+    } catch (error) {
+      console.error('Failed to delete all data:', error);
+      setToastMessage('❌ Failed to delete all data');
+    }
   };
 
   if (isLoading) {

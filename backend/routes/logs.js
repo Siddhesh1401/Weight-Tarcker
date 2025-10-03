@@ -218,4 +218,75 @@ router.get('/export', async (req, res) => {
   }
 });
 
+// DELETE /api/log/:id - Delete a specific log entry
+router.delete('/log/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id } = req.query;
+
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'user_id is required'
+      });
+    }
+
+    const deletedLog = await Log.findOneAndDelete({
+      _id: id,
+      user_id: user_id
+    });
+
+    if (!deletedLog) {
+      return res.status(404).json({
+        success: false,
+        message: 'Log entry not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Log entry deleted successfully',
+      data: deletedLog
+    });
+  } catch (error) {
+    console.error('Error deleting log:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete log entry',
+      error: error.message
+    });
+  }
+});
+
+// DELETE /api/logs - Delete all logs for a user
+router.delete('/logs', async (req, res) => {
+  try {
+    const { user_id } = req.query;
+
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'user_id is required'
+      });
+    }
+
+    const result = await Log.deleteMany({ user_id });
+
+    res.json({
+      success: true,
+      message: 'All logs deleted successfully',
+      data: {
+        deletedCount: result.deletedCount
+      }
+    });
+  } catch (error) {
+    console.error('Error deleting all logs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete all logs',
+      error: error.message
+    });
+  }
+});
+
 export default router;
