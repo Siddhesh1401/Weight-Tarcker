@@ -115,7 +115,7 @@ class NotificationService {
     }
 
     const defaultOptions: NotificationOptions & { vibrate?: number[] } = {
-      icon: '/icon-192.png',
+      icon: '/favicon.svg',
       badge: '/favicon.svg',
       vibrate: [200, 100, 200],
       requireInteraction: false,
