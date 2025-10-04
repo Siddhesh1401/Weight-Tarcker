@@ -31,9 +31,9 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-600">
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-t-3xl p-6 border-b border-gray-100 dark:border-gray-600">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md my-8 border border-gray-100 dark:border-gray-600 max-h-[calc(100vh-4rem)] overflow-hidden flex flex-col">
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-t-3xl p-6 border-b border-gray-100 dark:border-gray-600 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-xl">
@@ -53,7 +53,7 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form id="sleep-log-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Hours of Sleep
@@ -101,24 +101,26 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
             onChange={setLogTime}
             label="Wake Up Time"
           />
-
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-3 px-6 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2"
-            >
-              <Save size={20} />
-              Save
-            </button>
-          </div>
         </form>
+
+        {/* Sticky Footer Buttons */}
+        <div className="flex gap-3 p-6 pt-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-600 flex-shrink-0">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-3 px-6 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="sleep-log-form"
+            className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            <Save size={20} />
+            Save
+          </button>
+        </div>
       </div>
     </div>
   );

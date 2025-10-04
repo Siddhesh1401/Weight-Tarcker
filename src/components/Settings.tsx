@@ -89,7 +89,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
       </div>
 
       {/* Tab Content */}
-      <div className="min-h-[400px]">
+      <div className="min-h-[400px] max-h-[calc(100vh-280px)] overflow-y-auto">
         {activeTab === 'main' && (
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Goal Weight */}
