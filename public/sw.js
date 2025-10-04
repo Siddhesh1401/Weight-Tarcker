@@ -45,18 +45,25 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
+  // Skip caching for non-GET requests (POST, PUT, DELETE)
+  if (request.method !== 'GET') {
+    event.respondWith(fetch(request));
+    return;
+  }
+  
   // For HTML files and API calls, always use network first
-  if (request.method === 'GET' && 
-      (request.headers.get('accept')?.includes('text/html') || 
-       url.pathname.startsWith('/api/'))) {
+  if (request.headers.get('accept')?.includes('text/html') || 
+      url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Clone and cache the response
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
+          // Only cache successful GET responses
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
           return response;
         })
         .catch(() => {
@@ -72,11 +79,13 @@ self.addEventListener('fetch', (event) => {
       caches.match(request)
         .then((response) => {
           return response || fetch(request).then((fetchResponse) => {
-            // Cache new assets
-            const responseClone = fetchResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-            });
+            // Cache new assets only if successful
+            if (fetchResponse.ok) {
+              const responseClone = fetchResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, responseClone);
+              });
+            }
             return fetchResponse;
           });
         })
