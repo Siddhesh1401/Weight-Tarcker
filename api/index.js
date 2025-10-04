@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import logsRouter from '../backend/routes/logs.js';
 import settingsRouter from '../backend/routes/settings.js';
 import templatesRouter from '../backend/routes/templates.js';
+import pushRouter from '../backend/routes/push-serverless.js';
 
 const app = express();
 
@@ -53,6 +54,7 @@ connectDB();
 app.use('/api', logsRouter);
 app.use('/api', settingsRouter);
 app.use('/api', templatesRouter);
+app.use('/api/push', pushRouter);
 
 // Health check
 app.get('/api', (req, res) => {
