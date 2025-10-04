@@ -90,14 +90,22 @@ self.addEventListener('fetch', (event) => {
 
 // Push notification event
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push received:', event);
+  console.log('[SW] Push notification received:', event);
   
-  const data = event.data ? event.data.json() : {};
+  let data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data = { title: event.data.text() };
+    }
+  }
+  
   const title = data.title || 'Weight Tracker Reminder';
   const options = {
     body: data.body || 'Don\'t forget to log your progress!',
-    icon: '/icon-192.png',
-    badge: '/favicon.svg',
+    icon: data.icon || '/favicon.svg',
+    badge: data.badge || '/favicon.svg',
     vibrate: [200, 100, 200],
     tag: data.tag || 'reminder',
     requireInteraction: false,

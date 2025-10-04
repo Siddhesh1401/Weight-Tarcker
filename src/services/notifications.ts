@@ -54,9 +54,18 @@ class NotificationService {
   }
 
   // Update settings
-  updateSettings(newSettings: Partial<NotificationSettings>) {
+  async updateSettings(newSettings: Partial<NotificationSettings>) {
     this.settings = { ...this.settings, ...newSettings };
     this.saveSettings();
+    
+    // Update server-side settings
+    try {
+      const { pushNotificationService } = await import('./pushNotifications');
+      await pushNotificationService.updateSettings(this.settings);
+    } catch (error) {
+      console.warn('⚠️ Could not update server settings:', error);
+    }
+    
     this.rescheduleAll();
   }
 
@@ -223,6 +232,17 @@ class NotificationService {
     // Register service worker
     await this.registerServiceWorker();
 
+    // Subscribe to server-side push for background notifications
+    try {
+      const { pushNotificationService } = await import('./pushNotifications');
+      const subscribed = await pushNotificationService.subscribe(this.settings);
+      if (subscribed) {
+        console.log('✅ Subscribed to server-side push notifications');
+      }
+    } catch (error) {
+      console.warn('⚠️ Server-side push not available:', error);
+    }
+
     // Clear all existing timers
     this.clearAll();
     console.log('🧹 Cleared old notification timers');
@@ -294,8 +314,17 @@ class NotificationService {
   }
 
   // Stop all notifications
-  stopAll() {
+  async stopAll() {
     this.clearAll();
+    
+    // Unsubscribe from server-side push
+    try {
+      const { pushNotificationService } = await import('./pushNotifications');
+      await pushNotificationService.unsubscribe();
+    } catch (error) {
+      console.warn('⚠️ Could not unsubscribe from server:', error);
+    }
+    
     console.log('All notifications stopped');
   }
 

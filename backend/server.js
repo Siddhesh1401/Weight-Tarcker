@@ -5,6 +5,7 @@ import connectDB from './config/db.js';
 import logsRouter from './routes/logs.js';
 import settingsRouter from './routes/settings.js';
 import templatesRouter from './routes/templates.js';
+import pushRouter from './routes/push.js';
 
 // Load environment variables
 dotenv.config();
@@ -34,6 +35,7 @@ connectDB();
 app.use('/api', logsRouter);
 app.use('/api', settingsRouter);
 app.use('/api', templatesRouter);
+app.use('/api/push', pushRouter);
 
 // Health check endpoint
 app.get('/', (req, res) => {

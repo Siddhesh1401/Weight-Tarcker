@@ -148,6 +148,29 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
             Test Notification (Check Console)
           </button>
 
+          {/* Server Push Test Button */}
+          <button
+            type="button"
+            onClick={async () => {
+              console.log('🚀 Testing server-side push notification...');
+              try {
+                const { pushNotificationService } = await import('../services/pushNotifications');
+                const sent = await pushNotificationService.sendTestNotification();
+                if (sent) {
+                  console.log('✅ Server push test sent! Should arrive in 1-2 seconds.');
+                } else {
+                  console.error('❌ Server push test failed - check backend is running');
+                }
+              } catch (error) {
+                console.error('❌ Server push error:', error);
+              }
+            }}
+            className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 font-medium"
+          >
+            <BellRing size={18} />
+            Test Server Push (Background)
+          </button>
+
           {/* Quick Presets */}
           <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-700 dark:to-gray-700 p-4 rounded-xl border border-emerald-200 dark:border-gray-600">
             <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">

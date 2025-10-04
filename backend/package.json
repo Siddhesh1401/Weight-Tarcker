@@ -10,13 +10,19 @@
     "seed": "node scripts/seed.js",
     "test-api": "node test-templates.js"
   },
-  "keywords": ["weight-tracker", "express", "mongodb"],
+  "keywords": [
+    "weight-tracker",
+    "express",
+    "mongodb"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "mongoose": "^8.0.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "node-cron": "^4.2.1",
+    "web-push": "^3.6.7"
   }
 }
