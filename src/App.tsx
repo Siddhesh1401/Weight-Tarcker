@@ -120,19 +120,25 @@ function App() {
     // For weight, water, sleep - show directly
   };
 
-  const handleSaveMeal = async (description: string, hadTea?: boolean, isCheatMeal?: boolean, time?: string) => {
+  const handleSaveMeal = async (description: string, hadTea?: boolean, isCheatMeal?: boolean, time?: string, date?: string) => {
     if (!activeLogType || activeLogType === 'weight') return;
 
     const now = new Date();
+    const selectedDate = date || now.toISOString().split('T')[0];
+    const selectedTime = time || now.toTimeString().slice(0, 5);
+    
+    // Create timestamp from selected date and time
+    const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
+
     const newMeal: MealEntry = {
       id: Date.now().toString(),
-      date: now.toISOString().split('T')[0],
+      date: selectedDate,
       mealType: activeLogType,
       description,
       hadTea,
       isCheatMeal,
-      timestamp: now.toISOString(),
-      time: time || now.toTimeString().slice(0, 5), // Use provided time or current time
+      timestamp,
+      time: selectedTime,
     };
 
     // Optimistically update UI
@@ -158,14 +164,20 @@ function App() {
     }
   };
 
-  const handleSaveWeight = async (weight: number, time?: string) => {
+  const handleSaveWeight = async (weight: number, time?: string, date?: string) => {
     const now = new Date();
+    const selectedDate = date || now.toISOString().split('T')[0];
+    const selectedTime = time || now.toTimeString().slice(0, 5);
+    
+    // Create timestamp from selected date and time
+    const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
+
     const newWeight: WeightLogType = {
       id: Date.now().toString(),
-      date: now.toISOString().split('T')[0],
+      date: selectedDate,
       weight,
-      timestamp: now.toISOString(),
-      time: time || now.toTimeString().slice(0, 5),
+      timestamp,
+      time: selectedTime,
     };
 
     // Optimistically update UI
@@ -189,14 +201,20 @@ function App() {
     }
   };
 
-  const handleSaveWater = async (glasses: number, time?: string) => {
+  const handleSaveWater = async (glasses: number, time?: string, date?: string) => {
     const now = new Date();
+    const selectedDate = date || now.toISOString().split('T')[0];
+    const selectedTime = time || now.toTimeString().slice(0, 5);
+    
+    // Create timestamp from selected date and time
+    const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
+
     const newWater: WaterLogType = {
       id: Date.now().toString(),
-      date: now.toISOString().split('T')[0],
+      date: selectedDate,
       glasses,
-      timestamp: now.toISOString(),
-      time: time || now.toTimeString().slice(0, 5),
+      timestamp,
+      time: selectedTime,
     };
 
     setWaterLogs([...waterLogs, newWater]);
@@ -218,15 +236,21 @@ function App() {
     }
   };
 
-  const handleSaveSleep = async (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent', time?: string) => {
+  const handleSaveSleep = async (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent', time?: string, date?: string) => {
     const now = new Date();
+    const selectedDate = date || now.toISOString().split('T')[0];
+    const selectedTime = time || now.toTimeString().slice(0, 5);
+    
+    // Create timestamp from selected date and time
+    const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
+
     const newSleep: SleepLogType = {
       id: Date.now().toString(),
-      date: now.toISOString().split('T')[0],
+      date: selectedDate,
       hours,
       quality,
-      timestamp: now.toISOString(),
-      time: time || now.toTimeString().slice(0, 5),
+      timestamp,
+      time: selectedTime,
     };
 
     setSleepLogs([...sleepLogs, newSleep]);
@@ -442,8 +466,8 @@ function App() {
       {showCheatMeal && activeLogType && ['breakfast', 'lunch', 'snacks', 'dinner', 'other'].includes(activeLogType) && (
         <CheatMealLog
           mealType={activeLogType}
-          onSave={(description, hadTea, time) => {
-            handleSaveMeal(description, hadTea, true, time); // Always mark as cheat meal, pass time
+          onSave={(description, hadTea, time, date) => {
+            handleSaveMeal(description, hadTea, true, time, date); // Always mark as cheat meal, pass time and date
             setShowCheatMeal(false);
           }}
           onCancel={() => {

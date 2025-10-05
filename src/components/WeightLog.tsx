@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Save, Scale, X } from 'lucide-react';
-import TimePicker from './TimePicker';
+import DateTimePicker from './DateTimePicker';
 
 interface WeightLogProps {
-  onSave: (weight: number, time?: string) => void;
+  onSave: (weight: number, time?: string, date?: string) => void;
   onCancel: () => void;
 }
 
@@ -12,6 +12,10 @@ export default function WeightLog({ onSave, onCancel }: WeightLogProps) {
   const [logTime, setLogTime] = useState(() => {
     const now = new Date();
     return now.toTimeString().slice(0, 5); // HH:MM format
+  });
+  const [logDate, setLogDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0]; // YYYY-MM-DD format
   });
 
   // Prevent body scroll when modal is open
@@ -26,7 +30,7 @@ export default function WeightLog({ onSave, onCancel }: WeightLogProps) {
     e.preventDefault();
     const weightValue = parseFloat(weight);
     if (weightValue > 0) {
-      onSave(weightValue, logTime);
+      onSave(weightValue, logTime, logDate);
     }
   };
 
@@ -73,10 +77,14 @@ export default function WeightLog({ onSave, onCancel }: WeightLogProps) {
             </div>
           </div>
 
-          <TimePicker
-            value={logTime}
-            onChange={setLogTime}
-            label="Time of Measurement"
+          <DateTimePicker
+            dateValue={logDate}
+            timeValue={logTime}
+            onDateChange={setLogDate}
+            onTimeChange={setLogTime}
+            dateLabel="Date"
+            timeLabel="Time of Measurement"
+            className="mt-2"
           />
         </form>
 

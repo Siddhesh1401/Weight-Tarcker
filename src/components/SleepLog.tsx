@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Save, Moon, X } from 'lucide-react';
-import TimePicker from './TimePicker';
+import DateTimePicker from './DateTimePicker';
 
 interface SleepLogProps {
-  onSave: (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent', time?: string) => void;
+  onSave: (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent', time?: string, date?: string) => void;
   onCancel: () => void;
 }
 
@@ -13,6 +13,10 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
   const [logTime, setLogTime] = useState(() => {
     const now = new Date();
     return now.toTimeString().slice(0, 5); // HH:MM format
+  });
+  const [logDate, setLogDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0]; // YYYY-MM-DD format
   });
 
   // Prevent body scroll when modal is open
@@ -27,7 +31,7 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
     e.preventDefault();
     const hoursValue = parseFloat(hours);
     if (hoursValue > 0) {
-      onSave(hoursValue, quality, logTime);
+      onSave(hoursValue, quality, logTime, logDate);
     }
   };
 
@@ -104,10 +108,14 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
             </div>
           </div>
 
-          <TimePicker
-            value={logTime}
-            onChange={setLogTime}
-            label="Wake Up Time"
+          <DateTimePicker
+            dateValue={logDate}
+            timeValue={logTime}
+            onDateChange={setLogDate}
+            onTimeChange={setLogTime}
+            dateLabel="Date"
+            timeLabel="Wake Up Time"
+            className="mt-2"
           />
         </form>
 

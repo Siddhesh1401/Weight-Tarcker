@@ -3,12 +3,12 @@ import { Save, Utensils, X, Settings } from 'lucide-react';
 import { MealType } from '../types';
 import { mealPresets } from '../data/mealPresets';
 import MealPresetManager from './MealPresetManager';
-import TimePicker from './TimePicker';
+import DateTimePicker from './DateTimePicker';
 import { templatesApi, settingsApi } from '../services/api';
 
 interface MealLogProps {
   mealType: MealType;
-  onSave: (description: string, hadTea?: boolean, isCheatMeal?: boolean, time?: string) => void;
+  onSave: (description: string, hadTea?: boolean, isCheatMeal?: boolean, time?: string, date?: string) => void;
   onCancel: () => void;
   isOnline?: boolean;
 }
@@ -55,6 +55,10 @@ export default function MealLog({ mealType, onSave, onCancel, isOnline = false }
   const [logTime, setLogTime] = useState(() => {
     const now = new Date();
     return now.toTimeString().slice(0, 5); // HH:MM format
+  });
+  const [logDate, setLogDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0]; // YYYY-MM-DD format
   });
 
   // Prevent body scroll when modal is open
@@ -153,7 +157,7 @@ export default function MealLog({ mealType, onSave, onCancel, isOnline = false }
     }
     
     if (finalDescription) {
-      onSave(finalDescription, false, false, logTime); // Pass time to parent
+      onSave(finalDescription, false, false, logTime, logDate); // Pass time and date to parent
     }
   };
 
@@ -237,10 +241,13 @@ export default function MealLog({ mealType, onSave, onCancel, isOnline = false }
             )}
           </div>
 
-          <TimePicker
-            value={logTime}
-            onChange={setLogTime}
-            label="Time of Meal"
+          <DateTimePicker
+            dateValue={logDate}
+            timeValue={logTime}
+            onDateChange={setLogDate}
+            onTimeChange={setLogTime}
+            dateLabel="Date of Meal"
+            timeLabel="Time of Meal"
             className="mt-2"
           />
         </form>

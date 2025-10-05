@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Save, Droplets, X } from 'lucide-react';
-import TimePicker from './TimePicker';
+import DateTimePicker from './DateTimePicker';
 
 interface WaterLogProps {
-  onSave: (glasses: number, time?: string) => void;
+  onSave: (glasses: number, time?: string, date?: string) => void;
   onCancel: () => void;
   currentGlasses?: number;
 }
@@ -13,6 +13,10 @@ export default function WaterLog({ onSave, onCancel, currentGlasses = 0 }: Water
   const [logTime, setLogTime] = useState(() => {
     const now = new Date();
     return now.toTimeString().slice(0, 5); // HH:MM format
+  });
+  const [logDate, setLogDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0]; // YYYY-MM-DD format
   });
 
   // Prevent body scroll when modal is open
@@ -26,7 +30,7 @@ export default function WaterLog({ onSave, onCancel, currentGlasses = 0 }: Water
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (glasses > 0) {
-      onSave(glasses, logTime);
+      onSave(glasses, logTime, logDate);
     }
   };
 
@@ -99,10 +103,14 @@ export default function WaterLog({ onSave, onCancel, currentGlasses = 0 }: Water
             ))}
           </div>
 
-          <TimePicker
-            value={logTime}
-            onChange={setLogTime}
-            label="Time of Entry"
+          <DateTimePicker
+            dateValue={logDate}
+            timeValue={logTime}
+            onDateChange={setLogDate}
+            onTimeChange={setLogTime}
+            dateLabel="Date"
+            timeLabel="Time of Entry"
+            className="mt-2"
           />
         </form>
 

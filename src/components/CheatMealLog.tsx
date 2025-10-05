@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Save, Pizza, X } from 'lucide-react';
 import { MealType } from '../types';
-import TimePicker from './TimePicker';
+import DateTimePicker from './DateTimePicker';
 
 interface CheatMealLogProps {
   mealType: MealType;
-  onSave: (description: string, hadTea?: boolean, time?: string) => void;
+  onSave: (description: string, hadTea?: boolean, time?: string, date?: string) => void;
   onCancel: () => void;
 }
 
@@ -23,6 +23,10 @@ export default function CheatMealLog({ mealType, onSave, onCancel }: CheatMealLo
     const now = new Date();
     return now.toTimeString().slice(0, 5); // HH:MM format
   });
+  const [logDate, setLogDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0]; // YYYY-MM-DD format
+  });
 
   const config = mealConfig[mealType as keyof typeof mealConfig];
 
@@ -37,7 +41,7 @@ export default function CheatMealLog({ mealType, onSave, onCancel }: CheatMealLo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (description.trim()) {
-      onSave(description, false, logTime); // Pass time
+      onSave(description, false, logTime, logDate); // Pass time and date
     }
   };
 
@@ -86,10 +90,14 @@ export default function CheatMealLog({ mealType, onSave, onCancel }: CheatMealLo
             />
           </div>
 
-          <TimePicker
-            value={logTime}
-            onChange={setLogTime}
-            label="Time of Meal"
+                    <DateTimePicker
+            dateValue={logDate}
+            timeValue={logTime}
+            onDateChange={setLogDate}
+            onTimeChange={setLogTime}
+            dateLabel="Date of Cheat Meal"
+            timeLabel="Time of Cheat Meal"
+            className="mt-2"
           />
         </form>
 
