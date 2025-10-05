@@ -48,6 +48,7 @@ const mealConfig = {
 
 export default function MealLog({ mealType, onSave, onCancel, isOnline = false }: MealLogProps) {
   const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
+  const [presetDetails, setPresetDetails] = useState<Record<string, string>>({}); // Store details for each preset
   const [customMeal, setCustomMeal] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [showPresetManager, setShowPresetManager] = useState(false);
@@ -134,11 +135,87 @@ export default function MealLog({ mealType, onSave, onCancel, isOnline = false }
   const allPresets = customPresets;
 
   const togglePreset = (preset: string) => {
-    setSelectedPresets(prev =>
-      prev.includes(preset)
-        ? prev.filter(p => p !== preset)
-        : [...prev, preset]
-    );
+    setSelectedPresets(prev => {
+      const isRemoving = prev.includes(preset);
+      if (isRemoving) {
+        // Remove details when unchecking preset
+        setPresetDetails(prevDetails => {
+          const newDetails = { ...prevDetails };
+          delete newDetails[preset];
+          return newDetails;
+        });
+        return prev.filter(p => p !== preset);
+      } else {
+        return [...prev, preset];
+      }
+    });
+  };
+
+  // Get smart placeholder based on preset name
+  const getPlaceholderForPreset = (preset: string): string => {
+    const lowerPreset = preset.toLowerCase();
+    
+    // Sabji/Bhaji related
+    if (lowerPreset.includes('bhaji') || lowerPreset.includes('sabji') || lowerPreset.includes('sabzi')) {
+      return 'which sabji?';
+    }
+    
+    // Dal related
+    if (lowerPreset.includes('dal')) {
+      return 'which dal?';
+    }
+    
+    // Rice related
+    if (lowerPreset.includes('rice') && !lowerPreset.includes('dal')) {
+      return 'type?';
+    }
+    
+    // Roti/Chapati related
+    if (lowerPreset.includes('roti') || lowerPreset.includes('chapati')) {
+      return 'with what?';
+    }
+    
+    // Drink related
+    if (lowerPreset.includes('drink') || lowerPreset.includes('juice') || lowerPreset.includes('shake')) {
+      return 'which one?';
+    }
+    
+    // Coldrink/Soda
+    if (lowerPreset.includes('coldrink') || lowerPreset.includes('cold drink') || lowerPreset.includes('soda')) {
+      return 'which drink?';
+    }
+    
+    // Tea/Coffee
+    if (lowerPreset.includes('tea') || lowerPreset.includes('chai')) {
+      return 'type?';
+    }
+    
+    if (lowerPreset.includes('coffee')) {
+      return 'type?';
+    }
+    
+    // Curry related
+    if (lowerPreset.includes('curry')) {
+      return 'which curry?';
+    }
+    
+    // Snacks
+    if (lowerPreset.includes('samosa') || lowerPreset.includes('pakora')) {
+      return 'type?';
+    }
+    
+    // Bread
+    if (lowerPreset.includes('bread')) {
+      return 'type?';
+    }
+    
+    // Paratha
+    if (lowerPreset.includes('paratha')) {
+      return 'type?';
+    }
+    
+    // Default
+    return 'add details...';
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -147,7 +224,12 @@ export default function MealLog({ mealType, onSave, onCancel, isOnline = false }
     let finalDescription = '';
     
     if (selectedPresets.length > 0) {
-      finalDescription = selectedPresets.join(', ');
+      // Add details to presets if available
+      const presetsWithDetails = selectedPresets.map(preset => {
+        const detail = presetDetails[preset];
+        return detail ? `${preset} (${detail})` : preset;
+      });
+      finalDescription = presetsWithDetails.join(', ');
     }
     
     if (showCustomInput && customMeal.trim()) {
@@ -201,22 +283,37 @@ export default function MealLog({ mealType, onSave, onCancel, isOnline = false }
             </div>
             <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
               {allPresets.map((preset) => (
-                <label
-                  key={preset}
-                  className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                    selectedPresets.includes(preset)
-                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedPresets.includes(preset)}
-                    onChange={() => togglePreset(preset)}
-                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-emerald-500 focus:ring-emerald-500"
-                  />
-                  <span className="text-sm text-gray-800 dark:text-gray-200">{preset}</span>
-                </label>
+                <div key={preset} className="flex flex-col gap-1.5">
+                  <label
+                    className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedPresets.includes(preset)
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedPresets.includes(preset)}
+                      onChange={() => togglePreset(preset)}
+                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span className="text-sm text-gray-800 dark:text-gray-200">{preset}</span>
+                  </label>
+                  
+                  {/* Show detail input when preset is selected */}
+                  {selectedPresets.includes(preset) && (
+                    <input
+                      type="text"
+                      value={presetDetails[preset] || ''}
+                      onChange={(e) => setPresetDetails(prev => ({
+                        ...prev,
+                        [preset]: e.target.value
+                      }))}
+                      placeholder={getPlaceholderForPreset(preset)}
+                      className="w-full px-3 py-2 text-sm border-2 border-emerald-400 dark:border-emerald-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder-gray-400 dark:placeholder-gray-500 transition-all"
+                    />
+                  )}
+                </div>
               ))}
             </div>
           </div>
