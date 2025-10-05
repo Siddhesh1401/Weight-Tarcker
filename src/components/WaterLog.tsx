@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, Droplets, X } from 'lucide-react';
 import TimePicker from './TimePicker';
 
@@ -15,6 +15,14 @@ export default function WaterLog({ onSave, onCancel, currentGlasses = 0 }: Water
     return now.toTimeString().slice(0, 5); // HH:MM format
   });
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (glasses > 0) {
@@ -27,8 +35,8 @@ export default function WaterLog({ onSave, onCancel, currentGlasses = 0 }: Water
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md my-8 border border-gray-100 dark:border-gray-600 max-h-[calc(100vh-4rem)] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 pb-24 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-600 max-h-[70vh] overflow-hidden flex flex-col">
         <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-t-3xl p-6 border-b border-gray-100 dark:border-gray-600 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

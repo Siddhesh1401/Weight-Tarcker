@@ -22,6 +22,14 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
 
   const defaultPresets = mealPresets[mealType] || [];
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   // Load custom presets from backend
   useEffect(() => {
     const loadPresets = async () => {
@@ -331,9 +339,9 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
   const visibleDefaults = defaultPresets.filter(p => !hiddenDefaults.includes(p));
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col border border-gray-100 dark:border-gray-600">
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 p-6 border-b border-gray-100 dark:border-gray-600">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50 flex items-center justify-center p-4 pb-24 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-600 max-h-[70vh] overflow-hidden flex flex-col">
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 p-6 border-b border-gray-100 dark:border-gray-600 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Manage Presets</h2>
@@ -361,7 +369,7 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 size={24} className="animate-spin text-emerald-500" />
@@ -492,7 +500,7 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
           )}
         </div>
 
-        <div className="p-6 border-t border-gray-100 dark:border-gray-600">
+        <div className="p-6 border-t border-gray-100 dark:border-gray-600 flex-shrink-0 bg-white dark:bg-gray-800">
           <button
             onClick={onClose}
             className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 dark:from-emerald-600 dark:to-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200"

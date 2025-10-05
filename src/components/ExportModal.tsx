@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Download, FileText, FileJson, FileType, X, Calendar } from 'lucide-react';
 
 interface ExportModalProps {
@@ -15,6 +15,14 @@ export default function ExportModal({ onExport, onCancel, title = 'Export Data',
   const [endDate, setEndDate] = useState('');
   const [useDateRange, setUseDateRange] = useState(false);
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   const handleExport = () => {
     if (useDateRange && startDate && endDate) {
       onExport(format, startDate, endDate);
@@ -24,9 +32,9 @@ export default function ExportModal({ onExport, onCancel, title = 'Export Data',
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md my-8 border border-gray-100 dark:border-gray-600">
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-t-3xl p-6 border-b border-gray-100 dark:border-gray-600">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50 flex items-center justify-center p-4 pb-24 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-600 max-h-[70vh] overflow-hidden flex flex-col">
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-t-3xl p-6 border-b border-gray-100 dark:border-gray-600 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-emerald-100 dark:bg-emerald-900 p-2 rounded-xl">
@@ -46,7 +54,7 @@ export default function ExportModal({ onExport, onCancel, title = 'Export Data',
           </div>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">
           {/* Date Range Toggle - Only show for "Export All" */}
           {!isSingleDay && (
             <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border-2 border-blue-200 dark:border-blue-700">
@@ -160,28 +168,28 @@ export default function ExportModal({ onExport, onCancel, title = 'Export Data',
               </div>
             </button>
           </div>
+        </div>
 
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-3 px-6 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleExport}
-              disabled={useDateRange && (!startDate || !endDate)}
-              className={`flex-1 font-bold py-3 px-6 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${
-                useDateRange && (!startDate || !endDate)
-                  ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-emerald-500 to-teal-500 dark:from-emerald-600 dark:to-teal-600 text-white hover:shadow-lg transform hover:scale-[1.02]'
-              }`}
-            >
-              <Download size={20} />
-              Export
-            </button>
-          </div>
+        <div className="flex gap-3 p-6 pt-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-600 flex-shrink-0">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-3 px-6 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleExport}
+            disabled={useDateRange && (!startDate || !endDate)}
+            className={`flex-1 font-bold py-3 px-6 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${
+              useDateRange && (!startDate || !endDate)
+                ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-emerald-500 to-teal-500 dark:from-emerald-600 dark:to-teal-600 text-white hover:shadow-lg transform hover:scale-[1.02]'
+            }`}
+          >
+            <Download size={20} />
+            Export
+          </button>
         </div>
       </div>
     </div>
