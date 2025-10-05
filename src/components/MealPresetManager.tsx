@@ -249,10 +249,8 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
     }
 
     try {
-      const response: any = await templatesApi.deleteTemplate(preset.id);
-      if (response.success) {
-        setCustomPresets(prev => prev.filter((_, i) => i !== index));
-      }
+      await templatesApi.deleteTemplate(preset.id);
+      setCustomPresets(prev => prev.filter((_, i) => i !== index));
     } catch (error) {
       console.error('Failed to delete preset:', error);
     }
@@ -286,22 +284,20 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
 
     try {
       setIsSaving(true);
-      const response: any = await templatesApi.updateTemplate(preset.id, {
+      const updatedTemplate = await templatesApi.updateTemplate(preset.id, {
         name: editValue.trim(),
         description: editValue.trim()
       });
 
-      if (response.success) {
-        setCustomPresets(prev => prev.map((p, i) => 
-          i === editingIndex ? { 
-            ...p, 
-            name: response.data.name, 
-            description: response.data.description 
-          } : p
-        ));
-        setEditingIndex(null);
-        setEditValue('');
-      }
+      setCustomPresets(prev => prev.map((p, i) => 
+        i === editingIndex ? { 
+          ...p, 
+          name: updatedTemplate.name, 
+          description: updatedTemplate.description 
+        } : p
+      ));
+      setEditingIndex(null);
+      setEditValue('');
     } catch (error) {
       console.error('Failed to update preset:', error);
     } finally {
