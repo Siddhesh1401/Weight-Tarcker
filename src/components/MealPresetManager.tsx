@@ -156,7 +156,8 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
             mealType,
             description: name,
             isFavorite: false,
-            useCount: 0
+            useCount: 0,
+            order: index
           })));
         }
         setIsLoading(false);
@@ -196,37 +197,40 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
             
             // Reload templates after migration
             const updatedTemplates = await templatesApi.getTemplates(mealType);
-            setCustomPresets(updatedTemplates.map((template: any) => ({
+            setCustomPresets(updatedTemplates.map((template: any, index: number) => ({
               id: template._id,
               name: template.name,
               mealType: template.meal_type,
               description: template.description,
               isFavorite: template.is_favorite,
-              useCount: template.use_count
+              useCount: template.use_count,
+              order: template.order ?? index
             })));
             
             // Clear localStorage after successful migration
             localStorage.removeItem(`custom_presets_${mealType}`);
           } else {
             // No migration needed, just set the templates
-            setCustomPresets(templates.map((template: any) => ({
+            setCustomPresets(templates.map((template: any, index: number) => ({
               id: template._id,
               name: template.name,
               mealType: template.meal_type,
               description: template.description,
               isFavorite: template.is_favorite,
-              useCount: template.use_count
+              useCount: template.use_count,
+              order: template.order ?? index
             })));
           }
         } else {
           // No localStorage data, just use backend templates
-          setCustomPresets(templates.map((template: any) => ({
+          setCustomPresets(templates.map((template: any, index: number) => ({
             id: template._id,
             name: template.name,
             mealType: template.meal_type,
             description: template.description,
             isFavorite: template.is_favorite,
-            useCount: template.use_count
+            useCount: template.use_count,
+            order: template.order ?? index
           })));
         }
       } catch (error) {
@@ -242,7 +246,8 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
             mealType,
             description: name,
             isFavorite: false,
-            useCount: 0
+            useCount: 0,
+            order: index
           })));
         }
       } finally {
@@ -314,7 +319,8 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
         mealType,
         description: newPreset.trim(),
         isFavorite: false,
-        useCount: 0
+        useCount: 0,
+        order: prev.length
       }]);
       setNewPreset('');
       return;
@@ -335,7 +341,8 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
         mealType: response.meal_type,
         description: response.description,
         isFavorite: response.is_favorite,
-        useCount: response.use_count
+        useCount: response.use_count,
+        order: response.order ?? prev.length
       }]);
       setNewPreset('');
     } catch (error) {
@@ -396,7 +403,7 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
 
     try {
       setIsSaving(true);
-      const updatedTemplate = await templatesApi.updateTemplate(preset.id, {
+      const updatedTemplate: any = await templatesApi.updateTemplate(preset.id, {
         name: editValue.trim(),
         description: editValue.trim()
       });

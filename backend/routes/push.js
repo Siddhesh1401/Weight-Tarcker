@@ -52,7 +52,17 @@ router.post('/subscribe', async (req, res) => {
       badge: '/favicon.svg',
     });
 
-    await webpush.sendNotification(subscription, payload);
+    try {
+      await webpush.sendNotification(subscription, payload);
+      console.log('✅ Test notification sent successfully');
+    } catch (notifError) {
+      // Log the error but don't fail the subscription
+      console.warn('⚠️ Could not send test notification:', notifError.message);
+      // If it's an FCM endpoint issue, log detailed info
+      if (notifError.statusCode === 404 && subscription.endpoint?.includes('fcm.googleapis.com')) {
+        console.warn('💡 FCM endpoint format may need updating. Subscription saved but test notification failed.');
+      }
+    }
     
     res.json({ success: true, message: 'Subscribed successfully' });
   } catch (error) {
@@ -116,12 +126,15 @@ async function sendNotificationToUser(userId, notificationData) {
     console.log(`✅ Notification sent to user ${userId}:`, notificationData.title);
     return true;
   } catch (error) {
-    console.error(`❌ Error sending notification to user ${userId}:`, error);
-    
-    // Remove invalid subscription
+    // Handle specific error cases
     if (error.statusCode === 410) {
       console.log(`🗑️ Removing expired subscription for user ${userId}`);
       subscriptions.delete(userId);
+    } else if (error.statusCode === 404) {
+      console.warn(`⚠️ Invalid endpoint for user ${userId} (404) - may need resubscription`);
+      // Don't delete immediately, could be temporary FCM issue
+    } else {
+      console.error(`❌ Error sending notification to user ${userId}:`, error.message);
     }
     
     return false;
