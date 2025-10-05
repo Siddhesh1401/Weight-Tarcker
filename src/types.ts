@@ -43,6 +43,7 @@ export interface MealTemplate {
   description: string;
   isFavorite: boolean;
   useCount: number;
+  order: number;
 }
 
 export interface DayData {

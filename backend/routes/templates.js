@@ -20,7 +20,7 @@ router.get('/templates', async (req, res) => {
       query.meal_type = meal_type;
     }
 
-    const templates = await MealTemplate.find(query).sort({ use_count: -1, created_at: -1 });
+    const templates = await MealTemplate.find(query).sort({ order: 1, use_count: -1, created_at: -1 });
 
     res.json({
       success: true,
@@ -49,12 +49,16 @@ router.post('/templates', async (req, res) => {
       });
     }
 
+    // Get the current count of templates for this user and meal_type to set order
+    const templateCount = await MealTemplate.countDocuments({ user_id, meal_type });
+
     const template = new MealTemplate({
       user_id,
       name,
       meal_type,
       description,
-      is_favorite: is_favorite || false
+      is_favorite: is_favorite || false,
+      order: templateCount
     });
 
     await template.save();
@@ -190,6 +194,43 @@ router.delete('/templates/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to delete template',
+      error: error.message
+    });
+  }
+});
+
+// POST /api/templates/reorder - Reorder templates
+router.post('/templates/reorder', async (req, res) => {
+  try {
+    const { user_id, template_ids } = req.body;
+
+    if (!user_id || !template_ids || !Array.isArray(template_ids)) {
+      return res.status(400).json({
+        success: false,
+        message: 'user_id and template_ids array are required'
+      });
+    }
+
+    // Update order for each template
+    const updatePromises = template_ids.map((templateId, index) =>
+      MealTemplate.findOneAndUpdate(
+        { _id: templateId, user_id },
+        { order: index },
+        { new: true }
+      )
+    );
+
+    await Promise.all(updatePromises);
+
+    res.json({
+      success: true,
+      message: 'Templates reordered successfully'
+    });
+  } catch (error) {
+    console.error('Error reordering templates:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reorder templates',
       error: error.message
     });
   }

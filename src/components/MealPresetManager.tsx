@@ -1,8 +1,113 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Save, X, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, X, Loader2, GripVertical } from 'lucide-react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { mealPresets } from '../data/mealPresets';
 import { templatesApi, settingsApi } from '../services/api';
 import { MealTemplate } from '../types';
+
+interface SortablePresetItemProps {
+  preset: MealTemplate;
+  index: number;
+  editingIndex: number | null;
+  editValue: string;
+  isSaving: boolean;
+  onEdit: (index: number) => void;
+  onSaveEdit: () => void;
+  onCancelEdit: () => void;
+  onDelete: (index: number) => void;
+  onEditValueChange: (value: string) => void;
+}
+
+function SortablePresetItem({
+  preset,
+  index,
+  editingIndex,
+  editValue,
+  isSaving,
+  onEdit,
+  onSaveEdit,
+  onCancelEdit,
+  onDelete,
+  onEditValueChange
+}: SortablePresetItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: preset.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center gap-2 ${
+        isDragging ? 'opacity-50 shadow-lg' : ''
+      }`}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 p-1 cursor-grab active:cursor-grabbing"
+        title="Drag to reorder"
+      >
+        <GripVertical size={18} />
+      </button>
+
+      {editingIndex === index ? (
+        <>
+          <input
+            type="text"
+            value={editValue}
+            onChange={(e) => onEditValueChange(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && onSaveEdit()}
+            className="flex-1 px-3 py-1 border-2 border-emerald-500 dark:border-emerald-400 rounded focus:outline-none bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+            autoFocus
+          />
+          <button
+            onClick={onSaveEdit}
+            disabled={isSaving}
+            className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 p-1 disabled:opacity-50"
+          >
+            {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+          </button>
+          <button
+            onClick={onCancelEdit}
+            className="text-gray-600 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-400 p-1"
+          >
+            <X size={18} />
+          </button>
+        </>
+      ) : (
+        <>
+          <span className="flex-1 text-sm text-gray-800 dark:text-gray-200">{preset.name}</span>
+          <button
+            onClick={() => onEdit(index)}
+            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1"
+          >
+            <Edit2 size={18} />
+          </button>
+          <button
+            onClick={() => onDelete(index)}
+            className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1"
+          >
+            <Trash2 size={18} />
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
 
 interface MealPresetManagerProps {
   mealType: 'breakfast' | 'lunch' | 'snacks' | 'dinner';
@@ -19,6 +124,13 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const defaultPresets = mealPresets[mealType] || [];
 
@@ -310,6 +422,34 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
     setEditValue('');
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = customPresets.findIndex((preset) => preset.id === active.id);
+      const newIndex = customPresets.findIndex((preset) => preset.id === over.id);
+
+      const reorderedPresets = arrayMove(customPresets, oldIndex, newIndex);
+      setCustomPresets(reorderedPresets);
+
+      // Update backend with new order
+      if (isOnline) {
+        try {
+          const templateIds = reorderedPresets.map(preset => preset.id);
+          await templatesApi.reorderTemplates(templateIds);
+        } catch (error) {
+          console.error('Failed to save new order:', error);
+          // Revert the change on error
+          setCustomPresets(customPresets);
+        }
+      } else {
+        // Save to localStorage for offline mode
+        const reorderedNames = reorderedPresets.map(preset => preset.name);
+        localStorage.setItem(`custom_presets_${mealType}`, JSON.stringify(reorderedNames));
+      }
+    }
+  };
+
   const handleHideDefault = async (preset: string) => {
     const updated = [...hiddenDefaults, preset];
     setHiddenDefaults(updated);
@@ -440,56 +580,34 @@ export default function MealPresetManager({ mealType, onClose, isOnline }: MealP
                     No custom presets yet. Add one above!
                   </p>
                 ) : (
-                  <div className="space-y-2">
-                    {customPresets.map((preset, index) => (
-                      <div
-                        key={preset.id}
-                        className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center gap-2"
-                      >
-                        {editingIndex === index ? (
-                          <>
-                            <input
-                              type="text"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onKeyPress={(e) => e.key === 'Enter' && handleSaveEdit()}
-                              className="flex-1 px-3 py-1 border-2 border-emerald-500 dark:border-emerald-400 rounded focus:outline-none bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                              autoFocus
-                            />
-                            <button
-                              onClick={handleSaveEdit}
-                              disabled={isSaving}
-                              className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 p-1 disabled:opacity-50"
-                            >
-                              {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="text-gray-600 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-400 p-1"
-                            >
-                              <X size={18} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <span className="flex-1 text-sm text-gray-800 dark:text-gray-200">{preset.name}</span>
-                            <button
-                              onClick={() => handleEdit(index)}
-                              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1"
-                            >
-                              <Edit2 size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(index)}
-                              className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </>
-                        )}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={customPresets.map(preset => preset.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2">
+                        {customPresets.map((preset, index) => (
+                          <SortablePresetItem
+                            key={preset.id}
+                            preset={preset}
+                            index={index}
+                            editingIndex={editingIndex}
+                            editValue={editValue}
+                            isSaving={isSaving}
+                            onEdit={handleEdit}
+                            onSaveEdit={handleSaveEdit}
+                            onCancelEdit={handleCancelEdit}
+                            onDelete={handleDelete}
+                            onEditValueChange={setEditValue}
+                          />
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
                 )}
               </div>
             </>

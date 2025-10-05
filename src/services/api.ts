@@ -247,6 +247,17 @@ export const templatesApi = {
       }),
     });
   },
+
+  // Reorder templates
+  async reorderTemplates(templateIds: string[]) {
+    return apiCall('/templates/reorder', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: DEFAULT_USER_ID,
+        template_ids: templateIds,
+      }),
+    });
+  },
 };
 
 // Health check
