@@ -28,8 +28,8 @@ export default function DeleteConfirmation({ itemType, itemDescription, onConfir
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50 flex items-center justify-center p-4 pb-24 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-600 max-h-[70vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50 flex items-center justify-center p-4 pt-16 pb-20 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-600 max-h-[80vh] overflow-hidden flex flex-col">
         <div className="bg-gradient-to-r from-rose-50 to-red-50 dark:from-rose-900/30 dark:to-red-900/30 rounded-t-3xl p-6 border-b border-rose-100 dark:border-rose-800 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
