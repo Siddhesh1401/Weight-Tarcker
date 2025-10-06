@@ -79,13 +79,13 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center justify-center gap-2 px-3 py-4 rounded-2xl text-xs font-semibold transition-all duration-200 ${
+                className={`flex flex-col items-center justify-center gap-2 px-3 py-4 rounded-2xl text-xs font-semibold transition-all duration-300 ${
                   isActive
-                    ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg transform scale-[1.02]'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:shadow-md'
+                    ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg transform scale-[1.05] border-2 border-emerald-600'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:shadow-md border-2 border-transparent hover:border-emerald-300 dark:hover:border-emerald-700 transform hover:scale-[1.02] hover:-translate-y-0.5'
                 }`}
               >
-                <Icon size={20} className={isActive ? 'animate-bounce-subtle' : ''} />
+                <Icon size={20} className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
                 <span className="text-center leading-tight">{tab.label}</span>
               </button>
             );
