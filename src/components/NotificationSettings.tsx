@@ -73,15 +73,20 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
   ]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-600">
+    <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-100 dark:border-gray-600">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <BellRing className="text-emerald-500" size={20} />
-          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Smart Reminders</h3>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
+            <BellRing className="text-emerald-500" size={20} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Smart Reminders</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Never miss your healthy habits</p>
+          </div>
         </div>
         {/* Master Toggle */}
-        <label className="relative inline-flex items-center cursor-pointer">
+        <label className="relative inline-flex items-center cursor-pointer group">
           <input
             type="checkbox"
             checked={notifSettings.enabled}
@@ -91,7 +96,6 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
                 const hasPermission = await notificationService.requestPermission();
                 if (hasPermission) {
                   updateSettings({ enabled: true });
-                  // Start scheduling all notifications
                   await notificationService.startAll();
                   console.log('✅ Notifications enabled and started!');
                 } else {
@@ -105,163 +109,165 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
             }}
             className="sr-only peer"
           />
-          <div className="w-14 h-8 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div>
+          <div className="w-14 h-7 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-200 dark:peer-focus:ring-emerald-800 rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 shadow-inner group-hover:shadow-md"></div>
         </label>
       </div>
 
       {notifSettings.enabled ? (
         <div className="space-y-4">
-          {/* Test Notification Button */}
-          <button
-            type="button"
-            onClick={async () => {
-              console.log('🧪 Testing notification system...');
-              console.log('📱 Permission:', Notification.permission);
-              console.log('⚙️ Settings:', notificationService.getSettings());
-              console.log('🔔 Service Worker:', await navigator.serviceWorker.getRegistration());
-              
-              // Test immediate notification
-              await notificationService.testNotification();
-              
-              // Test scheduled notification in 5 seconds using Service Worker
-              console.log('⏰ Scheduling test notification for 5 seconds from now...');
-              setTimeout(async () => {
-                if (Notification.permission === 'granted') {
-                  try {
-                    const registration = await navigator.serviceWorker.ready;
-                    await registration.showNotification('⏰ 5-Second Test', {
-                      body: 'This notification fired 5 seconds after test button click!',
-                      icon: '/favicon.svg',
-                      badge: '/favicon.svg',
-                      tag: 'test-5s',
-                    });
-                    console.log('✅ 5-second test notification sent via Service Worker');
-                  } catch (error) {
-                    console.error('❌ Error showing 5-second test:', error);
+          {/* Test Buttons - Compact Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                console.log('🧪 Testing notification system...');
+                console.log('📱 Permission:', Notification.permission);
+                console.log('⚙️ Settings:', notificationService.getSettings());
+                console.log('🔔 Service Worker:', await navigator.serviceWorker.getRegistration());
+                
+                await notificationService.testNotification();
+                
+                console.log('⏰ Scheduling test notification for 5 seconds from now...');
+                setTimeout(async () => {
+                  if (Notification.permission === 'granted') {
+                    try {
+                      const registration = await navigator.serviceWorker.ready;
+                      await registration.showNotification('⏰ 5-Second Test', {
+                        body: 'This notification fired 5 seconds after test button click!',
+                        icon: '/favicon.svg',
+                        badge: '/favicon.svg',
+                        tag: 'test-5s',
+                      });
+                      console.log('✅ 5-second test notification sent via Service Worker');
+                    } catch (error) {
+                      console.error('❌ Error showing 5-second test:', error);
+                    }
                   }
-                }
-              }, 5000);
-            }}
-            className="w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 font-medium"
-          >
-            <BellRing size={18} />
-            Test Notification (Check Console)
-          </button>
+                }, 5000);
+              }}
+              className="px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl hover:shadow-lg transition-all flex items-center justify-center gap-2 font-semibold text-sm transform hover:scale-[1.02]"
+            >
+              <BellRing size={16} />
+              Test Now
+            </button>
 
-          {/* Server Push Test Button */}
-          <button
-            type="button"
-            onClick={async () => {
-              console.log('🚀 Testing server-side push notification...');
-              try {
-                const { pushNotificationService } = await import('../services/pushNotifications');
-                const sent = await pushNotificationService.sendTestNotification();
-                if (sent) {
-                  console.log('✅ Server push test sent! Should arrive in 1-2 seconds.');
-                } else {
-                  console.error('❌ Server push test failed - check backend is running');
+            <button
+              type="button"
+              onClick={async () => {
+                console.log('🚀 Testing server-side push notification...');
+                try {
+                  const { pushNotificationService } = await import('../services/pushNotifications');
+                  const sent = await pushNotificationService.sendTestNotification();
+                  if (sent) {
+                    console.log('✅ Server push test sent! Should arrive in 1-2 seconds.');
+                  } else {
+                    console.error('❌ Server push test failed - check backend is running');
+                  }
+                } catch (error) {
+                  console.error('❌ Server push error:', error);
                 }
-              } catch (error) {
-                console.error('❌ Server push error:', error);
-              }
-            }}
-            className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 font-medium"
-          >
-            <BellRing size={18} />
-            Test Server Push (Background)
-          </button>
+              }}
+              className="px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl hover:shadow-lg transition-all flex items-center justify-center gap-2 font-semibold text-sm transform hover:scale-[1.02]"
+            >
+              <BellRing size={16} />
+              Test Push
+            </button>
+          </div>
 
           {/* Quick Presets */}
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-700 dark:to-gray-700 p-4 rounded-xl border border-emerald-200 dark:border-gray-600">
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-              <span>⚡</span> Quick Presets
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-700 dark:to-gray-700 p-4 rounded-2xl border border-emerald-200 dark:border-gray-600">
+            <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+              ⚡ Quick Presets
             </p>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => applyPreset('early')}
-                className="px-3 py-2.5 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-medium rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-700 hover:scale-105 transition-all border border-gray-200 dark:border-gray-500 shadow-sm"
+                className="px-3 py-2.5 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-700 hover:scale-105 transition-all border-2 border-gray-200 dark:border-gray-500 shadow-sm"
               >
-                🌅 Early Bird
+                🌅 Early
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset('standard')}
-                className="px-3 py-2.5 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-medium rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-700 hover:scale-105 transition-all border border-gray-200 dark:border-gray-500 shadow-sm"
+                className="px-3 py-2.5 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-700 hover:scale-105 transition-all border-2 border-gray-200 dark:border-gray-500 shadow-sm"
               >
                 ☀️ Standard
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset('night')}
-                className="px-3 py-2.5 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-medium rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-700 hover:scale-105 transition-all border border-gray-200 dark:border-gray-500 shadow-sm"
+                className="px-3 py-2.5 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-700 hover:scale-105 transition-all border-2 border-gray-200 dark:border-gray-500 shadow-sm"
               >
-                🌙 Night Owl
+                🌙 Night
               </button>
             </div>
           </div>
 
-          {/* Individual Reminder Controls */}
+          {/* Meal Reminders - Grid Layout */}
           <div className="space-y-3">
-            {/* Breakfast */}
-            <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl border-2 border-orange-200 dark:border-orange-700 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🍳</span>
-                  <div>
-                    <span className="font-semibold text-gray-800 dark:text-gray-200">Breakfast</span>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Morning meal reminder</p>
+            <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              🍽️ Meal Reminders
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* Breakfast */}
+              <div className="p-3 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-2xl border-2 border-orange-200 dark:border-orange-700/50 hover:shadow-md transition-all">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xl">🍳</span>
+                  <div className="flex-1">
+                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-sm block">Breakfast</span>
                   </div>
                 </div>
                 <input
                   type="time"
                   value={notifSettings.breakfastTime}
                   onChange={(e) => updateSettings({ breakfastTime: e.target.value })}
-                  className="px-3 py-2 border-2 border-orange-300 dark:border-orange-600 bg-white dark:bg-gray-700 dark:text-gray-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all"
+                  className="w-full px-3 py-2 border-2 border-orange-300 dark:border-orange-600 bg-white dark:bg-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all"
                 />
               </div>
-            </div>
 
-            {/* Lunch */}
-            <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🥗</span>
-                  <div>
-                    <span className="font-semibold text-gray-800 dark:text-gray-200">Lunch</span>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Midday meal reminder</p>
+              {/* Lunch */}
+              <div className="p-3 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-2xl border-2 border-emerald-200 dark:border-emerald-700/50 hover:shadow-md transition-all">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xl">🥗</span>
+                  <div className="flex-1">
+                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-sm block">Lunch</span>
                   </div>
                 </div>
                 <input
                   type="time"
                   value={notifSettings.lunchTime}
                   onChange={(e) => updateSettings({ lunchTime: e.target.value })}
-                  className="px-3 py-2 border-2 border-emerald-300 dark:border-emerald-600 bg-white dark:bg-gray-700 dark:text-gray-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition-all"
+                  className="w-full px-3 py-2 border-2 border-emerald-300 dark:border-emerald-600 bg-white dark:bg-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition-all"
                 />
               </div>
-            </div>
 
-            {/* Dinner */}
-            <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border-2 border-purple-200 dark:border-purple-700 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🍽️</span>
-                  <div>
-                    <span className="font-semibold text-gray-800 dark:text-gray-200">Dinner</span>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Evening meal reminder</p>
+              {/* Dinner */}
+              <div className="p-3 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border-2 border-purple-200 dark:border-purple-700/50 hover:shadow-md transition-all">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xl">🍽️</span>
+                  <div className="flex-1">
+                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-sm block">Dinner</span>
                   </div>
                 </div>
                 <input
                   type="time"
                   value={notifSettings.dinnerTime}
                   onChange={(e) => updateSettings({ dinnerTime: e.target.value })}
-                  className="px-3 py-2 border-2 border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-700 dark:text-gray-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
+                  className="w-full px-3 py-2 border-2 border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
                 />
               </div>
             </div>
+          </div>
+
+          {/* Other Reminders */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              ⏰ Other Reminders
+            </h4>
 
             {/* Water Reminder */}
-            <div className={`p-4 rounded-xl border-2 transition-all hover:shadow-md ${
+            <div className={`p-4 rounded-2xl border-2 transition-all hover:shadow-md ${
               notifSettings.waterReminder 
                 ? 'bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-blue-300 dark:border-blue-700' 
                 : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 opacity-60'
