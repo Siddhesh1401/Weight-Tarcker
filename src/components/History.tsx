@@ -219,79 +219,237 @@ export default function History({
         <head>
           <title>Weight Tracker - ${date}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-            h1 { color: #10b981; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
-            .section { margin: 20px 0; }
-            .data-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-            .label { font-weight: bold; color: #374151; }
-            .value { color: #10b981; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #10b981; color: white; }
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              padding: 20px;
+              max-width: 800px;
+              margin: 0 auto;
+              background: #ffffff;
+              color: #374151;
+              line-height: 1.5;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 4px solid #059669;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .header h1 {
+              color: #059669;
+              font-size: 28px;
+              margin: 0;
+              font-weight: 700;
+            }
+            .header .meta {
+              color: #6b7280;
+              font-size: 14px;
+              margin-top: 8px;
+            }
+            .section {
+              background: white;
+              border: 1px solid #e5e7eb;
+              border-radius: 8px;
+              padding: 20px;
+              margin-bottom: 20px;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+            .section h2 {
+              color: #059669;
+              margin: 0 0 15px 0;
+              font-size: 18px;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            }
+            .data-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 12px;
+            }
+            .data-item {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 8px 12px;
+              background: #f9fafb;
+              border-radius: 6px;
+            }
+            .data-list {
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            }
+            .label {
+              font-weight: 600;
+              color: #374151;
+              font-size: 14px;
+            }
+            .value {
+              color: #059669;
+              font-weight: 600;
+              font-size: 14px;
+            }
+            .meals-list {
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+            }
+            .meal-item {
+              border: 1px solid #e5e7eb;
+              border-radius: 8px;
+              padding: 12px;
+              background: #fafafa;
+            }
+            .meal-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 8px;
+            }
+            .meal-type {
+              font-weight: bold;
+              color: #059669;
+              font-size: 16px;
+            }
+            .meal-time {
+              color: #6b7280;
+              font-size: 12px;
+            }
+            .meal-description {
+              color: #374151;
+              line-height: 1.4;
+            }
+            .cheat-badge {
+              background: #fef2f2;
+              color: #dc2626;
+              padding: 2px 8px;
+              border-radius: 12px;
+              font-size: 11px;
+              font-weight: 600;
+            }
+            .summary {
+              background: #ecfdf5;
+              border: 1px solid #059669;
+              border-radius: 6px;
+              padding: 12px;
+              margin-top: 15px;
+            }
+            .no-data {
+              text-align: center;
+              color: #6b7280;
+              font-style: italic;
+              padding: 40px;
+              background: #f9fafb;
+              border-radius: 8px;
+            }
             @media print {
-              body { padding: 0; }
-              .no-print { display: none; }
+              body { padding: 15px; }
+              .section { page-break-inside: avoid; }
+            }
+            @media (max-width: 600px) {
+              .data-grid { grid-template-columns: 1fr; }
             }
           </style>
         </head>
         <body>
-          <h1>Weight Tracker Export</h1>
-          <p><strong>Date:</strong> ${date}</p>
+          <div class="header">
+            <h1>📊 Weight Tracker Export</h1>
+            <div class="meta">
+              ${formatDate(date)} - Generated on ${new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </div>
+          </div>
 
           ${logs.weight ? `
             <div class="section">
-              <h2>Weight</h2>
-              <div class="data-row">
-                <span class="label">Weight:</span>
-                <span class="value">${logs.weight.weight} kg</span>
+              <h2>⚖️ Weight</h2>
+              <div class="data-grid">
+                <div class="data-item">
+                  <span class="label">Weight:</span>
+                  <span class="value">${logs.weight.weight} kg</span>
+                </div>
+                ${logs.weight.time ? `
+                  <div class="data-item">
+                    <span class="label">Time:</span>
+                    <span class="value">${formatTime(logs.weight.time, logs.weight.timestamp)}</span>
+                  </div>
+                ` : ''}
               </div>
             </div>
           ` : ''}
 
           ${logs.water.length > 0 ? `
             <div class="section">
-              <h2>Water Intake</h2>
-              ${logs.water.map((w: any) => `
-                <div class="data-row">
-                  <span class="label">Water:</span>
-                  <span class="value">${w.glasses} glasses</span>
+              <h2>💧 Water Intake</h2>
+              <div class="data-list">
+                ${logs.water.map((w: any) => `
+                  <div class="data-item">
+                    <span class="label">${w.glasses} glasses</span>
+                    ${w.time ? `<span class="value">at ${formatTime(w.time, w.timestamp)}</span>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+              <div class="summary">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span class="label">Daily Total:</span>
+                  <span class="value">${logs.water.reduce((sum: number, w: any) => sum + w.glasses, 0)} glasses</span>
                 </div>
-              `).join('')}
+              </div>
             </div>
           ` : ''}
 
           ${logs.sleep ? `
             <div class="section">
-              <h2>Sleep</h2>
-              <div class="data-row">
-                <span class="label">Duration:</span>
-                <span class="value">${logs.sleep.hours} hours</span>
-              </div>
-              <div class="data-row">
-                <span class="label">Quality:</span>
-                <span class="value">${logs.sleep.quality}</span>
+              <h2>🌙 Sleep</h2>
+              <div class="data-grid">
+                <div class="data-item">
+                  <span class="label">Duration:</span>
+                  <span class="value">${logs.sleep.hours} hours</span>
+                </div>
+                <div class="data-item">
+                  <span class="label">Quality:</span>
+                  <span class="value">${logs.sleep.quality}</span>
+                </div>
+                ${logs.sleep.time ? `
+                  <div class="data-item">
+                    <span class="label">Time:</span>
+                    <span class="value">${formatTime(logs.sleep.time, logs.sleep.timestamp)}</span>
+                  </div>
+                ` : ''}
               </div>
             </div>
           ` : ''}
 
           ${logs.meals.length > 0 ? `
             <div class="section">
-              <h2>Meals</h2>
-              <table>
-                <tr><th>Type</th><th>Description</th><th>Cheat Meal</th></tr>
+              <h2>🍽️ Meals (${logs.meals.length})</h2>
+              <div class="meals-list">
                 ${logs.meals.map((m: any) => `
-                  <tr>
-                    <td>${m.mealType}</td>
-                    <td>${m.description}</td>
-                    <td>${m.isCheatMeal ? 'Yes' : 'No'}</td>
-                  </tr>
+                  <div class="meal-item">
+                    <div class="meal-header">
+                      <div>
+                        <span class="meal-type">${m.mealType}</span>
+                        ${m.isCheatMeal ? '<span class="cheat-badge">🍕 Cheat Meal</span>' : ''}
+                      </div>
+                      ${m.time ? `<span class="meal-time">${formatTime(m.time, m.timestamp)}</span>` : ''}
+                    </div>
+                    <div class="meal-description">${m.description}</div>
+                  </div>
                 `).join('')}
-              </table>
+              </div>
             </div>
           ` : ''}
 
           ${logs.meals.length === 0 && !logs.weight && logs.water.length === 0 && !logs.sleep ? `
-            <p>No logs recorded for this date.</p>
+            <div class="no-data">
+              No logs recorded for this date
+            </div>
           ` : ''}
         </body>
       </html>
@@ -316,66 +474,102 @@ export default function History({
 
     const sortedDates = Array.from(allDates).sort();
 
+    // Calculate summary statistics
+    const totalMeals = meals.length;
+    const totalWeightLogs = weights.length;
+    const totalWaterLogs = waterLogs.length;
+    const totalSleepLogs = sleepLogs.length;
+    const cheatMeals = meals.filter(m => m.isCheatMeal).length;
+    const totalWaterGlasses = waterLogs.reduce((sum, w) => sum + w.glasses, 0);
+
     const content = sortedDates.map(date => {
       const dayLogs = getLogsForDate(date);
       return `
-        <div class="date-section" style="page-break-inside: avoid; margin-bottom: 30px;">
-          <h2 style="color: #10b981; border-bottom: 2px solid #10b981; padding-bottom: 5px;">${formatDate(date)}</h2>
+        <div class="date-section" style="page-break-inside: avoid; margin-bottom: 40px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; background: #fafafa;">
+          <h2 style="color: #059669; border-bottom: 3px solid #059669; padding-bottom: 8px; margin-bottom: 15px; font-size: 18px;">${formatDate(date)}</h2>
 
           ${dayLogs.weight ? `
-            <div class="section">
-              <h3>Weight</h3>
-              <div class="data-row">
-                <span class="label">Weight:</span>
-                <span class="value">${dayLogs.weight.weight} kg</span>
+            <div class="section" style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+              <h3 style="color: #374151; margin-bottom: 8px; font-size: 14px;">⚖️ Weight</h3>
+              <div class="data-grid">
+                <div class="data-item">
+                  <span class="label">Weight:</span>
+                  <span class="value">${dayLogs.weight.weight} kg</span>
+                </div>
+                ${dayLogs.weight.time ? `
+                  <div class="data-item">
+                    <span class="label">Time:</span>
+                    <span class="value">${formatTime(dayLogs.weight.time, dayLogs.weight.timestamp)}</span>
+                  </div>
+                ` : ''}
               </div>
             </div>
           ` : ''}
 
           ${dayLogs.water.length > 0 ? `
-            <div class="section">
-              <h3>Water Intake</h3>
-              ${dayLogs.water.map((w: any) => `
-                <div class="data-row">
-                  <span class="label">Water:</span>
-                  <span class="value">${w.glasses} glasses</span>
-                </div>
-              `).join('')}
+            <div class="section" style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+              <h3 style="color: #374151; margin-bottom: 8px; font-size: 14px;">💧 Water Intake</h3>
+              <div class="data-list">
+                ${dayLogs.water.map((w: any) => `
+                  <div class="data-item">
+                    <span class="label">${w.glasses} glasses</span>
+                    ${w.time ? `<span class="value">at ${formatTime(w.time, w.timestamp)}</span>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+              <div class="summary" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                <span class="label">Daily Total:</span>
+                <span class="value">${dayLogs.water.reduce((sum, w) => sum + w.glasses, 0)} glasses</span>
+              </div>
             </div>
           ` : ''}
 
           ${dayLogs.sleep ? `
-            <div class="section">
-              <h3>Sleep</h3>
-              <div class="data-row">
-                <span class="label">Duration:</span>
-                <span class="value">${dayLogs.sleep.hours} hours</span>
-              </div>
-              <div class="data-row">
-                <span class="label">Quality:</span>
-                <span class="value">${dayLogs.sleep.quality}</span>
+            <div class="section" style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+              <h3 style="color: #374151; margin-bottom: 8px; font-size: 14px;">🌙 Sleep</h3>
+              <div class="data-grid">
+                <div class="data-item">
+                  <span class="label">Duration:</span>
+                  <span class="value">${dayLogs.sleep.hours} hours</span>
+                </div>
+                <div class="data-item">
+                  <span class="label">Quality:</span>
+                  <span class="value">${dayLogs.sleep.quality}</span>
+                </div>
+                ${dayLogs.sleep.time ? `
+                  <div class="data-item">
+                    <span class="label">Time:</span>
+                    <span class="value">${formatTime(dayLogs.sleep.time, dayLogs.sleep.timestamp)}</span>
+                  </div>
+                ` : ''}
               </div>
             </div>
           ` : ''}
 
           ${dayLogs.meals.length > 0 ? `
-            <div class="section">
-              <h3>Meals</h3>
-              <table>
-                <tr><th>Type</th><th>Description</th><th>Cheat Meal</th></tr>
+            <div class="section" style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+              <h3 style="color: #374151; margin-bottom: 8px; font-size: 14px;">🍽️ Meals (${dayLogs.meals.length})</h3>
+              <div class="meals-list">
                 ${dayLogs.meals.map((m: any) => `
-                  <tr>
-                    <td>${m.mealType}</td>
-                    <td>${m.description}</td>
-                    <td>${m.isCheatMeal ? 'Yes' : 'No'}</td>
-                  </tr>
+                  <div class="meal-item" style="border: 1px solid #e5e7eb; border-radius: 4px; padding: 8px; margin-bottom: 6px; background: ${m.isCheatMeal ? '#fef2f2' : '#f0fdf4'};">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <div>
+                        <span class="meal-type" style="font-weight: bold; color: #059669;">${m.mealType}</span>
+                        ${m.isCheatMeal ? '<span style="color: #dc2626; font-size: 12px; margin-left: 8px;">🍕 Cheat Meal</span>' : ''}
+                      </div>
+                      ${m.time ? `<span class="meal-time" style="color: #6b7280; font-size: 12px;">${formatTime(m.time, m.timestamp)}</span>` : ''}
+                    </div>
+                    <div class="meal-description" style="margin-top: 4px; color: #374151;">${m.description}</div>
+                  </div>
                 `).join('')}
-              </table>
+              </div>
             </div>
           ` : ''}
 
           ${dayLogs.meals.length === 0 && !dayLogs.weight && dayLogs.water.length === 0 && !dayLogs.sleep ? `
-            <p>No logs recorded for this date.</p>
+            <div class="no-data" style="text-align: center; color: #6b7280; font-style: italic; padding: 20px;">
+              No logs recorded for this date
+            </div>
           ` : ''}
         </div>
       `;
@@ -384,29 +578,143 @@ export default function History({
     printWindow.document.write(`
       <html>
         <head>
-          <title>Weight Tracker - All Data Export</title>
+          <title>Weight Tracker - Complete Data Export</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-            h1 { color: #10b981; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
-            h2 { color: #10b981; margin-top: 30px; }
-            h3 { color: #374151; margin-top: 20px; }
-            .section { margin: 15px 0; }
-            .data-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
-            .label { font-weight: bold; color: #374151; }
-            .value { color: #10b981; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; font-size: 12px; }
-            th { background-color: #10b981; color: white; }
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              padding: 20px;
+              max-width: 850px;
+              margin: 0 auto;
+              background: #ffffff;
+              color: #374151;
+              line-height: 1.5;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 4px solid #059669;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .header h1 {
+              color: #059669;
+              font-size: 28px;
+              margin: 0;
+              font-weight: 700;
+            }
+            .header .meta {
+              color: #6b7280;
+              font-size: 14px;
+              margin-top: 8px;
+            }
+            .summary {
+              background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+              border: 2px solid #059669;
+              border-radius: 12px;
+              padding: 20px;
+              margin-bottom: 30px;
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 15px;
+            }
+            .summary-item {
+              text-align: center;
+            }
+            .summary-value {
+              font-size: 24px;
+              font-weight: bold;
+              color: #059669;
+              display: block;
+            }
+            .summary-label {
+              font-size: 12px;
+              color: #374151;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .data-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 8px;
+            }
+            .data-item {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 4px 0;
+            }
+            .data-list {
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+            }
+            .label {
+              font-weight: 600;
+              color: #374151;
+              font-size: 13px;
+            }
+            .value {
+              color: #059669;
+              font-weight: 600;
+              font-size: 13px;
+            }
+            .meals-list {
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            }
             @media print {
-              body { padding: 0; }
+              body { padding: 15px; }
               .no-print { display: none; }
+              .date-section { page-break-inside: avoid; }
+            }
+            @media (max-width: 600px) {
+              .data-grid { grid-template-columns: 1fr; }
+              .summary { grid-template-columns: 1fr; }
             }
           </style>
         </head>
         <body>
-          <h1>Weight Tracker - Complete Data Export</h1>
-          <p><strong>Generated on:</strong> ${new Date().toLocaleDateString()}</p>
-          <p><strong>Total Dates:</strong> ${sortedDates.length}</p>
+          <div class="header">
+            <h1>📊 Weight Tracker - Complete Data Export</h1>
+            <div class="meta">
+              Generated on: ${new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </div>
+          </div>
+
+          <div class="summary">
+            <div class="summary-item">
+              <span class="summary-value">${sortedDates.length}</span>
+              <span class="summary-label">Total Days</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-value">${totalMeals}</span>
+              <span class="summary-label">Total Meals</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-value">${totalWeightLogs}</span>
+              <span class="summary-label">Weight Logs</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-value">${totalWaterGlasses}</span>
+              <span class="summary-label">Water Glasses</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-value">${totalSleepLogs}</span>
+              <span class="summary-label">Sleep Logs</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-value">${cheatMeals}</span>
+              <span class="summary-label">Cheat Meals</span>
+            </div>
+          </div>
+
           ${content}
         </body>
       </html>
