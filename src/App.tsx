@@ -13,7 +13,7 @@ import SleepLog from './components/SleepLog';
 import Toast from './components/Toast';
 import DarkModeToggle from './components/DarkModeToggle';
 import { MealEntry, WeightLog as WeightLogType, WaterLog as WaterLogType, SleepLog as SleepLogType, UserSettings, MealType } from './types';
-import { mockMeals, mockWeights, mockWaterLogs, mockSleepLogs, defaultSettings } from './data/mockData';
+import { mockMeals, mockWeights, defaultSettings } from './data/mockData';
 import { logApi, settingsApi } from './services/api';
 import notificationService from './services/notifications';
 
@@ -21,8 +21,8 @@ function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [meals, setMeals] = useState<MealEntry[]>(mockMeals);
   const [weights, setWeights] = useState<WeightLogType[]>(mockWeights);
-  const [waterLogs, setWaterLogs] = useState<WaterLogType[]>(mockWaterLogs);
-  const [sleepLogs, setSleepLogs] = useState<SleepLogType[]>(mockSleepLogs);
+  const [waterLogs, setWaterLogs] = useState<WaterLogType[]>([]);
+  const [sleepLogs, setSleepLogs] = useState<SleepLogType[]>([]);
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
   const [activeLogType, setActiveLogType] = useState<MealType | null>(null);
   const [showMealTypeSelector, setShowMealTypeSelector] = useState(false);
