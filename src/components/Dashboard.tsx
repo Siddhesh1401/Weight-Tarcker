@@ -41,29 +41,39 @@ export default function Dashboard({ meals, weights, waterLogs, sleepLogs, settin
   // Helper function to check if a date is today (handles timezone issues)
   const isToday = (dateString: string) => {
     if (!dateString) return false;
-    const date = new Date(dateString);
-    const todayDate = new Date();
-    return date.toDateString() === todayDate.toDateString();
+    
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    // Extract date from the input (handles both date strings and timestamps)
+    let dateToCheck = dateString;
+    if (dateString.includes('T')) {
+      // It's a timestamp, extract the date part
+      dateToCheck = dateString.split('T')[0];
+    }
+    
+    return dateToCheck === todayStr;
   };
 
-  const todayMeals = meals.filter(m => isToday(m.date) || isToday(m.timestamp));
+  const todayMeals = meals.filter(m => isToday(m.date));
   
   // Filter weight logs to only show valid numeric values
   const todayWeight = weights.find(w => {
     const isValidWeight = typeof w.weight === 'number' && Number.isFinite(w.weight) && !isNaN(w.weight);
-    return isValidWeight && (isToday(w.date) || isToday(w.timestamp));
+    return isValidWeight && isToday(w.date);
   });
   
   // Filter water logs to only show valid numeric values
   const todayWater = waterLogs.filter(w => {
     const isValidWater = typeof w.glasses === 'number' && Number.isFinite(w.glasses) && !isNaN(w.glasses);
-    return isValidWater && (isToday(w.date) || isToday(w.timestamp));
+    return isValidWater && isToday(w.date);
   });
   
   // Filter sleep logs to only show valid numeric values
   const todaySleep = sleepLogs.find(s => {
     const isValidSleep = typeof s.hours === 'number' && Number.isFinite(s.hours) && !isNaN(s.hours);
-    return isValidSleep && (isToday(s.date) || isToday(s.timestamp));
+    return isValidSleep && isToday(s.date);
   });
 
   const greeting = `Hello, ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`;

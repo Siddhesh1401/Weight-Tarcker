@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -11,6 +11,7 @@ import {
   Scatter,
   ComposedChart,
   Bar,
+  BarChart,
   Area,
   AreaChart
 } from 'recharts';
@@ -66,13 +67,15 @@ export default function HealthTrendsChart({
 }: HealthTrendsChartProps) {
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['weight', 'water', 'sleep']);
   const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [currentChartType, setCurrentChartType] = useState<'trends' | 'correlation' | 'distribution'>(chartType);
+  const [currentTimeRange, setCurrentTimeRange] = useState<'week' | 'month' | '3months' | '6months' | 'year'>(timeRange);
 
   // Calculate date range based on timeRange
   const dateRange = useMemo(() => {
     const endDate = new Date();
     const startDate = new Date();
 
-    switch (timeRange) {
+    switch (currentTimeRange) {
       case 'week':
         startDate.setDate(endDate.getDate() - 7);
         break;
@@ -91,7 +94,7 @@ export default function HealthTrendsChart({
     }
 
     return { startDate, endDate };
-  }, [timeRange]);
+  }, [currentTimeRange]);
 
   // Process and aggregate data based on view mode
   const processedData = useMemo(() => {
@@ -529,8 +532,8 @@ export default function HealthTrendsChart({
 
         <div className="flex flex-wrap gap-2">
           <select
-            value={timeRange}
-            onChange={(e) => {/* timeRange change handler */}}
+            value={currentTimeRange}
+            onChange={(e) => setCurrentTimeRange(e.target.value as any)}
             className="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm"
           >
             <option value="week">Last Week</option>
@@ -557,9 +560,9 @@ export default function HealthTrendsChart({
             ].map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
-                onClick={() => {/* chartType change handler */}}
+                onClick={() => setCurrentChartType(key as any)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                  chartType === key
+                  currentChartType === key
                     ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
                     : 'text-gray-600 dark:text-gray-400'
                 }`}
@@ -617,9 +620,9 @@ export default function HealthTrendsChart({
       </div>
 
       {/* Chart Content */}
-      {chartType === 'trends' && renderTrendsChart()}
-      {chartType === 'correlation' && renderCorrelationChart()}
-      {chartType === 'distribution' && renderDistributionChart()}
+      {currentChartType === 'trends' && renderTrendsChart()}
+      {currentChartType === 'correlation' && renderCorrelationChart()}
+      {currentChartType === 'distribution' && renderDistributionChart()}
     </div>
   );
 }
