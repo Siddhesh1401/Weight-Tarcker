@@ -700,7 +700,13 @@ function App() {
         )}
 
         {currentPage === 'progress' && (
-          <ProgressDashboard meals={meals} weights={weights} />
+          <ProgressDashboard 
+            meals={meals} 
+            weights={weights} 
+            waterLogs={waterLogs}
+            sleepLogs={sleepLogs}
+            settings={settings}
+          />
         )}
 
         {currentPage === 'settings' && (

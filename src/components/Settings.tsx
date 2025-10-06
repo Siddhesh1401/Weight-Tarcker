@@ -111,6 +111,47 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
               </div>
             </div>
 
+            {/* Daily Goals */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="text-emerald-500" size={20} />
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200">Daily Goals</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Water Goal (glasses per day)</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={formData.waterGoal || 8}
+                      onChange={(e) => setFormData({ ...formData, waterGoal: parseInt(e.target.value) })}
+                      className="flex-1 px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none text-lg"
+                    />
+                    <span className="text-gray-600 dark:text-gray-400 font-medium">glasses</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Sleep Goal (hours per night)</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="4"
+                      max="12"
+                      value={formData.sleepGoal || 8}
+                      onChange={(e) => setFormData({ ...formData, sleepGoal: parseFloat(e.target.value) })}
+                      className="flex-1 px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none text-lg"
+                    />
+                    <span className="text-gray-600 dark:text-gray-400 font-medium">hours</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Meal Times */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-4">

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell } from 'recharts';
 import { Activity, Droplets, Moon, TrendingUp, Award } from 'lucide-react';
 import WeightChart from './WeightChart';
-import { MealEntry, WeightLog as WeightLogType } from '../types';
+import { MealEntry, WeightLog as WeightLogType, WaterLog, SleepLog, UserSettings } from '../types';
 
 interface ProgressData {
   totalMeals: number;
@@ -24,15 +24,27 @@ interface ProgressData {
     value: number;
     color: string;
   }>;
+  waterTrend: Array<{
+    date: string;
+    glasses: number;
+  }>;
+  sleepTrend: Array<{
+    date: string;
+    hours: number;
+    quality: string;
+  }>;
 }
 
 interface ProgressDashboardProps {
   className?: string;
   meals?: MealEntry[];
   weights?: WeightLogType[];
+  waterLogs?: WaterLog[];
+  sleepLogs?: SleepLog[];
+  settings?: UserSettings;
 }
 
-export default function ProgressDashboard({ className = '', meals = [], weights = [] }: ProgressDashboardProps) {
+export default function ProgressDashboard({ className = '', meals = [], weights = [], waterLogs = [], sleepLogs = [], settings }: ProgressDashboardProps) {
   const [progressData, setProgressData] = useState<ProgressData>({
     totalMeals: 0,
     totalWater: 0,
@@ -40,22 +52,24 @@ export default function ProgressDashboard({ className = '', meals = [], weights 
     avgSleep: 0,
     weightProgress: 0,
     weeklyGoal: {
-      meals: 21, // 3 meals/day * 7 days
-      water: 56, // 8 glasses/day * 7 days
-      sleep: 56  // 8 hours/day * 7 days
+      meals: 21, // 3 meals/day
+      water: 56, // 8 glasses/day
+      sleep: 56, // 8 hours/day
     },
     recentWeights: [],
     mealDistribution: [
-      { name: 'Breakfast', value: 0, color: '#fbbf24' },
-      { name: 'Lunch', value: 0, color: '#f59e0b' },
-      { name: 'Snacks', value: 0, color: '#d97706' },
-      { name: 'Dinner', value: 0, color: '#b45309' }
-    ]
+      { name: 'Breakfast', value: 0, color: '#8884d8' },
+      { name: 'Lunch', value: 0, color: '#82ca9d' },
+      { name: 'Dinner', value: 0, color: '#ffc658' },
+      { name: 'Snacks', value: 0, color: '#ff7c7c' },
+    ],
+    waterTrend: [],
+    sleepTrend: [],
   });
 
   useEffect(() => {
     calculateProgressData();
-  }, [meals, weights]);
+  }, [meals, weights, waterLogs, sleepLogs]);
 
   const calculateProgressData = () => {
     // Get current week data (last 7 days)
@@ -112,6 +126,27 @@ export default function ProgressDashboard({ className = '', meals = [], weights 
       color: ['#fbbf24', '#f59e0b', '#d97706', '#b45309'][index]
     }));
 
+    // Water trend (last 7 days)
+    const waterTrend = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      const dateStr = date.toISOString().split('T')[0];
+      const dayWater = (waterLogs || []).filter((log: WaterLog) => log.date === dateStr).reduce((sum: number, log: WaterLog) => sum + log.glasses, 0);
+      return { date: dateStr, glasses: dayWater };
+    });
+
+    // Sleep trend (last 7 days)
+    const sleepTrend = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      const dateStr = date.toISOString().split('T')[0];
+      const daySleep = (sleepLogs || []).filter((log: SleepLog) => log.date === dateStr);
+      const totalSleep = daySleep.reduce((sum: number, log: SleepLog) => sum + log.hours, 0);
+      const qualityMap = { 'poor': 1, 'fair': 2, 'good': 3, 'excellent': 4 };
+      const avgQuality = daySleep.length > 0 ? daySleep.reduce((sum: number, log: SleepLog) => sum + (qualityMap[log.quality] || 3), 0) / daySleep.length : 3;
+      return { date: dateStr, hours: totalSleep, quality: ['Poor', 'Fair', 'Good', 'Excellent'][Math.round(avgQuality) - 1] || 'Good' };
+    });
+
     setProgressData({
       totalMeals,
       totalWater,
@@ -124,7 +159,9 @@ export default function ProgressDashboard({ className = '', meals = [], weights 
         sleep: 56  // 8 hours/day * 7 days
       },
       recentWeights,
-      mealDistribution
+      mealDistribution,
+      waterTrend,
+      sleepTrend
     });
   };
 

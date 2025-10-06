@@ -123,4 +123,6 @@ export const defaultSettings: UserSettings = {
   snacksTime: '6:00 PM',
   dinnerTime: '11:00 PM',
   notificationsEnabled: true,
+  waterGoal: 8,
+  sleepGoal: 8,
 };

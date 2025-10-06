@@ -120,21 +120,40 @@ export default function Dashboard({ meals, weights, waterLogs, sleepLogs, settin
               </div>
             )}
 
-            {todayWater.map((water) => (
-              <div key={water.id} className="p-3 sm:p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Droplets size={16} className="text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">Water</span>
+            {todayWater.map((water) => {
+              const totalWaterToday = todayWater.reduce((sum, w) => sum + w.glasses, 0);
+              const waterGoal = settings.waterGoal || 8;
+              const waterProgress = Math.min(100, (totalWaterToday / waterGoal) * 100);
+              const isGoalMet = totalWaterToday >= waterGoal;
+              
+              return (
+                <div key={water.id} className={`p-3 sm:p-4 rounded-2xl border-2 ${
+                  isGoalMet 
+                    ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700' 
+                    : 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700'
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <Droplets size={16} className={isGoalMet ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400"} />
+                      <span className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">Water</span>
+                    </div>
+                    <span className={`text-lg sm:text-xl font-bold ${isGoalMet ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                      {totalWaterToday}/{waterGoal} glasses
+                    </span>
                   </div>
-                  <span className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400">{water.glasses} glasses</span>
+                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all duration-300 ${isGoalMet ? 'bg-green-500' : 'bg-blue-500'}`}
+                      style={{ width: `${waterProgress}%` }}
+                    ></div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            }).slice(-1)} {/* Only show the last water entry with progress */}
 
             {todaySleep && (
               <div className="p-3 sm:p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 border-2 border-indigo-200 dark:border-indigo-700">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <Moon size={16} className="text-indigo-600 dark:text-indigo-400" />
                     <span className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">Sleep</span>
@@ -144,6 +163,20 @@ export default function Dashboard({ meals, weights, waterLogs, sleepLogs, settin
                     <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 ml-2 capitalize">({todaySleep.quality})</span>
                   </div>
                 </div>
+                {settings.sleepGoal && (
+                  <div className="mt-2">
+                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      <span>Goal: {settings.sleepGoal}h</span>
+                      <span>{Math.round((todaySleep.hours / settings.sleepGoal) * 100)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                      <div 
+                        className="bg-indigo-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, (todaySleep.hours / settings.sleepGoal) * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
