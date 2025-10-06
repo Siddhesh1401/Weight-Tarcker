@@ -8,8 +8,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node scripts/seed.js",
-    "view-logs": "node scripts/view-logs.js",
-    "test-api": "node test-templates.js"
+    "view-logs": "node scripts/view-logs.js"
   },
   "keywords": [
     "weight-tracker",
