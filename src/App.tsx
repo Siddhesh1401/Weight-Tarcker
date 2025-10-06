@@ -64,10 +64,11 @@ function App() {
 
         if (logsData) {
           setIsOnline(true);
+          console.log('📥 Loaded', logsData.length, 'logs from backend');
           
           // Transform backend logs to frontend format
           const mealLogs: MealEntry[] = logsData
-            .filter((log: any) => log.meal_type !== 'weight')
+            .filter((log: any) => ['breakfast', 'lunch', 'snacks', 'dinner', 'other'].includes(log.meal_type))
             .map((log: any) => ({
               id: log._id,
               date: log.date,
@@ -76,19 +77,51 @@ function App() {
               hadTea: log.tea_biscuit,
               isCheatMeal: log.cheat_meal,
               timestamp: log.timestamp,
+              time: log.time,
             }));
 
           const weightLogs: WeightLogType[] = logsData
-            .filter((log: any) => log.weight !== null && log.weight > 0)
+            .filter((log: any) => log.meal_type === 'weight' && log.weight !== null && log.weight > 0)
             .map((log: any) => ({
               id: log._id,
               date: log.date,
               weight: log.weight,
               timestamp: log.timestamp,
+              time: log.time,
             }));
+
+          const waterLogsData: WaterLogType[] = logsData
+            .filter((log: any) => log.meal_type === 'water' && log.water_glasses !== null && log.water_glasses > 0)
+            .map((log: any) => ({
+              id: log._id,
+              date: log.date,
+              glasses: log.water_glasses,
+              timestamp: log.timestamp,
+              time: log.time,
+            }));
+
+          const sleepLogsData: SleepLogType[] = logsData
+            .filter((log: any) => log.meal_type === 'sleep' && log.sleep_hours !== null && log.sleep_hours > 0)
+            .map((log: any) => ({
+              id: log._id,
+              date: log.date,
+              hours: log.sleep_hours,
+              quality: log.sleep_quality || 'good',
+              timestamp: log.timestamp,
+              time: log.time,
+            }));
+
+          console.log('📊 Transformed logs:', {
+            meals: mealLogs.length,
+            weights: weightLogs.length,
+            water: waterLogsData.length,
+            sleep: sleepLogsData.length,
+          });
 
           setMeals(mealLogs);
           setWeights(weightLogs);
+          setWaterLogs(waterLogsData);
+          setSleepLogs(sleepLogsData);
         } else {
           // Backend not available, use mock data
           setIsOnline(false);
@@ -158,6 +191,11 @@ function App() {
       // Update backend if online
       if (isOnline) {
         try {
+          console.log('🔄 Updating meal on backend:', {
+            date: updatedMeal.date,
+            meal_type: updatedMeal.mealType,
+            time: selectedTime,
+          });
           await logApi.updateLog({
             date: updatedMeal.date,
             meal_type: updatedMeal.mealType,
@@ -166,8 +204,9 @@ function App() {
             cheat_meal: isCheatMeal,
             time: selectedTime,
           });
+          console.log('✅ Meal updated successfully on backend');
         } catch (error) {
-          console.error('Failed to update meal on backend:', error);
+          console.error('❌ Failed to update meal on backend:', error);
         }
       }
       return;
