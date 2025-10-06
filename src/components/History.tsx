@@ -50,6 +50,63 @@ export default function History({
 
   const sortedDates = Array.from(allDates).sort((a, b) => b.localeCompare(a)); // Most recent first
 
+  // Group meals that are the same type and logged within TIME_WINDOW minutes
+  const groupNearbyMeals = (mealList: MealEntry[]) => {
+    const TIME_WINDOW = 5; // minutes
+    
+    // Sort meals by timestamp
+    const sorted = [...mealList].sort((a, b) => {
+      const timeA = a.timestamp || `${a.date}T${a.time || '00:00'}:00`;
+      const timeB = b.timestamp || `${b.date}T${b.time || '00:00'}:00`;
+      return new Date(timeA).getTime() - new Date(timeB).getTime();
+    });
+
+    const groups: Array<{
+      meals: MealEntry[];
+      mealType: string;
+      time: string;
+      timestamp: string;
+      isCheatMeal: boolean;
+      hadTea: boolean;
+      combinedDescription: string;
+      ids: string[];
+    }> = [];
+
+    sorted.forEach(meal => {
+      const mealTime = new Date(meal.timestamp || `${meal.date}T${meal.time || '00:00'}:00`).getTime();
+      
+      // Find if there's a group with the same meal type within TIME_WINDOW minutes
+      const existingGroup = groups.find(group => {
+        const groupTime = new Date(group.timestamp).getTime();
+        const timeDiff = Math.abs(mealTime - groupTime) / (1000 * 60); // difference in minutes
+        return group.mealType === meal.mealType && timeDiff <= TIME_WINDOW;
+      });
+
+      if (existingGroup) {
+        // Add to existing group
+        existingGroup.meals.push(meal);
+        existingGroup.ids.push(meal.id);
+        existingGroup.combinedDescription += ', ' + meal.description;
+        existingGroup.isCheatMeal = existingGroup.isCheatMeal || (meal.isCheatMeal ?? false);
+        existingGroup.hadTea = existingGroup.hadTea || (meal.hadTea ?? false);
+      } else {
+        // Create new group
+        groups.push({
+          meals: [meal],
+          mealType: meal.mealType,
+          time: meal.time || '00:00',
+          timestamp: meal.timestamp || `${meal.date}T${meal.time || '00:00'}:00`,
+          isCheatMeal: meal.isCheatMeal ?? false,
+          hadTea: meal.hadTea ?? false,
+          combinedDescription: meal.description,
+          ids: [meal.id]
+        });
+      }
+    });
+
+    return groups;
+  };
+
   const getLogsForDate = (date: string) => {
     return {
       meals: meals.filter(m => m.date === date),
@@ -1118,79 +1175,134 @@ export default function History({
                     )}
 
                     {/* Meals */}
-                    {selectedLogs.meals.length > 0 && (
-                      <div className="space-y-4">
-                        <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg">Meals</h3>
-                        {selectedLogs.meals.map((meal) => {
-                          const isCheat = meal.isCheatMeal;
-                          // Split description by commas to format as chips
-                          const formatDescription = (desc: string) => {
-                            const parts = desc.split(',').map(part => part.trim());
-                            return parts;
-                          };
-                          const descriptionParts = formatDescription(meal.description);
+                    {selectedLogs.meals.length > 0 && (() => {
+                      const groupedMeals = groupNearbyMeals(selectedLogs.meals);
+                      
+                      return (
+                        <div className="space-y-4">
+                          <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg">Meals</h3>
+                          {groupedMeals.map((group) => {
+                            const isCheat = group.isCheatMeal;
+                            // Split description by commas to format as chips
+                            const formatDescription = (desc: string) => {
+                              const parts = desc.split(',').map(part => part.trim()).filter(p => p.length > 0);
+                              return parts;
+                            };
+                            const descriptionParts = formatDescription(group.combinedDescription);
+                            const isGrouped = group.meals.length > 1;
 
-                          return (
-                            <div
-                              key={meal.id}
-                              className={`rounded-2xl p-5 shadow-lg border-2 transition-all ${
-                                isCheat
-                                  ? 'bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-700'
-                                  : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
-                              }`}
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                                      {meal.mealType}
-                                    </span>
-                                    {meal.hadTea && <Coffee size={16} className="text-amber-600 dark:text-amber-400" />}
-                                    {isCheat && <Pizza size={16} className="text-rose-500 dark:text-rose-400" />}
-                                  </div>
-                                  {/* Display description items as tags/chips */}
-                                  <div className="flex flex-wrap gap-2">
-                                    {descriptionParts.map((part, index) => (
-                                      <span
-                                        key={index}
-                                        className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-500 shadow-sm"
-                                      >
-                                        {part}
+                            return (
+                              <div
+                                key={group.ids.join('-')}
+                                className={`rounded-2xl p-5 shadow-lg border-2 transition-all ${
+                                  isCheat
+                                    ? 'bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-700'
+                                    : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-3">
+                                      <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                        {group.mealType}
                                       </span>
-                                    ))}
+                                      {group.hadTea && <Coffee size={16} className="text-amber-600 dark:text-amber-400" />}
+                                      {isCheat && <Pizza size={16} className="text-rose-500 dark:text-rose-400" />}
+                                      {isGrouped && (
+                                        <span className="text-xs bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full font-medium">
+                                          {group.meals.length} entries combined
+                                        </span>
+                                      )}
+                                    </div>
+                                    {/* Display description items as tags/chips */}
+                                    <div className="flex flex-wrap gap-2">
+                                      {descriptionParts.map((part, index) => (
+                                        <span
+                                          key={index}
+                                          className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-500 shadow-sm"
+                                        >
+                                          {part}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col items-end gap-2">
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                      {formatTime(group.time, group.timestamp)}
+                                    </span>
+                                    <div className="flex gap-2">
+                                      {onEditMeal && group.meals.length === 1 && (
+                                        <button
+                                          onClick={() => onEditMeal(group.meals[0])}
+                                          className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                                        >
+                                          <Edit2 size={18} />
+                                        </button>
+                                      )}
+                                      {group.meals.length === 1 ? (
+                                        <button
+                                          onClick={() => setDeleteItem({
+                                            type: 'Meal',
+                                            id: group.meals[0].id,
+                                            description: `${group.mealType}: ${group.meals[0].description}`
+                                          })}
+                                          className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
+                                        >
+                                          <Trash2 size={18} />
+                                        </button>
+                                      ) : (
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 italic pt-2">
+                                          Delete items individually
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                                <div className="flex flex-col items-end gap-2">
-                                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    {formatTime(meal.time, meal.timestamp)}
-                                  </span>
-                                  <div className="flex gap-2">
-                                    {onEditMeal && (
-                                      <button
-                                        onClick={() => onEditMeal(meal)}
-                                        className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-                                      >
-                                        <Edit2 size={18} />
-                                      </button>
-                                    )}
-                                    <button
-                                      onClick={() => setDeleteItem({
-                                        type: 'Meal',
-                                        id: meal.id,
-                                        description: `${meal.mealType}: ${meal.description}`
-                                      })}
-                                      className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
-                                    >
-                                      <Trash2 size={18} />
-                                    </button>
+                                {/* Show individual entries if grouped */}
+                                {isGrouped && (
+                                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium">Individual entries:</p>
+                                    <div className="space-y-2">
+                                      {group.meals.map((meal, idx) => (
+                                        <div key={meal.id} className="flex items-center justify-between text-xs bg-white/50 dark:bg-gray-800/50 rounded-lg p-2">
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-medium text-gray-600 dark:text-gray-400">#{idx + 1}</span>
+                                            <span className="text-gray-700 dark:text-gray-300">{meal.description}</span>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-gray-500 dark:text-gray-400">
+                                              {formatTime(meal.time, meal.timestamp)}
+                                            </span>
+                                            {onEditMeal && (
+                                              <button
+                                                onClick={() => onEditMeal(meal)}
+                                                className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                                              >
+                                                <Edit2 size={14} />
+                                              </button>
+                                            )}
+                                            <button
+                                              onClick={() => setDeleteItem({
+                                                type: 'Meal',
+                                                id: meal.id,
+                                                description: `${meal.mealType}: ${meal.description}`
+                                              })}
+                                              className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
+                                            >
+                                              <Trash2 size={14} />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
+                                )}
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
 
                     {selectedLogs.meals.length === 0 && !selectedLogs.weight && selectedLogs.water.length === 0 && !selectedLogs.sleep && (
                       <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-100 dark:border-gray-600 text-center">
