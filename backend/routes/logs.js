@@ -258,12 +258,12 @@ router.delete('/log/:id', async (req, res) => {
   }
 });
 
-// PUT /api/log - Update an existing log entry (upsert based on date + meal_type + time)
+// PUT /api/log - Update an existing log entry
 router.put('/log', async (req, res) => {
   try {
     const { 
       user_id, date, meal_type, meal_notes, tea_biscuit, cheat_meal, weight,
-      water_glasses, sleep_hours, sleep_quality, time
+      water_glasses, sleep_hours, sleep_quality, time, log_id
     } = req.body;
 
     // Validation
@@ -274,15 +274,61 @@ router.put('/log', async (req, res) => {
       });
     }
 
+    console.log('PUT /api/log - Received:', { log_id, meal_type, date, time });
+
+    // If log_id is provided, use it to update (this is an edit of existing entry)
+    if (log_id) {
+      console.log('Updating by ID:', log_id);
+      
+      const updatedLog = await Log.findByIdAndUpdate(
+        log_id,
+        {
+          user_id,
+          date,
+          meal_type,
+          meal_notes: meal_notes || '',
+          tea_biscuit: tea_biscuit || false,
+          cheat_meal: cheat_meal || false,
+          weight: weight || null,
+          water_glasses: water_glasses || null,
+          sleep_hours: sleep_hours || null,
+          sleep_quality: sleep_quality || null,
+          time: time || null,
+          timestamp: new Date().toISOString()
+        },
+        { 
+          new: true,
+          runValidators: true
+        }
+      );
+
+      if (!updatedLog) {
+        return res.status(404).json({
+          success: false,
+          message: 'Log entry not found'
+        });
+      }
+
+      console.log('Updated log by ID:', updatedLog._id);
+
+      return res.json({
+        success: true,
+        message: 'Log entry updated successfully',
+        data: updatedLog
+      });
+    }
+
+    // If no log_id, fall back to upsert behavior (for backward compatibility)
     // Build query to find existing log
-    // For weight/sleep, we only have one per day, so match by date + type
-    // For water/meals, we match by date + type + time if time is provided
     let query = { user_id, date, meal_type };
+    
+    // Only add time to query for meals and water (allows multiple per day)
     if (time && (meal_type === 'water' || ['breakfast', 'lunch', 'snacks', 'dinner', 'other'].includes(meal_type))) {
       query.time = time;
     }
 
-    // Update or create the log
+    console.log('PUT /api/log - Query:', JSON.stringify(query));
+
     const updatedLog = await Log.findOneAndUpdate(
       query,
       {
@@ -300,11 +346,13 @@ router.put('/log', async (req, res) => {
         timestamp: new Date().toISOString()
       },
       { 
-        new: true,  // Return updated document
-        upsert: true,  // Create if doesn't exist
+        new: true,
+        upsert: true,
         runValidators: true
       }
     );
+
+    console.log('Updated/Created log:', updatedLog._id);
 
     res.json({
       success: true,

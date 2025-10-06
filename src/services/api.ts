@@ -69,8 +69,9 @@ export const logApi = {
     });
   },
 
-  // Update an existing log (upsert based on date + meal_type + time)
+  // Update an existing log (uses MongoDB _id to prevent duplicates when time changes)
   async updateLog(logData: {
+    log_id?: string; // MongoDB _id of the log to update
     date: string;
     meal_type: string;
     meal_notes?: string;

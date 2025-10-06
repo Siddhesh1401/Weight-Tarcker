@@ -192,11 +192,13 @@ function App() {
       if (isOnline) {
         try {
           console.log('🔄 Updating meal on backend:', {
+            log_id: editingMeal.id,
             date: updatedMeal.date,
             meal_type: updatedMeal.mealType,
             time: selectedTime,
           });
           await logApi.updateLog({
+            log_id: editingMeal.id, // Send MongoDB _id
             date: updatedMeal.date,
             meal_type: updatedMeal.mealType,
             meal_notes: description,
@@ -281,6 +283,7 @@ function App() {
       if (isOnline) {
         try {
           await logApi.updateLog({
+            log_id: editingWeight.id, // Send MongoDB _id
             date: updatedWeight.date,
             meal_type: 'weight',
             weight: weight,
@@ -356,6 +359,7 @@ function App() {
       if (isOnline) {
         try {
           await logApi.updateLog({
+            log_id: editingWater.id, // Send MongoDB _id
             date: updatedWater.date,
             meal_type: 'water',
             water_glasses: glasses,
@@ -431,6 +435,7 @@ function App() {
       if (isOnline) {
         try {
           await logApi.updateLog({
+            log_id: editingSleep.id, // Send MongoDB _id
             date: updatedSleep.date,
             meal_type: 'sleep',
             sleep_hours: hours,
