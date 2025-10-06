@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Save, Target, Clock, Moon, Sun, BookOpen, Download, Trash2, AlertTriangle, Database, Bell } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Target, Clock, Moon, Sun, BookOpen, Download, Trash2, AlertTriangle, Database, Bell, Activity } from 'lucide-react';
 import { UserSettings } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import ExportButton from './ExportButton';
 import DietPlan from './DietPlan';
 import NotificationSettings from './NotificationSettings';
+import HealthCalculator from './HealthCalculator';
 import notificationService, { NotificationSettings as NotifSettings } from '../services/notifications';
 
 interface SettingsProps {
@@ -14,7 +15,7 @@ interface SettingsProps {
   onDeleteAllData?: () => void;
 }
 
-type SettingsTab = 'main' | 'notifications' | 'diet' | 'data' | 'export';
+type SettingsTab = 'main' | 'notifications' | 'diet' | 'health' | 'data' | 'export';
 
 export default function Settings({ settings, onSave, onCancel, onDeleteAllData }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('main');
@@ -48,6 +49,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
     { id: 'main' as SettingsTab, label: 'Settings', icon: SettingsIcon },
     { id: 'notifications' as SettingsTab, label: 'Notifications', icon: Bell },
     { id: 'diet' as SettingsTab, label: 'Diet Plan', icon: BookOpen },
+    { id: 'health' as SettingsTab, label: 'Health Calculator', icon: Activity },
     { id: 'data' as SettingsTab, label: 'Data', icon: Database },
     { id: 'export' as SettingsTab, label: 'Export', icon: Download },
   ];
@@ -247,6 +249,12 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
         )}
 
         {activeTab === 'diet' && <DietPlan />}
+
+        {activeTab === 'health' && (
+          <div className="space-y-6">
+            <HealthCalculator settings={settings} onUpdateSettings={(updates) => onSave({ ...settings, ...updates })} />
+          </div>
+        )}
 
         {activeTab === 'notifications' && (
           <div className="space-y-6">

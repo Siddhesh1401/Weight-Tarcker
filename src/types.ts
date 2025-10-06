@@ -63,9 +63,14 @@ export interface UserSettings {
   snacksTime: string;
   dinnerTime: string;
   notificationsEnabled: boolean;
-  height?: number;
-  currentWeight?: number;
+  height?: number; // in cm
+  currentWeight?: number; // in kg
   waterGoal?: number;
   sleepGoal?: number;
   darkMode?: boolean;
+  age?: number;
+  gender?: 'male' | 'female';
+  bodyFatMethod?: 'navy' | 'jackson-pollock' | 'boer' | 'hume';
+  bmi?: number;
+  bodyFat?: number;
 }

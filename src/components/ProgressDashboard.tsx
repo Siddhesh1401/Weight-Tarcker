@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell } from 'recharts';
 import { Activity, Droplets, Moon, TrendingUp, Award } from 'lucide-react';
 import WeightChart from './WeightChart';
+import HealthTrendsChart from './HealthTrendsChart';
 import { MealEntry, WeightLog as WeightLogType, WaterLog, SleepLog, UserSettings } from '../types';
 
 interface ProgressData {
@@ -326,6 +327,17 @@ export default function ProgressDashboard({ className = '', meals = [], weights 
             {progressData.weightProgress > 0 ? '+' : ''}{progressData.weightProgress}kg
           </p>
         </div>
+      </div>
+
+      {/* Advanced Analytics */}
+      <div className="mt-8">
+        <HealthTrendsChart
+          meals={meals}
+          weights={weights}
+          waterLogs={waterLogs}
+          sleepLogs={sleepLogs}
+          timeRange="month"
+        />
       </div>
     </div>
   );
