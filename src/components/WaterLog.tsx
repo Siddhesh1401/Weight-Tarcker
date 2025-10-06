@@ -18,7 +18,8 @@ export default function WaterLog({ onSave, onCancel, currentGlasses = 0, editDat
   });
   const [logDate, setLogDate] = useState(() => {
     const now = new Date();
-    return now.toISOString().split('T')[0]; // YYYY-MM-DD format
+    // Use local date instead of UTC to avoid timezone issues
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   });
 
   // Populate form if editing
