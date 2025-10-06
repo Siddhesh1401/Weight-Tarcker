@@ -50,7 +50,8 @@ export default function SleepLog({ onSave, onCancel, editData }: SleepLogProps) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const hoursValue = parseFloat(hours);
-    if (hoursValue > 0) {
+    // Validate that hours is a valid positive number
+    if (hoursValue > 0 && Number.isFinite(hoursValue) && !isNaN(hoursValue)) {
       onSave(hoursValue, quality, logTime, logDate);
     }
   };

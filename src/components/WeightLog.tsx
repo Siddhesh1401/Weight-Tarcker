@@ -48,7 +48,8 @@ export default function WeightLog({ onSave, onCancel, editData }: WeightLogProps
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const weightValue = parseFloat(weight);
-    if (weightValue > 0) {
+    // Validate that weight is a valid positive number
+    if (weightValue > 0 && Number.isFinite(weightValue) && !isNaN(weightValue)) {
       onSave(weightValue, logTime, logDate);
     }
   };

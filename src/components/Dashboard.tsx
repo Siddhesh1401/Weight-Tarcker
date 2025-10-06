@@ -27,12 +27,24 @@ export default function Dashboard({ meals, weights, waterLogs, sleepLogs, settin
   };
 
   const todayMeals = meals.filter(m => isToday(m.date) || isToday(m.timestamp));
-  const todayWeight = weights.find(w => isToday(w.date) || isToday(w.timestamp));
+  
+  // Filter weight logs to only show valid numeric values
+  const todayWeight = weights.find(w => {
+    const isValidWeight = typeof w.weight === 'number' && Number.isFinite(w.weight) && !isNaN(w.weight);
+    return isValidWeight && (isToday(w.date) || isToday(w.timestamp));
+  });
+  
+  // Filter water logs to only show valid numeric values
   const todayWater = waterLogs.filter(w => {
     const isValidWater = typeof w.glasses === 'number' && Number.isFinite(w.glasses) && !isNaN(w.glasses);
     return isValidWater && (isToday(w.date) || isToday(w.timestamp));
   });
-  const todaySleep = sleepLogs.find(s => isToday(s.date) || isToday(s.timestamp));
+  
+  // Filter sleep logs to only show valid numeric values
+  const todaySleep = sleepLogs.find(s => {
+    const isValidSleep = typeof s.hours === 'number' && Number.isFinite(s.hours) && !isNaN(s.hours);
+    return isValidSleep && (isToday(s.date) || isToday(s.timestamp));
+  });
 
   const greeting = `Hello, ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`;
 

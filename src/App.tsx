@@ -209,6 +209,13 @@ function App() {
   };
 
   const handleSaveWeight = async (weight: number, time?: string, date?: string) => {
+    // Validate weight input
+    if (!Number.isFinite(weight) || isNaN(weight) || weight <= 0) {
+      setToastMessage('❌ Invalid weight value');
+      setTimeout(() => setToastMessage(''), 3000);
+      return;
+    }
+
     const now = new Date();
     const selectedDate = date || now.toISOString().split('T')[0];
     const selectedTime = time || now.toTimeString().slice(0, 5);
@@ -351,6 +358,13 @@ function App() {
   };
 
   const handleSaveSleep = async (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent', time?: string, date?: string) => {
+    // Validate hours input
+    if (!Number.isFinite(hours) || isNaN(hours) || hours <= 0) {
+      setToastMessage('❌ Invalid sleep hours');
+      setTimeout(() => setToastMessage(''), 3000);
+      return;
+    }
+
     const now = new Date();
     const selectedDate = date || now.toISOString().split('T')[0];
     const selectedTime = time || now.toTimeString().slice(0, 5);
