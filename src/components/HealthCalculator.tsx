@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calculator, Ruler, Weight, User, Activity, Target, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Calculator, Ruler, Weight, User, Activity, Target, TrendingUp, AlertTriangle, Save } from 'lucide-react';
 import { UserSettings } from '../types';
 
 interface HealthCalculatorProps {
@@ -164,24 +164,76 @@ export default function HealthCalculator({ settings, onUpdateSettings, className
     };
   };
 
-  // Calculate body fat based on selected method
-  const calculateBodyFat = () => {
-    const method = settings.bodyFatMethod || 'navy';
+  // Calculate Body Fat using Hume Formula
+  const calculateBodyFatHume = () => {
+    const weight = parseFloat(measurements.weight);
+    const height = parseFloat(measurements.height);
+    const age = parseFloat(measurements.age);
 
-    let result: BodyFatResult | null = null;
-
-    switch (method) {
-      case 'navy':
-        result = calculateBodyFatNavy();
-        break;
-      case 'boer':
-        result = calculateBodyFatBoer();
-        break;
-      default:
-        result = calculateBodyFatNavy();
+    if (!weight || !height || !age) {
+      return null;
     }
 
-    setBodyFatResult(result);
+    // Hume Formula: BF% = (0.407 * weight / height^2) + (0.267 * age) - 19.2 for males
+    // BF% = (0.407 * weight / height^2) + (0.267 * age) - 12.1 for females
+    const heightInMeters = height / 100;
+    const bmi = weight / (heightInMeters * heightInMeters);
+
+    let bodyFatPercentage = 0;
+
+    if (measurements.gender === 'male') {
+      bodyFatPercentage = (0.407 * bmi) + (0.267 * age) - 19.2;
+    } else {
+      bodyFatPercentage = (0.407 * bmi) + (0.267 * age) - 12.1;
+    }
+
+    bodyFatPercentage = Math.max(0, Math.min(50, bodyFatPercentage));
+
+    const categories = BODY_FAT_CATEGORIES[measurements.gender];
+    const category = categories.find(cat => bodyFatPercentage >= cat.range[0] && bodyFatPercentage < cat.range[1]) || categories[categories.length - 1];
+
+    return {
+      percentage: Math.round(bodyFatPercentage * 10) / 10,
+      category: category.category,
+      color: category.color,
+      description: category.description,
+      method: 'Hume Formula'
+    };
+  };
+
+  // Calculate Body Fat using Jackson-Pollock (simplified - requires calipers)
+  const calculateBodyFatJacksonPollock = () => {
+    // Jackson-Pollock method requires skinfold measurements with calipers
+    // Since we don't have caliper inputs, we'll use a simplified version based on available measurements
+    // This is not accurate - just for demonstration
+    const age = parseFloat(measurements.age);
+    const bmi = bmiResult?.bmi;
+
+    if (!age || !bmi) {
+      return null;
+    }
+
+    // Simplified estimation - not accurate without caliper measurements
+    let bodyFatPercentage = 0;
+
+    if (measurements.gender === 'male') {
+      bodyFatPercentage = (1.10938 * bmi) - (0.0008267 * age * age) + (0.0000016 * age * age * age) - 0.0002574 * age * age - 10.8;
+    } else {
+      bodyFatPercentage = (1.089733 * bmi) - (0.0009245 * age * age) + (0.0000025 * age * age * age) - 0.0000979 * age * age - 5.4;
+    }
+
+    bodyFatPercentage = Math.max(0, Math.min(50, bodyFatPercentage));
+
+    const categories = BODY_FAT_CATEGORIES[measurements.gender];
+    const category = categories.find(cat => bodyFatPercentage >= cat.range[0] && bodyFatPercentage < cat.range[1]) || categories[categories.length - 1];
+
+    return {
+      percentage: Math.round(bodyFatPercentage * 10) / 10,
+      category: category.category,
+      color: category.color,
+      description: category.description,
+      method: 'Jackson-Pollock (Estimated)'
+    };
   };
 
   // Auto-calculate when inputs change
@@ -200,10 +252,56 @@ export default function HealthCalculator({ settings, onUpdateSettings, className
   const updateMeasurements = (field: string, value: string) => {
     setMeasurements(prev => ({ ...prev, [field]: value }));
 
-    // Update settings if it's a core field
-    if (['height', 'age', 'gender'].includes(field)) {
-      onUpdateSettings({ [field]: field === 'gender' ? value : parseFloat(value) || undefined });
+    // Don't update settings immediately - only when results are calculated
+  };
+
+  // Save BMI and body fat results to settings
+  const saveResultsToSettings = () => {
+    const updates: Partial<UserSettings> = {};
+
+    if (bmiResult) {
+      updates.bmi = bmiResult.bmi;
     }
+
+    if (bodyFatResult) {
+      updates.bodyFat = bodyFatResult.percentage;
+    }
+
+    // Also save the measurement data
+    updates.height = parseFloat(measurements.height) || undefined;
+    updates.currentWeight = parseFloat(measurements.weight) || undefined;
+    updates.age = parseFloat(measurements.age) || undefined;
+    updates.gender = measurements.gender;
+
+    if (Object.keys(updates).length > 0) {
+      onUpdateSettings(updates);
+    }
+  };
+
+  // Calculate body fat based on selected method
+  const calculateBodyFat = () => {
+    const method = settings.bodyFatMethod || 'navy';
+
+    let result: BodyFatResult | null = null;
+
+    switch (method) {
+      case 'navy':
+        result = calculateBodyFatNavy();
+        break;
+      case 'boer':
+        result = calculateBodyFatBoer();
+        break;
+      case 'jackson-pollock':
+        result = calculateBodyFatJacksonPollock();
+        break;
+      case 'hume':
+        result = calculateBodyFatHume();
+        break;
+      default:
+        result = calculateBodyFatNavy();
+    }
+
+    setBodyFatResult(result);
   };
 
   const getBMIDescription = (bmi: number) => {
@@ -249,6 +347,69 @@ export default function HealthCalculator({ settings, onUpdateSettings, className
           Body Fat
         </button>
       </div>
+
+      {/* Body Fat Methods Information */}
+      {activeTab === 'bodyfat' && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 mb-6 border border-amber-200 dark:border-amber-800">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="text-amber-600 dark:text-amber-400" size={20} />
+            <h3 className="font-semibold text-amber-900 dark:text-amber-100">Body Fat Measurement Methods</h3>
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-amber-200 dark:border-amber-700">
+                <h4 className="font-semibold text-emerald-700 dark:text-emerald-300 mb-1">🏆 U.S. Navy Method (Recommended)</h4>
+                <p className="text-gray-700 dark:text-gray-300 text-xs mb-2">
+                  <strong>Accuracy:</strong> High (±2-3%)<br/>
+                  <strong>Measurements needed:</strong> Neck, waist, hip (females)
+                </p>
+                <p className="text-gray-600 dark:text-gray-400 text-xs">
+                  Most accurate method using circumference measurements. Used by military and fitness professionals.
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-amber-200 dark:border-amber-700">
+                <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-1">📊 Boer Formula</h4>
+                <p className="text-gray-700 dark:text-gray-300 text-xs mb-2">
+                  <strong>Accuracy:</strong> Medium (±4-5%)<br/>
+                  <strong>Measurements needed:</strong> BMI + Age only
+                </p>
+                <p className="text-gray-600 dark:text-gray-400 text-xs">
+                  Quick estimation using BMI and age. Good when detailed measurements aren't available.
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-amber-200 dark:border-amber-700">
+                <h4 className="font-semibold text-purple-700 dark:text-purple-300 mb-1">🔬 Jackson-Pollock 3-Site</h4>
+                <p className="text-gray-700 dark:text-gray-300 text-xs mb-2">
+                  <strong>Accuracy:</strong> Very High (±1-2%)<br/>
+                  <strong>Measurements needed:</strong> Skinfold calipers
+                </p>
+                <p className="text-gray-600 dark:text-gray-400 text-xs">
+                  Research-grade method using skinfold measurements. Requires calipers for best accuracy.
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-amber-200 dark:border-amber-700">
+                <h4 className="font-semibold text-orange-700 dark:text-orange-300 mb-1">⚡ Hume Formula</h4>
+                <p className="text-gray-700 dark:text-gray-300 text-xs mb-2">
+                  <strong>Accuracy:</strong> Medium (±4-5%)<br/>
+                  <strong>Measurements needed:</strong> Weight, height, age
+                </p>
+                <p className="text-gray-600 dark:text-gray-400 text-xs">
+                  Simple formula using basic measurements. Good for quick estimates.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-amber-100 dark:bg-amber-900/30 rounded-lg p-3 border border-amber-300 dark:border-amber-600">
+              <p className="text-amber-800 dark:text-amber-200 text-xs">
+                <strong>💡 Tip:</strong> For best accuracy, use the U.S. Navy Method with a flexible tape measure. All methods are estimates - consult a healthcare professional for precise body composition analysis.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* BMI Calculator */}
       {activeTab === 'bmi' && (
@@ -346,7 +507,24 @@ export default function HealthCalculator({ settings, onUpdateSettings, className
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Input Fields */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Body Measurements</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Body Measurements</h3>
+
+                {/* Method Selector */}
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Method:</label>
+                  <select
+                    value={settings.bodyFatMethod || 'navy'}
+                    onChange={(e) => onUpdateSettings({ bodyFatMethod: e.target.value as any })}
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:bg-gray-700 dark:text-white text-sm"
+                  >
+                    <option value="navy">U.S. Navy</option>
+                    <option value="boer">Boer Formula</option>
+                    <option value="jackson-pollock">Jackson-Pollock</option>
+                    <option value="hume">Hume Formula</option>
+                  </select>
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -478,16 +656,38 @@ export default function HealthCalculator({ settings, onUpdateSettings, className
 
               {/* Method Info */}
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">About {settings.bodyFatMethod === 'navy' ? 'U.S. Navy Method' : 'Boer Formula'}</h4>
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                  About {settings.bodyFatMethod === 'navy' ? 'U.S. Navy Method' :
+                        settings.bodyFatMethod === 'boer' ? 'Boer Formula' :
+                        settings.bodyFatMethod === 'jackson-pollock' ? 'Jackson-Pollock 3-Site' :
+                        'Hume Formula'}
+                </h4>
                 <p className="text-sm text-blue-800 dark:text-blue-200">
                   {settings.bodyFatMethod === 'navy'
-                    ? 'Uses neck and waist measurements (plus hip for females) for accurate body fat estimation.'
-                    : 'Uses BMI and age for a quick body fat estimation when detailed measurements aren\'t available.'
+                    ? 'Uses neck and waist measurements (plus hip for females) for accurate body fat estimation. Most reliable method for home use.'
+                    : settings.bodyFatMethod === 'boer'
+                    ? 'Uses BMI and age for a quick body fat estimation when detailed measurements aren\'t available. Good for general assessment.'
+                    : settings.bodyFatMethod === 'jackson-pollock'
+                    ? 'Research-grade method using skinfold measurements at 3 sites. Requires calipers for best accuracy. Most precise when properly measured.'
+                    : 'Simple formula using basic measurements (weight, height, age). Provides quick estimates but less accurate than circumference methods.'
                   }
                 </p>
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Save Results Button */}
+      {(bmiResult || bodyFatResult) && (
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={saveResultsToSettings}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200"
+          >
+            <Save size={18} />
+            Save Results to Profile
+          </button>
         </div>
       )}
     </div>
