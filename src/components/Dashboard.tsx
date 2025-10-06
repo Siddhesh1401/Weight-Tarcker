@@ -18,6 +18,26 @@ export default function Dashboard({ meals, weights, waterLogs, sleepLogs, settin
   const weightDiff = currentWeight - goalWeight;
   const progress = currentWeight > 0 ? Math.max(0, Math.min(100, ((80 - currentWeight) / (80 - goalWeight)) * 100)) : 0;
 
+  // Helper function to format time consistently
+  const formatTime = (time?: string, timestamp?: string) => {
+    // Always prioritize the 'time' field if available
+    if (time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    }
+    
+    // Fallback to timestamp
+    if (timestamp) {
+      const date = new Date(timestamp);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      }
+    }
+    return '';
+  };
+
   // Helper function to check if a date is today (handles timezone issues)
   const isToday = (dateString: string) => {
     if (!dateString) return false;
@@ -218,7 +238,7 @@ export default function Dashboard({ meals, weights, waterLogs, sleepLogs, settin
                       </div>
                     </div>
                     <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
-                      {new Date(meal.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                      {formatTime(meal.time, meal.timestamp)}
                     </span>
                   </div>
                 </div>

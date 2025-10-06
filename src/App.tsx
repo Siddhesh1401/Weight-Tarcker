@@ -166,8 +166,8 @@ function App() {
     const selectedDate = date || now.toISOString().split('T')[0];
     const selectedTime = time || now.toTimeString().slice(0, 5);
     
-    // Create timestamp from selected date and time
-    const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
+    // Create timestamp preserving local time
+    const timestamp = `${selectedDate}T${selectedTime}:00`;
 
     // Check if we're editing
     if (editingMeal) {
@@ -271,8 +271,8 @@ function App() {
     const selectedDate = date || now.toISOString().split('T')[0];
     const selectedTime = time || now.toTimeString().slice(0, 5);
     
-    // Create timestamp from selected date and time
-    const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
+    // Create timestamp preserving local time
+    const timestamp = `${selectedDate}T${selectedTime}:00`;
 
     // Check if we're editing
     if (editingWeight) {
@@ -357,8 +357,8 @@ function App() {
       return;
     }
     
-    // Create timestamp from selected date and time
-    const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
+    // Create timestamp preserving local time
+    const timestamp = `${selectedDate}T${selectedTime}:00`;
 
     // Check if we're editing
     if (editingWater) {
@@ -442,8 +442,8 @@ function App() {
     const selectedDate = date || now.toISOString().split('T')[0];
     const selectedWakeTime = wakeTime || now.toTimeString().slice(0, 5);
     
-    // Create timestamp from selected date and wake time
-    const timestamp = new Date(`${selectedDate}T${selectedWakeTime}`).toISOString();
+    // Create timestamp preserving local time
+    const timestamp = `${selectedDate}T${selectedWakeTime}:00`;
 
     // Check if we're editing
     if (editingSleep) {

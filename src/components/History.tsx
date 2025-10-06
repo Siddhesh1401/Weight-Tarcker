@@ -76,6 +76,7 @@ export default function History({
   };
 
   const formatTime = (time?: string, timestamp?: string) => {
+    // Always prioritize the 'time' field if available
     if (time) {
       // Convert HH:MM to 12-hour format
       const [hours, minutes] = time.split(':').map(Number);
@@ -83,8 +84,14 @@ export default function History({
       const displayHours = hours % 12 || 12;
       return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
     }
+    
+    // Fallback to timestamp only if time is not available
     if (timestamp) {
-      return new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      // Check if timestamp is in ISO format (with timezone) or local format
+      const date = new Date(timestamp);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      }
     }
     return '';
   };
