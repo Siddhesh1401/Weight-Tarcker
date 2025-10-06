@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Scale, Droplets, Moon, Coffee, Pizza, Trash2, Download, Filter } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Scale, Droplets, Moon, Coffee, Pizza, Trash2, Download, Filter, Edit2 } from 'lucide-react';
 import { MealEntry, WeightLog, WaterLog, SleepLog } from '../types';
 import DeleteConfirmation from './DeleteConfirmation';
 import ExportModal from './ExportModal';
@@ -13,9 +13,26 @@ interface HistoryProps {
   onDeleteWeight: (id: string) => void;
   onDeleteWater: (id: string) => void;
   onDeleteSleep: (id: string) => void;
+  onEditMeal?: (meal: MealEntry) => void;
+  onEditWeight?: (weight: WeightLog) => void;
+  onEditWater?: (water: WaterLog) => void;
+  onEditSleep?: (sleep: SleepLog) => void;
 }
 
-export default function History({ meals, weights, waterLogs, sleepLogs, onDeleteMeal, onDeleteWeight, onDeleteWater, onDeleteSleep }: HistoryProps) {
+export default function History({ 
+  meals, 
+  weights, 
+  waterLogs, 
+  sleepLogs, 
+  onDeleteMeal, 
+  onDeleteWeight, 
+  onDeleteWater, 
+  onDeleteSleep,
+  onEditMeal,
+  onEditWeight,
+  onEditWater,
+  onEditSleep
+}: HistoryProps) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [deleteItem, setDeleteItem] = useState<{ type: string; id: string; description: string } | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -370,16 +387,26 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{selectedLogs.weight!.weight} kg</span>
-                        <button
-                          onClick={() => setDeleteItem({ 
-                            type: 'Weight', 
-                            id: selectedLogs.weight!.id, 
-                            description: `${selectedLogs.weight!.weight} kg` 
-                          })}
-                          className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
-                        >
-                          <Trash2 size={20} />
-                        </button>
+                        <div className="flex gap-2">
+                          {onEditWeight && (
+                            <button
+                              onClick={() => onEditWeight(selectedLogs.weight!)}
+                              className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setDeleteItem({ 
+                              type: 'Weight', 
+                              id: selectedLogs.weight!.id, 
+                              description: `${selectedLogs.weight!.weight} kg` 
+                            })}
+                            className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -402,16 +429,26 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{water.glasses} glasses</span>
-                        <button
-                          onClick={() => setDeleteItem({ 
-                            type: 'Water', 
-                            id: water.id, 
-                            description: `${water.glasses} glasses` 
-                          })}
-                          className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
-                        >
-                          <Trash2 size={20} />
-                        </button>
+                        <div className="flex gap-2">
+                          {onEditWater && (
+                            <button
+                              onClick={() => onEditWater(water)}
+                              className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setDeleteItem({ 
+                              type: 'Water', 
+                              id: water.id, 
+                              description: `${water.glasses} glasses` 
+                            })}
+                            className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -437,16 +474,26 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                           <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{selectedLogs.sleep!.hours}h</span>
                           <span className="text-sm text-gray-600 dark:text-gray-400 ml-2 capitalize">({selectedLogs.sleep!.quality})</span>
                         </div>
-                        <button
-                          onClick={() => setDeleteItem({ 
-                            type: 'Sleep', 
-                            id: selectedLogs.sleep!.id, 
-                            description: `${selectedLogs.sleep!.hours}h (${selectedLogs.sleep!.quality})` 
-                          })}
-                          className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
-                        >
-                          <Trash2 size={20} />
-                        </button>
+                        <div className="flex gap-2">
+                          {onEditSleep && (
+                            <button
+                              onClick={() => onEditSleep(selectedLogs.sleep!)}
+                              className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setDeleteItem({ 
+                              type: 'Sleep', 
+                              id: selectedLogs.sleep!.id, 
+                              description: `${selectedLogs.sleep!.hours}h (${selectedLogs.sleep!.quality})` 
+                            })}
+                            className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -499,16 +546,26 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                               <span className="text-sm text-gray-500 dark:text-gray-400">
                                 {formatTime(meal.time, meal.timestamp)}
                               </span>
-                              <button
-                                onClick={() => setDeleteItem({ 
-                                  type: 'Meal', 
-                                  id: meal.id, 
-                                  description: `${meal.mealType}: ${meal.description}` 
-                                })}
-                                className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
-                              >
-                                <Trash2 size={18} />
-                              </button>
+                              <div className="flex gap-2">
+                                {onEditMeal && (
+                                  <button
+                                    onClick={() => onEditMeal(meal)}
+                                    className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                                  >
+                                    <Edit2 size={18} />
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => setDeleteItem({ 
+                                    type: 'Meal', 
+                                    id: meal.id, 
+                                    description: `${meal.mealType}: ${meal.description}` 
+                                  })}
+                                  className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>

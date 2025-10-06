@@ -31,6 +31,12 @@ function App() {
   const [isOnline, setIsOnline] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  
+  // Edit states
+  const [editingMeal, setEditingMeal] = useState<MealEntry | null>(null);
+  const [editingWeight, setEditingWeight] = useState<WeightLogType | null>(null);
+  const [editingWater, setEditingWater] = useState<WaterLogType | null>(null);
+  const [editingSleep, setEditingSleep] = useState<SleepLogType | null>(null);
 
   // Auto-start notifications on app load
   useEffect(() => {
@@ -172,6 +178,38 @@ function App() {
     // Create timestamp from selected date and time
     const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
 
+    // Check if we're editing
+    if (editingWeight) {
+      const updatedWeight: WeightLogType = {
+        ...editingWeight,
+        weight,
+        date: selectedDate,
+        time: selectedTime,
+        timestamp,
+      };
+
+      setWeights(weights.map(w => w.id === editingWeight.id ? updatedWeight : w));
+      setActiveLogType(null);
+      setEditingWeight(null);
+      setToastMessage('✅ Weight updated successfully!');
+
+      // Update backend if online
+      if (isOnline) {
+        try {
+          await logApi.saveLog({
+            date: updatedWeight.date,
+            meal_type: 'weight',
+            weight: weight,
+            time: selectedTime,
+          });
+        } catch (error) {
+          console.error('Failed to update weight on backend:', error);
+        }
+      }
+      return;
+    }
+
+    // Creating new weight log
     const newWeight: WeightLogType = {
       id: Date.now().toString(),
       date: selectedDate,
@@ -209,6 +247,38 @@ function App() {
     // Create timestamp from selected date and time
     const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
 
+    // Check if we're editing
+    if (editingWater) {
+      const updatedWater: WaterLogType = {
+        ...editingWater,
+        glasses,
+        date: selectedDate,
+        time: selectedTime,
+        timestamp,
+      };
+
+      setWaterLogs(waterLogs.map(w => w.id === editingWater.id ? updatedWater : w));
+      setActiveLogType(null);
+      setEditingWater(null);
+      setToastMessage('✅ Water log updated successfully!');
+
+      // Update backend if online
+      if (isOnline) {
+        try {
+          await logApi.saveLog({
+            date: updatedWater.date,
+            meal_type: 'water',
+            water_glasses: glasses,
+            time: selectedTime,
+          });
+        } catch (error) {
+          console.error('Failed to update water log on backend:', error);
+        }
+      }
+      return;
+    }
+
+    // Creating new water log
     const newWater: WaterLogType = {
       id: Date.now().toString(),
       date: selectedDate,
@@ -244,6 +314,40 @@ function App() {
     // Create timestamp from selected date and time
     const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
 
+    // Check if we're editing
+    if (editingSleep) {
+      const updatedSleep: SleepLogType = {
+        ...editingSleep,
+        hours,
+        quality,
+        date: selectedDate,
+        time: selectedTime,
+        timestamp,
+      };
+
+      setSleepLogs(sleepLogs.map(s => s.id === editingSleep.id ? updatedSleep : s));
+      setActiveLogType(null);
+      setEditingSleep(null);
+      setToastMessage('✅ Sleep log updated successfully!');
+
+      // Update backend if online
+      if (isOnline) {
+        try {
+          await logApi.saveLog({
+            date: updatedSleep.date,
+            meal_type: 'sleep',
+            sleep_hours: hours,
+            sleep_quality: quality,
+            time: selectedTime,
+          });
+        } catch (error) {
+          console.error('Failed to update sleep log on backend:', error);
+        }
+      }
+      return;
+    }
+
+    // Creating new sleep log
     const newSleep: SleepLogType = {
       id: Date.now().toString(),
       date: selectedDate,
@@ -351,6 +455,32 @@ function App() {
     }
   };
 
+  // Edit handlers
+  const handleEditMeal = (meal: MealEntry) => {
+    setEditingMeal(meal);
+    if (meal.isCheatMeal) {
+      setShowCheatMeal(true);
+    } else {
+      setShowRegularMeal(true);
+    }
+    setActiveLogType(meal.mealType);
+  };
+
+  const handleEditWeight = (weight: WeightLogType) => {
+    setEditingWeight(weight);
+    setActiveLogType('weight');
+  };
+
+  const handleEditWater = (water: WaterLogType) => {
+    setEditingWater(water);
+    setActiveLogType('water');
+  };
+
+  const handleEditSleep = (sleep: SleepLogType) => {
+    setEditingSleep(sleep);
+    setActiveLogType('sleep');
+  };
+
   const handleDeleteAllData = async () => {
     try {
       if (isOnline) {
@@ -416,6 +546,10 @@ function App() {
             onDeleteWeight={handleDeleteWeight}
             onDeleteWater={handleDeleteWater}
             onDeleteSleep={handleDeleteSleep}
+            onEditMeal={handleEditMeal}
+            onEditWeight={handleEditWeight}
+            onEditWater={handleEditWater}
+            onEditSleep={handleEditSleep}
           />
         )}
 
@@ -480,21 +614,33 @@ function App() {
       {activeLogType === 'weight' && (
         <WeightLog
           onSave={handleSaveWeight}
-          onCancel={() => setActiveLogType(null)}
+          onCancel={() => {
+            setActiveLogType(null);
+            setEditingWeight(null);
+          }}
+          editData={editingWeight}
         />
       )}
 
       {activeLogType === 'water' && (
         <WaterLog
           onSave={handleSaveWater}
-          onCancel={() => setActiveLogType(null)}
+          onCancel={() => {
+            setActiveLogType(null);
+            setEditingWater(null);
+          }}
+          editData={editingWater}
         />
       )}
 
       {activeLogType === 'sleep' && (
         <SleepLog
           onSave={handleSaveSleep}
-          onCancel={() => setActiveLogType(null)}
+          onCancel={() => {
+            setActiveLogType(null);
+            setEditingSleep(null);
+          }}
+          editData={editingSleep}
         />
       )}
 

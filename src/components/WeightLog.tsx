@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Save, Scale, X } from 'lucide-react';
 import DateTimePicker from './DateTimePicker';
+import { WeightLog as WeightLogType } from '../types';
 
 interface WeightLogProps {
   onSave: (weight: number, time?: string, date?: string) => void;
   onCancel: () => void;
+  editData?: WeightLogType | null;
 }
 
-export default function WeightLog({ onSave, onCancel }: WeightLogProps) {
+export default function WeightLog({ onSave, onCancel, editData }: WeightLogProps) {
   const [weight, setWeight] = useState('');
   const [logTime, setLogTime] = useState(() => {
     const now = new Date();
@@ -17,6 +19,23 @@ export default function WeightLog({ onSave, onCancel }: WeightLogProps) {
     const now = new Date();
     return now.toISOString().split('T')[0]; // YYYY-MM-DD format
   });
+
+  // Populate form if editing
+  useEffect(() => {
+    if (editData) {
+      setWeight(editData.weight.toString());
+      if (editData.time) {
+        setLogTime(editData.time);
+      }
+      if (editData.date) {
+        setLogDate(editData.date);
+      } else if (editData.timestamp) {
+        const date = new Date(editData.timestamp);
+        setLogDate(date.toISOString().split('T')[0]);
+        setLogTime(date.toTimeString().slice(0, 5));
+      }
+    }
+  }, [editData]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -44,7 +63,9 @@ export default function WeightLog({ onSave, onCancel }: WeightLogProps) {
                 <Scale className="text-emerald-600 dark:text-emerald-400" size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Log Weight</h2>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                  {editData ? 'Edit Weight' : 'Log Weight'}
+                </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Track your progress</p>
               </div>
             </div>

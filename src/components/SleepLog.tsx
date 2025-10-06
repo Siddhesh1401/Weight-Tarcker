@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Save, Moon, X } from 'lucide-react';
 import DateTimePicker from './DateTimePicker';
+import { SleepLog as SleepLogType } from '../types';
 
 interface SleepLogProps {
   onSave: (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent', time?: string, date?: string) => void;
   onCancel: () => void;
+  editData?: SleepLogType | null;
 }
 
-export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
+export default function SleepLog({ onSave, onCancel, editData }: SleepLogProps) {
   const [hours, setHours] = useState('8');
   const [quality, setQuality] = useState<'poor' | 'fair' | 'good' | 'excellent'>('good');
   const [logTime, setLogTime] = useState(() => {
@@ -18,6 +20,24 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
     const now = new Date();
     return now.toISOString().split('T')[0]; // YYYY-MM-DD format
   });
+
+  // Populate form if editing
+  useEffect(() => {
+    if (editData) {
+      setHours(editData.hours.toString());
+      setQuality(editData.quality);
+      if (editData.time) {
+        setLogTime(editData.time);
+      }
+      if (editData.date) {
+        setLogDate(editData.date);
+      } else if (editData.timestamp) {
+        const date = new Date(editData.timestamp);
+        setLogDate(date.toISOString().split('T')[0]);
+        setLogTime(date.toTimeString().slice(0, 5));
+      }
+    }
+  }, [editData]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -52,7 +72,9 @@ export default function SleepLog({ onSave, onCancel }: SleepLogProps) {
                 <Moon className="text-indigo-600 dark:text-indigo-400" size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Log Sleep</h2>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                  {editData ? 'Edit Sleep' : 'Log Sleep'}
+                </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Track your rest</p>
               </div>
             </div>

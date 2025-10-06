@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Save, Droplets, X } from 'lucide-react';
 import DateTimePicker from './DateTimePicker';
+import { WaterLog as WaterLogType } from '../types';
 
 interface WaterLogProps {
   onSave: (glasses: number, time?: string, date?: string) => void;
   onCancel: () => void;
   currentGlasses?: number;
+  editData?: WaterLogType | null;
 }
 
-export default function WaterLog({ onSave, onCancel, currentGlasses = 0 }: WaterLogProps) {
+export default function WaterLog({ onSave, onCancel, currentGlasses = 0, editData }: WaterLogProps) {
   const [glasses, setGlasses] = useState(currentGlasses);
   const [logTime, setLogTime] = useState(() => {
     const now = new Date();
@@ -18,6 +20,23 @@ export default function WaterLog({ onSave, onCancel, currentGlasses = 0 }: Water
     const now = new Date();
     return now.toISOString().split('T')[0]; // YYYY-MM-DD format
   });
+
+  // Populate form if editing
+  useEffect(() => {
+    if (editData) {
+      setGlasses(editData.glasses);
+      if (editData.time) {
+        setLogTime(editData.time);
+      }
+      if (editData.date) {
+        setLogDate(editData.date);
+      } else if (editData.timestamp) {
+        const date = new Date(editData.timestamp);
+        setLogDate(date.toISOString().split('T')[0]);
+        setLogTime(date.toTimeString().slice(0, 5));
+      }
+    }
+  }, [editData]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -48,7 +67,9 @@ export default function WaterLog({ onSave, onCancel, currentGlasses = 0 }: Water
                 <Droplets className="text-blue-600 dark:text-blue-400" size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Log Water</h2>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                  {editData ? 'Edit Water' : 'Log Water'}
+                </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Stay hydrated!</p>
               </div>
             </div>
