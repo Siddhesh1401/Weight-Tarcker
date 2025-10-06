@@ -216,7 +216,7 @@ function App() {
 
     // Creating new meal
     const newMeal: MealEntry = {
-      id: Date.now().toString(),
+      id: Date.now().toString(), // Temporary ID
       date: selectedDate,
       mealType: activeLogType,
       description,
@@ -234,7 +234,7 @@ function App() {
     // Save to backend if online
     if (isOnline) {
       try {
-        await logApi.saveLog({
+        const response: any = await logApi.saveLog({
           date: newMeal.date,
           meal_type: newMeal.mealType,
           meal_notes: description,
@@ -243,6 +243,16 @@ function App() {
           time: selectedTime,
         });
         console.log('✅ Meal saved to backend');
+        
+        // Update the meal with MongoDB _id from backend
+        if (response && response._id) {
+          setMeals(prevMeals => 
+            prevMeals.map(m => 
+              m.id === newMeal.id ? { ...m, id: response._id } : m
+            )
+          );
+          console.log('✅ Updated meal with MongoDB ID:', response._id);
+        }
       } catch (error) {
         console.error('Failed to save meal to backend:', error);
       }
@@ -313,13 +323,23 @@ function App() {
     // Save to backend if online
     if (isOnline) {
       try {
-        await logApi.saveLog({
+        const response: any = await logApi.saveLog({
           date: newWeight.date,
           meal_type: 'weight',
           weight: weight,
           time: selectedTime,
         });
         console.log('✅ Weight saved to backend');
+        
+        // Update the weight log with MongoDB _id from backend
+        if (response && response._id) {
+          setWeights(prevWeights => 
+            prevWeights.map(w => 
+              w.id === newWeight.id ? { ...w, id: response._id } : w
+            )
+          );
+          console.log('✅ Updated weight with MongoDB ID:', response._id);
+        }
       } catch (error) {
         console.error('Failed to save weight to backend:', error);
       }
@@ -387,13 +407,23 @@ function App() {
 
     if (isOnline) {
       try {
-        await logApi.saveLog({
+        const response: any = await logApi.saveLog({
           date: newWater.date,
           meal_type: 'water',
           water_glasses: glasses,
           time: selectedTime,
         });
         console.log('✅ Water saved to backend');
+        
+        // Update the water log with MongoDB _id from backend
+        if (response && response._id) {
+          setWaterLogs(prevWaterLogs => 
+            prevWaterLogs.map(w => 
+              w.id === newWater.id ? { ...w, id: response._id } : w
+            )
+          );
+          console.log('✅ Updated water log with MongoDB ID:', response._id);
+        }
       } catch (error) {
         console.error('Failed to save water to backend:', error);
       }
@@ -465,7 +495,7 @@ function App() {
 
     if (isOnline) {
       try {
-        await logApi.saveLog({
+        const response: any = await logApi.saveLog({
           date: newSleep.date,
           meal_type: 'sleep',
           sleep_hours: hours,
@@ -473,6 +503,16 @@ function App() {
           time: selectedTime,
         });
         console.log('✅ Sleep saved to backend');
+        
+        // Update the sleep log with MongoDB _id from backend
+        if (response && response._id) {
+          setSleepLogs(prevSleepLogs => 
+            prevSleepLogs.map(s => 
+              s.id === newSleep.id ? { ...s, id: response._id } : s
+            )
+          );
+          console.log('✅ Updated sleep log with MongoDB ID:', response._id);
+        }
       } catch (error) {
         console.error('Failed to save sleep to backend:', error);
       }
