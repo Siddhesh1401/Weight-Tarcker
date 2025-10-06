@@ -130,41 +130,87 @@ export default function History({
   };
 
   const generateCSV = (logs: any, date: string) => {
-    let csv = `Date,Type,Description,Cheat Meal,Time,Weight (kg),Water (glasses),Sleep Hours,Sleep Quality\n`;
+    const exportDate = new Date().toLocaleString();
+    let csv = `# Weight Tracker Export - ${formatDate(date)}\n`;
+    csv += `# Generated on: ${exportDate}\n`;
+    csv += `# App: Weight Tracker\n\n`;
+
+    csv += 'Date,Category,Type,Description,Cheat Meal,Time,Weight (kg),Water (glasses),Sleep Hours,Sleep Quality\n';
 
     // Weight row
     if (logs.weight) {
-      csv += `${date},Weight,,,${
+      csv += `${date},Weight,Weight Log,,,${
         logs.weight.time ? formatTime(logs.weight.time, logs.weight.timestamp) : ''
       },${logs.weight.weight},,,\n`;
     }
 
     // Water rows
-    logs.water.forEach((w: any) => {
-      csv += `${date},Water,,,${
+    logs.water.forEach((w: any, index: number) => {
+      csv += `${date},Water,Water Intake ${index + 1},,${
         w.time ? formatTime(w.time, w.timestamp) : ''
-      },,,${w.glasses},\n`;
+      },,,${w.glasses},,\n`;
     });
 
     // Sleep row
     if (logs.sleep) {
-      csv += `${date},Sleep,,,${
+      csv += `${date},Sleep,Sleep Log,,,${
         logs.sleep.time ? formatTime(logs.sleep.time, logs.sleep.timestamp) : ''
       },,,${logs.sleep.hours},${logs.sleep.quality}\n`;
     }
 
     // Meal rows
-    logs.meals.forEach((m: any) => {
-      csv += `${date},Meal,${m.description.replace(/"/g, '""')},${m.isCheatMeal ? 'Yes' : 'No'},${
+    logs.meals.forEach((m: any, index: number) => {
+      csv += `${date},Meal,${m.mealType},"${m.description.replace(/"/g, '""')}",${m.isCheatMeal ? 'Yes' : 'No'},${
         formatTime(m.time, m.timestamp)
       },,,,\n`;
     });
+
+    // Summary row
+    const totalMeals = logs.meals.length;
+    const totalWater = logs.water.reduce((sum: number, w: any) => sum + w.glasses, 0);
+    const cheatMeals = logs.meals.filter((m: any) => m.isCheatMeal).length;
+
+    csv += `\n# Summary for ${formatDate(date)}\n`;
+    csv += `# Total Meals: ${totalMeals}\n`;
+    csv += `# Cheat Meals: ${cheatMeals}\n`;
+    csv += `# Total Water: ${totalWater} glasses\n`;
+    if (logs.weight) csv += `# Weight: ${logs.weight.weight} kg\n`;
+    if (logs.sleep) csv += `# Sleep: ${logs.sleep.hours} hours (${logs.sleep.quality})\n`;
 
     return csv;
   };
 
   const generateAllCSV = () => {
-    let csv = 'Date,Type,Description,Cheat Meal,Time,Weight (kg),Water (glasses),Sleep Hours,Sleep Quality\n';
+    const exportDate = new Date().toLocaleString();
+    let csv = `# Weight Tracker - Complete Data Export\n`;
+    csv += `# Generated on: ${exportDate}\n`;
+    csv += `# App: Weight Tracker\n`;
+    csv += `# Exported by: User\n\n`;
+
+    // Summary statistics
+    const totalDates = new Set();
+    meals.forEach(m => totalDates.add(m.date));
+    weights.forEach(w => totalDates.add(w.date));
+    waterLogs.forEach(w => totalDates.add(w.date));
+    sleepLogs.forEach(s => totalDates.add(s.date));
+
+    const totalMeals = meals.length;
+    const totalWeights = weights.length;
+    const totalWaterLogs = waterLogs.length;
+    const totalSleepLogs = sleepLogs.length;
+    const totalWaterGlasses = waterLogs.reduce((sum: number, w: any) => sum + w.glasses, 0);
+    const cheatMeals = meals.filter(m => m.isCheatMeal).length;
+
+    csv += `# SUMMARY STATISTICS\n`;
+    csv += `# Total Days Tracked: ${totalDates.size}\n`;
+    csv += `# Total Meals Logged: ${totalMeals}\n`;
+    csv += `# Total Weight Logs: ${totalWeights}\n`;
+    csv += `# Total Water Logs: ${totalWaterLogs}\n`;
+    csv += `# Total Water Glasses: ${totalWaterGlasses}\n`;
+    csv += `# Total Sleep Logs: ${totalSleepLogs}\n`;
+    csv += `# Cheat Meals: ${cheatMeals}\n\n`;
+
+    csv += 'Date,Category,Type,Description,Cheat Meal,Time,Weight (kg),Water (glasses),Sleep Hours,Sleep Quality,Entry ID\n';
 
     // Collect all dates
     const allDates = new Set<string>();
@@ -180,32 +226,37 @@ export default function History({
 
       // Weight row
       if (dayLogs.weight) {
-        csv += `${date},Weight,,,${
+        csv += `${date},Weight,Weight Log,,,${
           dayLogs.weight.time ? formatTime(dayLogs.weight.time, dayLogs.weight.timestamp) : ''
-        },${dayLogs.weight.weight},,,\n`;
+        },${dayLogs.weight.weight},,,,\n`;
       }
 
       // Water rows
-      dayLogs.water.forEach(w => {
-        csv += `${date},Water,,,${
+      dayLogs.water.forEach((w: any) => {
+        csv += `${date},Water,Water Intake,,,${
           w.time ? formatTime(w.time, w.timestamp) : ''
-        },,,${w.glasses},\n`;
+        },,,${w.glasses},,\n`;
       });
 
       // Sleep row
       if (dayLogs.sleep) {
-        csv += `${date},Sleep,,,${
+        csv += `${date},Sleep,Sleep Log,,,${
           dayLogs.sleep.time ? formatTime(dayLogs.sleep.time, dayLogs.sleep.timestamp) : ''
-        },,,${dayLogs.sleep.hours},${dayLogs.sleep.quality}\n`;
+        },,,${dayLogs.sleep.hours},${dayLogs.sleep.quality},\n`;
       }
 
       // Meal rows
-      dayLogs.meals.forEach(m => {
-        csv += `${date},Meal,${m.description.replace(/"/g, '""')},${m.isCheatMeal ? 'Yes' : 'No'},${
+      dayLogs.meals.forEach((m: any) => {
+        csv += `${date},Meal,${m.mealType},"${m.description.replace(/"/g, '""')}",${m.isCheatMeal ? 'Yes' : 'No'},${
           formatTime(m.time, m.timestamp)
-        },,,,\n`;
+        },,,,,${m.id || ''}\n`;
       });
     });
+
+    // Final summary
+    csv += `\n# END OF EXPORT\n`;
+    csv += `# This file contains all your weight tracking data\n`;
+    csv += `# Import this CSV into Excel, Google Sheets, or any spreadsheet application\n`;
 
     return csv;
   };
