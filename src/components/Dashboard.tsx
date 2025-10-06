@@ -28,7 +28,10 @@ export default function Dashboard({ meals, weights, waterLogs, sleepLogs, settin
 
   const todayMeals = meals.filter(m => isToday(m.date) || isToday(m.timestamp));
   const todayWeight = weights.find(w => isToday(w.date) || isToday(w.timestamp));
-  const todayWater = waterLogs.filter(w => isToday(w.date) || isToday(w.timestamp));
+  const todayWater = waterLogs.filter(w => {
+    const isValidWater = typeof w.glasses === 'number' && Number.isFinite(w.glasses) && !isNaN(w.glasses);
+    return isValidWater && (isToday(w.date) || isToday(w.timestamp));
+  });
   const todaySleep = sleepLogs.find(s => isToday(s.date) || isToday(s.timestamp));
 
   const greeting = `Hello, ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`;

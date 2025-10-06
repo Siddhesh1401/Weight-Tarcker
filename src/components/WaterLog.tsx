@@ -48,7 +48,8 @@ export default function WaterLog({ onSave, onCancel, currentGlasses = 0, editDat
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (glasses > 0) {
+    // Validate that glasses is a valid positive number
+    if (glasses > 0 && Number.isFinite(glasses) && !isNaN(glasses)) {
       onSave(glasses, logTime, logDate);
     }
   };

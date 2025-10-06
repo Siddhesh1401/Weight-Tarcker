@@ -282,6 +282,12 @@ function App() {
     const selectedDate = date || now.toISOString().split('T')[0];
     const selectedTime = time || now.toTimeString().slice(0, 5);
     
+    // Validate glasses is a valid number
+    if (!Number.isFinite(glasses) || isNaN(glasses) || glasses <= 0) {
+      setToastMessage('❌ Invalid water amount');
+      return;
+    }
+    
     // Create timestamp from selected date and time
     const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
 
