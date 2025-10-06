@@ -232,71 +232,11 @@ export default function History({
 
   const generateAllCSV = () => {
     const exportDate = new Date().toLocaleString();
-    let csv = `# WEIGHT TRACKER - COMPREHENSIVE HEALTH ANALYSIS EXPORT\n`;
+    let csv = `# WEIGHT TRACKER - COMPLETE HEALTH DATA EXPORT\n`;
     csv += `# Export Generated: ${exportDate}\n`;
-    csv += `# Purpose: Complete AI Analysis of Health & Diet Patterns\n`;
-    csv += `# App: Weight Tracker\n`;
-    csv += `# Analysis Ready: Yes\n\n`;
+    csv += `# Contains meals, weight, water, and sleep tracking data\n\n`;
 
-    // Summary statistics
-    const totalDates = new Set();
-    meals.forEach(m => totalDates.add(m.date));
-    weights.forEach(w => totalDates.add(w.date));
-    waterLogs.forEach(w => totalDates.add(w.date));
-    sleepLogs.forEach(s => totalDates.add(s.date));
-
-    const totalMeals = meals.length;
-    const totalWeights = weights.length;
-    const totalWaterLogs = waterLogs.length;
-    const totalSleepLogs = sleepLogs.length;
-    const totalWaterGlasses = waterLogs.reduce((sum: number, w: any) => sum + w.glasses, 0);
-    const cheatMeals = meals.filter(m => m.isCheatMeal).length;
-    const avgMealsPerDay = totalDates.size > 0 ? (totalMeals / totalDates.size).toFixed(1) : '0';
-    const avgWaterPerDay = totalDates.size > 0 ? (totalWaterGlasses / totalDates.size).toFixed(1) : '0';
-
-    // Meal type breakdown
-    const breakfastMeals = meals.filter(m => m.mealType.toLowerCase().includes('breakfast')).length;
-    const lunchMeals = meals.filter(m => m.mealType.toLowerCase().includes('lunch')).length;
-    const dinnerMeals = meals.filter(m => m.mealType.toLowerCase().includes('dinner')).length;
-    const snackMeals = meals.filter(m => m.mealType.toLowerCase().includes('snack')).length;
-
-    csv += `# COMPREHENSIVE HEALTH STATISTICS\n`;
-    csv += `# Total Tracking Days: ${totalDates.size}\n`;
-    csv += `# Total Meals Logged: ${totalMeals}\n`;
-    csv += `# Average Meals Per Day: ${avgMealsPerDay}\n`;
-    csv += `# Breakfast Items: ${breakfastMeals}\n`;
-    csv += `# Lunch Items: ${lunchMeals}\n`;
-    csv += `# Dinner Items: ${dinnerMeals}\n`;
-    csv += `# Snack Items: ${snackMeals}\n`;
-    csv += `# Cheat Meals: ${cheatMeals}\n`;
-    csv += `# Cheat Meal Percentage: ${totalMeals > 0 ? ((cheatMeals / totalMeals) * 100).toFixed(1) : 0}%\n`;
-    csv += `# Total Weight Logs: ${totalWeights}\n`;
-    csv += `# Total Water Logs: ${totalWaterLogs}\n`;
-    csv += `# Total Water Glasses: ${totalWaterGlasses}\n`;
-    csv += `# Average Water Per Day: ${avgWaterPerDay} glasses\n`;
-    csv += `# Total Sleep Logs: ${totalSleepLogs}\n\n`;
-
-    csv += `# AI ANALYSIS GUIDE\n`;
-    csv += `# This data is structured for comprehensive health and diet analysis.\n`;
-    csv += `# Key Analysis Areas:\n`;
-    csv += `# 1. Eating Patterns: Meal timing, frequency, and types\n`;
-    csv += `# 2. Diet Quality: Cheat meal frequency, meal variety\n`;
-    csv += `# 3. Hydration: Water intake consistency and amounts\n`;
-    csv += `# 4. Weight Trends: Progress over time, correlations with diet\n`;
-    csv += `# 5. Sleep Patterns: Sleep duration and quality tracking\n`;
-    csv += `# 6. Behavioral Insights: Consistency, weekend vs weekday patterns\n`;
-    csv += `#\n`;
-    csv += `# Recommended AI Analysis Queries:\n`;
-    csv += `# - "Analyze my eating patterns and meal timing consistency"\n`;
-    csv += `# - "Identify correlations between water intake and weight changes"\n`;
-    csv += `# - "Assess diet quality based on cheat meal frequency"\n`;
-    csv += `# - "Find patterns in sleep duration and meal choices"\n`;
-    csv += `# - "Compare weekday vs weekend eating habits"\n`;
-    csv += `# - "Generate personalized health recommendations"\n\n`;
-
-    csv += `# DATA TABLES\n`;
-    csv += `# Table 1: Comprehensive Health Tracking Data\n`;
-    csv += `Date,Entry_Category,Entry_Type,Description,Cheat_Meal,Time_Logged,Weight_kg,Water_Glasses,Sleep_Hours,Sleep_Quality,Entry_ID\n`;
+    csv += `Date,Time,Type,Details,Value,Notes\n`;
 
     // Collect all dates
     const allDates = new Set<string>();
@@ -310,41 +250,42 @@ export default function History({
     sortedDates.forEach(date => {
       const dayLogs = getLogsForDate(date);
 
-      // Weight row
+      // Weight entries
       if (dayLogs.weight) {
-        csv += `${date},Weight,Weight Log,,,${
-          dayLogs.weight.time ? formatTime(dayLogs.weight.time, dayLogs.weight.timestamp) : ''
-        },${dayLogs.weight.weight},,,,\n`;
+        const timeStr = dayLogs.weight.time ? formatTime(dayLogs.weight.time, dayLogs.weight.timestamp) : '';
+        csv += `${date},${timeStr},Weight,Weight Log,${dayLogs.weight.weight} kg,\n`;
       }
 
-      // Water rows
+      // Water entries
       dayLogs.water.forEach((w: any) => {
-        csv += `${date},Water,Water Intake,,,${
-          w.time ? formatTime(w.time, w.timestamp) : ''
-        },,,${w.glasses},,\n`;
+        const timeStr = w.time ? formatTime(w.time, w.timestamp) : '';
+        csv += `${date},${timeStr},Water,Water Intake,${w.glasses} glasses,\n`;
       });
 
-      // Sleep row
+      // Sleep entries
       if (dayLogs.sleep) {
-        csv += `${date},Sleep,Sleep Log,,,${
-          dayLogs.sleep.time ? formatTime(dayLogs.sleep.time, dayLogs.sleep.timestamp) : ''
-        },,,${dayLogs.sleep.hours},${dayLogs.sleep.quality},\n`;
+        const timeStr = dayLogs.sleep.time ? formatTime(dayLogs.sleep.time, dayLogs.sleep.timestamp) : '';
+        csv += `${date},${timeStr},Sleep,Sleep Log,${dayLogs.sleep.hours} hours,${dayLogs.sleep.quality}\n`;
       }
 
-      // Meal rows
+      // Meal entries
       dayLogs.meals.forEach((m: any) => {
-        csv += `${date},Meal,${m.mealType},"${m.description.replace(/"/g, '""')}",${m.isCheatMeal ? 'Yes' : 'No'},${
-          formatTime(m.time, m.timestamp)
-        },,,,,${m.id || ''}\n`;
+        const timeStr = formatTime(m.time, m.timestamp);
+        const notes = [];
+        if (m.isCheatMeal) notes.push('Cheat meal');
+        if (m.hadTea) notes.push('Had tea');
+        const notesStr = notes.length > 0 ? notes.join(', ') : '';
+        csv += `${date},${timeStr},Meal,${m.mealType},"${m.description.replace(/"/g, '""')}",${notesStr}\n`;
       });
     });
 
-    // Final summary
-    csv += `\n# END OF EXPORT\n`;
-    csv += `# This file contains all your weight tracking data\n`;
-    csv += `# Import this CSV into Excel, Google Sheets, or any spreadsheet application\n`;
-    csv += `# For AI Analysis: Copy-paste this data into ChatGPT or Claude for personalized health insights\n`;
-    csv += `# Analysis Focus Areas: Diet patterns, weight trends, hydration habits, sleep quality\n`;
+    // Summary
+    csv += `\n# SUMMARY\n`;
+    csv += `# Total Meals: ${meals.length}\n`;
+    csv += `# Total Weight Logs: ${weights.length}\n`;
+    csv += `# Total Water Logs: ${waterLogs.length}\n`;
+    csv += `# Total Sleep Logs: ${sleepLogs.length}\n`;
+    csv += `# Tracking Days: ${allDates.size}\n`;
 
     return csv;
   };
