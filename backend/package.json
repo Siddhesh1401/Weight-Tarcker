@@ -8,7 +8,6 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node scripts/seed.js",
-    "cleanup": "node scripts/cleanup-duplicates.js",
     "view-logs": "node scripts/view-logs.js",
     "test-api": "node test-templates.js"
   },
