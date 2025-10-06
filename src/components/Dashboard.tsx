@@ -1,4 +1,4 @@
-import { TrendingDown, Target, Coffee, Utensils, Scale, Pizza, CheckCircle2, Droplets, Moon, Trash2 } from 'lucide-react';
+import { TrendingDown, Target, Coffee, Utensils, Scale, Pizza, CheckCircle2, Droplets, Moon } from 'lucide-react';
 import { MealEntry, WeightLog, WaterLog, SleepLog, UserSettings, MealType } from '../types';
 import { getRandomQuote } from '../data/quotes';
 
@@ -134,6 +134,14 @@ export default function Dashboard({ meals, weights, waterLogs, sleepLogs, settin
 
             {todayMeals.map((meal) => {
               const isCheat = meal.isCheatMeal;
+              // Split description by commas and parentheses to format better
+              const formatDescription = (desc: string) => {
+                // Match items with optional details in parentheses
+                const parts = desc.split(',').map(part => part.trim());
+                return parts;
+              };
+              const descriptionParts = formatDescription(meal.description);
+              
               return (
                 <div key={meal.id} className={`p-3 sm:p-4 rounded-2xl border-2 ${
                   isCheat
@@ -149,7 +157,17 @@ export default function Dashboard({ meals, weights, waterLogs, sleepLogs, settin
                         {meal.hadTea && <Coffee size={14} className="text-amber-600 dark:text-amber-400 flex-shrink-0" />}
                         {isCheat && <Pizza size={14} className="text-rose-500 dark:text-rose-400 flex-shrink-0" />}
                       </div>
-                      <p className="text-sm text-gray-800 dark:text-gray-200 truncate sm:whitespace-normal">{meal.description}</p>
+                      {/* Display description items as tags/chips */}
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                        {descriptionParts.map((part, index) => (
+                          <span 
+                            key={index}
+                            className="inline-flex items-center px-2 py-1 rounded-lg text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-500"
+                          >
+                            {part}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                     <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
                       {new Date(meal.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}

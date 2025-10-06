@@ -458,6 +458,13 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                     <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg">Meals</h3>
                     {selectedLogs.meals.map((meal) => {
                       const isCheat = meal.isCheatMeal;
+                      // Split description by commas to format as chips
+                      const formatDescription = (desc: string) => {
+                        const parts = desc.split(',').map(part => part.trim());
+                        return parts;
+                      };
+                      const descriptionParts = formatDescription(meal.description);
+                      
                       return (
                         <div 
                           key={meal.id} 
@@ -469,14 +476,24 @@ export default function History({ meals, weights, waterLogs, sleepLogs, onDelete
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
+                              <div className="flex items-center gap-2 mb-3">
                                 <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">
                                   {meal.mealType}
                                 </span>
                                 {meal.hadTea && <Coffee size={16} className="text-amber-600 dark:text-amber-400" />}
                                 {isCheat && <Pizza size={16} className="text-rose-500 dark:text-rose-400" />}
                               </div>
-                              <p className="text-sm text-gray-800 dark:text-gray-200">{meal.description}</p>
+                              {/* Display description items as tags/chips */}
+                              <div className="flex flex-wrap gap-2">
+                                {descriptionParts.map((part, index) => (
+                                  <span 
+                                    key={index}
+                                    className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-500 shadow-sm"
+                                  >
+                                    {part}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
                             <div className="flex flex-col items-end gap-2">
                               <span className="text-sm text-gray-500 dark:text-gray-400">
