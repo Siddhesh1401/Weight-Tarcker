@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Save, Pizza, X } from 'lucide-react';
-import { MealType } from '../types';
+import { MealType, MealEntry } from '../types';
 import DateTimePicker from './DateTimePicker';
 
 interface CheatMealLogProps {
   mealType: MealType;
   onSave: (description: string, hadTea?: boolean, time?: string, date?: string) => void;
   onCancel: () => void;
+  editData?: MealEntry | null;
 }
 
 const mealConfig = {
@@ -17,7 +18,7 @@ const mealConfig = {
   other: { title: 'Other', color: 'rose', showTea: false },
 };
 
-export default function CheatMealLog({ mealType, onSave, onCancel }: CheatMealLogProps) {
+export default function CheatMealLog({ mealType, onSave, onCancel, editData }: CheatMealLogProps) {
   const [description, setDescription] = useState('');
   const [logTime, setLogTime] = useState(() => {
     const now = new Date();
@@ -38,6 +39,23 @@ export default function CheatMealLog({ mealType, onSave, onCancel }: CheatMealLo
     };
   }, []);
 
+  // Populate form if editing
+  useEffect(() => {
+    if (editData) {
+      setDescription(editData.description);
+      if (editData.time) {
+        setLogTime(editData.time);
+      }
+      if (editData.date) {
+        setLogDate(editData.date);
+      } else if (editData.timestamp) {
+        const date = new Date(editData.timestamp);
+        setLogDate(date.toISOString().split('T')[0]);
+        setLogTime(date.toTimeString().slice(0, 5));
+      }
+    }
+  }, [editData]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (description.trim()) {
@@ -55,7 +73,9 @@ export default function CheatMealLog({ mealType, onSave, onCancel }: CheatMealLo
                 <Pizza className="text-rose-600 dark:text-rose-400" size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Cheat Meal!</h2>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                  {editData ? 'Edit Cheat Meal!' : 'Cheat Meal!'}
+                </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Enjoy your {config.title.toLowerCase()}</p>
               </div>
             </div>

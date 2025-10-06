@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Save, Utensils, X, Settings } from 'lucide-react';
-import { MealType } from '../types';
+import { MealType, MealEntry } from '../types';
 import { mealPresets } from '../data/mealPresets';
 import MealPresetManager from './MealPresetManager';
 import DateTimePicker from './DateTimePicker';
@@ -11,6 +11,7 @@ interface MealLogProps {
   onSave: (description: string, hadTea?: boolean, isCheatMeal?: boolean, time?: string, date?: string) => void;
   onCancel: () => void;
   isOnline?: boolean;
+  editData?: MealEntry | null;
 }
 
 const mealConfig = {
@@ -46,7 +47,7 @@ const mealConfig = {
   },
 };
 
-export default function MealLog({ mealType, onSave, onCancel, isOnline = false }: MealLogProps) {
+export default function MealLog({ mealType, onSave, onCancel, isOnline = false, editData }: MealLogProps) {
   const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
   const [presetDetails, setPresetDetails] = useState<Record<string, string>>({}); // Store details for each preset
   const [customMeal, setCustomMeal] = useState('');
@@ -69,6 +70,27 @@ export default function MealLog({ mealType, onSave, onCancel, isOnline = false }
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+  // Populate form if editing
+  useEffect(() => {
+    if (editData) {
+      // Parse description to extract presets and custom meal
+      const description = editData.description;
+      setCustomMeal(description); // Set as custom for now
+      setShowCustomInput(true);
+      
+      if (editData.time) {
+        setLogTime(editData.time);
+      }
+      if (editData.date) {
+        setLogDate(editData.date);
+      } else if (editData.timestamp) {
+        const date = new Date(editData.timestamp);
+        setLogDate(date.toISOString().split('T')[0]);
+        setLogTime(date.toTimeString().slice(0, 5));
+      }
+    }
+  }, [editData]);
 
   const config = mealConfig[mealType as keyof typeof mealConfig];
   const Icon = config.icon;
@@ -253,7 +275,9 @@ export default function MealLog({ mealType, onSave, onCancel, isOnline = false }
                 <Icon className={`text-${config.color}-600 dark:text-${config.color}-400`} size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Log {config.title}</h2>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                  {editData ? `Edit ${config.title}` : `Log ${config.title}`}
+                </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">What did you have?</p>
               </div>
             </div>

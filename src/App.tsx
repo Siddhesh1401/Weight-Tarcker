@@ -136,6 +136,44 @@ function App() {
     // Create timestamp from selected date and time
     const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
 
+    // Check if we're editing
+    if (editingMeal) {
+      const updatedMeal: MealEntry = {
+        ...editingMeal,
+        description,
+        hadTea,
+        isCheatMeal,
+        date: selectedDate,
+        time: selectedTime,
+        timestamp,
+      };
+
+      setMeals(meals.map(m => m.id === editingMeal.id ? updatedMeal : m));
+      setActiveLogType(null);
+      setShowRegularMeal(false);
+      setShowCheatMeal(false);
+      setEditingMeal(null);
+      setToastMessage('✅ Meal updated successfully!');
+
+      // Update backend if online
+      if (isOnline) {
+        try {
+          await logApi.saveLog({
+            date: updatedMeal.date,
+            meal_type: updatedMeal.mealType,
+            meal_notes: description,
+            tea_biscuit: hadTea,
+            cheat_meal: isCheatMeal,
+            time: selectedTime,
+          });
+        } catch (error) {
+          console.error('Failed to update meal on backend:', error);
+        }
+      }
+      return;
+    }
+
+    // Creating new meal
     const newMeal: MealEntry = {
       id: Date.now().toString(),
       date: selectedDate,
@@ -592,8 +630,10 @@ function App() {
           onCancel={() => {
             setShowRegularMeal(false);
             setActiveLogType(null);
+            setEditingMeal(null);
           }}
           isOnline={isOnline}
+          editData={editingMeal}
         />
       )}
 
@@ -607,7 +647,9 @@ function App() {
           onCancel={() => {
             setShowCheatMeal(false);
             setActiveLogType(null);
+            setEditingMeal(null);
           }}
+          editData={editingMeal}
         />
       )}
 
