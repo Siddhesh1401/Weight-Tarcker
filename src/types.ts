@@ -33,7 +33,9 @@ export interface SleepLog {
   hours: number;
   quality: 'poor' | 'fair' | 'good' | 'excellent';
   timestamp: string;
-  time?: string; // HH:MM format
+  time?: string; // HH:MM format - wake up time
+  bedTime?: string; // HH:MM format - when went to bed
+  notes?: string; // Optional notes about sleep factors
 }
 
 export interface MealTemplate {

@@ -430,7 +430,7 @@ function App() {
     }
   };
 
-  const handleSaveSleep = async (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent', time?: string, date?: string) => {
+    const handleSaveSleep = async (hours: number, quality: 'poor' | 'fair' | 'good' | 'excellent', bedTime?: string, wakeTime?: string, date?: string, notes?: string) => {
     // Validate hours input
     if (!Number.isFinite(hours) || isNaN(hours) || hours <= 0) {
       setToastMessage('❌ Invalid sleep hours');
@@ -440,10 +440,10 @@ function App() {
 
     const now = new Date();
     const selectedDate = date || now.toISOString().split('T')[0];
-    const selectedTime = time || now.toTimeString().slice(0, 5);
+    const selectedWakeTime = wakeTime || now.toTimeString().slice(0, 5);
     
-    // Create timestamp from selected date and time
-    const timestamp = new Date(`${selectedDate}T${selectedTime}`).toISOString();
+    // Create timestamp from selected date and wake time
+    const timestamp = new Date(`${selectedDate}T${selectedWakeTime}`).toISOString();
 
     // Check if we're editing
     if (editingSleep) {
@@ -452,7 +452,9 @@ function App() {
         hours,
         quality,
         date: selectedDate,
-        time: selectedTime,
+        time: selectedWakeTime,
+        bedTime,
+        notes,
         timestamp,
       };
 
@@ -470,7 +472,7 @@ function App() {
             meal_type: 'sleep',
             sleep_hours: hours,
             sleep_quality: quality,
-            time: selectedTime,
+            time: selectedWakeTime,
           });
         } catch (error) {
           console.error('Failed to update sleep log on backend:', error);
@@ -486,7 +488,9 @@ function App() {
       hours,
       quality,
       timestamp,
-      time: selectedTime,
+      time: selectedWakeTime,
+      bedTime,
+      notes,
     };
 
     setSleepLogs([...sleepLogs, newSleep]);
@@ -500,7 +504,7 @@ function App() {
           meal_type: 'sleep',
           sleep_hours: hours,
           sleep_quality: quality,
-          time: selectedTime,
+          time: selectedWakeTime,
         });
         console.log('✅ Sleep saved to backend');
         

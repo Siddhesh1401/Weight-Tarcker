@@ -236,7 +236,7 @@ export default function History({
     csv += `# Export Generated: ${exportDate}\n`;
     csv += `# Contains meals, weight, water, and sleep tracking data\n\n`;
 
-    csv += `Date,Time,Type,Details,Value,Notes\n`;
+    csv += `Date,Time,Type,Details,Value,Bed_Time,Quality,Notes\n`;
 
     // Collect all dates
     const allDates = new Set<string>();
@@ -253,19 +253,21 @@ export default function History({
       // Weight entries
       if (dayLogs.weight) {
         const timeStr = dayLogs.weight.time ? formatTime(dayLogs.weight.time, dayLogs.weight.timestamp) : '';
-        csv += `${date},${timeStr},Weight,Weight Log,${dayLogs.weight.weight} kg,\n`;
+        csv += `${date},${timeStr},Weight,Weight Log,${dayLogs.weight.weight} kg,,,\n`;
       }
 
       // Water entries
       dayLogs.water.forEach((w: any) => {
         const timeStr = w.time ? formatTime(w.time, w.timestamp) : '';
-        csv += `${date},${timeStr},Water,Water Intake,${w.glasses} glasses,\n`;
+        csv += `${date},${timeStr},Water,Water Intake,${w.glasses} glasses,,,\n`;
       });
 
       // Sleep entries
       if (dayLogs.sleep) {
         const timeStr = dayLogs.sleep.time ? formatTime(dayLogs.sleep.time, dayLogs.sleep.timestamp) : '';
-        csv += `${date},${timeStr},Sleep,Sleep Log,${dayLogs.sleep.hours} hours,${dayLogs.sleep.quality}\n`;
+        const bedTimeStr = dayLogs.sleep.bedTime ? formatTime(dayLogs.sleep.bedTime) : '';
+        const notesStr = dayLogs.sleep.notes || '';
+        csv += `${date},${timeStr},Sleep,Sleep Log,${dayLogs.sleep.hours} hours,${bedTimeStr},${dayLogs.sleep.quality},${notesStr}\n`;
       }
 
       // Meal entries
@@ -275,7 +277,7 @@ export default function History({
         if (m.isCheatMeal) notes.push('Cheat meal');
         if (m.hadTea) notes.push('Had tea');
         const notesStr = notes.length > 0 ? notes.join(', ') : '';
-        csv += `${date},${timeStr},Meal,${m.mealType},"${m.description.replace(/"/g, '""')}",${notesStr}\n`;
+        csv += `${date},${timeStr},Meal,${m.mealType},"${m.description.replace(/"/g, '""')}",,,${notesStr}\n`;
       });
     });
 
@@ -557,7 +559,6 @@ export default function History({
     // Calculate summary statistics
     const totalMeals = meals.length;
     const totalWeightLogs = weights.length;
-    const totalWaterLogs = waterLogs.length;
     const totalSleepLogs = sleepLogs.length;
     const cheatMeals = meals.filter(m => m.isCheatMeal).length;
     const totalWaterGlasses = waterLogs.reduce((sum, w) => sum + w.glasses, 0);
