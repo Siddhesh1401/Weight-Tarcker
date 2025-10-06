@@ -42,9 +42,9 @@ export default function Dashboard({ meals, weights, waterLogs, sleepLogs, settin
   const isToday = (dateString: string) => {
     if (!dateString) return false;
     
-    // Get today's date in YYYY-MM-DD format
+    // Get today's date in YYYY-MM-DD format using local time (avoid timezone issues)
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     
     // Extract date from the input (handles both date strings and timestamps)
     let dateToCheck = dateString;
