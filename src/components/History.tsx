@@ -3,7 +3,6 @@ import { Calendar, ChevronLeft, ChevronRight, Scale, Droplets, Moon, Coffee, Piz
 import { MealEntry, WeightLog, WaterLog, SleepLog } from '../types';
 import DeleteConfirmation from './DeleteConfirmation';
 import ExportModal from './ExportModal';
-import jsPDF from 'jspdf';
 
 interface HistoryProps {
   meals: MealEntry[];
@@ -212,81 +211,101 @@ export default function History({
   };
 
   const exportPDF = (logs: any, date: string) => {
-    const doc = new jsPDF();
-    let yPosition = 20;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
 
-    // Title
-    doc.setFontSize(20);
-    doc.text('Weight Tracker Export', 20, yPosition);
-    yPosition += 15;
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Weight Tracker - ${date}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+            h1 { color: #10b981; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
+            .section { margin: 20px 0; }
+            .data-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+            .label { font-weight: bold; color: #374151; }
+            .value { color: #10b981; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #10b981; color: white; }
+            @media print {
+              body { padding: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Weight Tracker Export</h1>
+          <p><strong>Date:</strong> ${date}</p>
 
-    doc.setFontSize(12);
-    doc.text(`Date: ${date}`, 20, yPosition);
-    yPosition += 20;
+          ${logs.weight ? `
+            <div class="section">
+              <h2>Weight</h2>
+              <div class="data-row">
+                <span class="label">Weight:</span>
+                <span class="value">${logs.weight.weight} kg</span>
+              </div>
+            </div>
+          ` : ''}
 
-    // Weight
-    if (logs.weight) {
-      doc.setFontSize(14);
-      doc.text('Weight', 20, yPosition);
-      yPosition += 10;
-      doc.setFontSize(10);
-      doc.text(`${logs.weight.weight} kg`, 30, yPosition);
-      yPosition += 15;
-    }
+          ${logs.water.length > 0 ? `
+            <div class="section">
+              <h2>Water Intake</h2>
+              ${logs.water.map((w: any) => `
+                <div class="data-row">
+                  <span class="label">Water:</span>
+                  <span class="value">${w.glasses} glasses</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
 
-    // Water
-    if (logs.water.length > 0) {
-      doc.setFontSize(14);
-      doc.text('Water Intake', 20, yPosition);
-      yPosition += 10;
-      doc.setFontSize(10);
-      logs.water.forEach((w: any) => {
-        doc.text(`${w.glasses} glasses`, 30, yPosition);
-        yPosition += 8;
-      });
-      yPosition += 5;
-    }
+          ${logs.sleep ? `
+            <div class="section">
+              <h2>Sleep</h2>
+              <div class="data-row">
+                <span class="label">Duration:</span>
+                <span class="value">${logs.sleep.hours} hours</span>
+              </div>
+              <div class="data-row">
+                <span class="label">Quality:</span>
+                <span class="value">${logs.sleep.quality}</span>
+              </div>
+            </div>
+          ` : ''}
 
-    // Sleep
-    if (logs.sleep) {
-      doc.setFontSize(14);
-      doc.text('Sleep', 20, yPosition);
-      yPosition += 10;
-      doc.setFontSize(10);
-      doc.text(`${logs.sleep.hours} hours`, 30, yPosition);
-      yPosition += 8;
-      doc.text(`Quality: ${logs.sleep.quality}`, 30, yPosition);
-      yPosition += 15;
-    }
+          ${logs.meals.length > 0 ? `
+            <div class="section">
+              <h2>Meals</h2>
+              <table>
+                <tr><th>Type</th><th>Description</th><th>Cheat Meal</th></tr>
+                ${logs.meals.map((m: any) => `
+                  <tr>
+                    <td>${m.mealType}</td>
+                    <td>${m.description}</td>
+                    <td>${m.isCheatMeal ? 'Yes' : 'No'}</td>
+                  </tr>
+                `).join('')}
+              </table>
+            </div>
+          ` : ''}
 
-    // Meals
-    if (logs.meals.length > 0) {
-      doc.setFontSize(14);
-      doc.text('Meals', 20, yPosition);
-      yPosition += 10;
-      doc.setFontSize(10);
-      logs.meals.forEach((m: any) => {
-        doc.text(`${m.mealType}: ${m.description}${m.isCheatMeal ? ' (Cheat Meal)' : ''}`, 30, yPosition);
-        yPosition += 8;
-      });
-    }
+          ${logs.meals.length === 0 && !logs.weight && logs.water.length === 0 && !logs.sleep ? `
+            <p>No logs recorded for this date.</p>
+          ` : ''}
+        </body>
+      </html>
+    `);
 
-    doc.save(`weight-tracker-${date}.pdf`);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
   };
 
   const exportAllPDF = () => {
-    const doc = new jsPDF();
-    const pageHeight = doc.internal.pageSize.height;
-    let yPosition = 20;
-
-    // Title
-    doc.setFontSize(20);
-    doc.text('Weight Tracker - All Data Export', 20, yPosition);
-    yPosition += 15;
-
-    doc.setFontSize(12);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, yPosition);
-    yPosition += 20;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
 
     // Collect all dates
     const allDates = new Set<string>();
@@ -297,56 +316,106 @@ export default function History({
 
     const sortedDates = Array.from(allDates).sort();
 
-    sortedDates.forEach(date => {
-      if (yPosition > pageHeight - 50) {
-        doc.addPage();
-        yPosition = 20;
-      }
-
+    const content = sortedDates.map(date => {
       const dayLogs = getLogsForDate(date);
+      return `
+        <div class="date-section" style="page-break-inside: avoid; margin-bottom: 30px;">
+          <h2 style="color: #10b981; border-bottom: 2px solid #10b981; padding-bottom: 5px;">${formatDate(date)}</h2>
 
-      doc.setFontSize(14);
-      doc.text(formatDate(date), 20, yPosition);
-      yPosition += 10;
+          ${dayLogs.weight ? `
+            <div class="section">
+              <h3>Weight</h3>
+              <div class="data-row">
+                <span class="label">Weight:</span>
+                <span class="value">${dayLogs.weight.weight} kg</span>
+              </div>
+            </div>
+          ` : ''}
 
-      // Weight
-      if (dayLogs.weight) {
-        doc.setFontSize(10);
-        doc.text(`Weight: ${dayLogs.weight.weight} kg`, 30, yPosition);
-        yPosition += 8;
-      }
+          ${dayLogs.water.length > 0 ? `
+            <div class="section">
+              <h3>Water Intake</h3>
+              ${dayLogs.water.map((w: any) => `
+                <div class="data-row">
+                  <span class="label">Water:</span>
+                  <span class="value">${w.glasses} glasses</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
 
-      // Water
-      if (dayLogs.water.length > 0) {
-        doc.text(`Water: ${dayLogs.water.reduce((sum, w) => sum + w.glasses, 0)} glasses`, 30, yPosition);
-        yPosition += 8;
-      }
+          ${dayLogs.sleep ? `
+            <div class="section">
+              <h3>Sleep</h3>
+              <div class="data-row">
+                <span class="label">Duration:</span>
+                <span class="value">${dayLogs.sleep.hours} hours</span>
+              </div>
+              <div class="data-row">
+                <span class="label">Quality:</span>
+                <span class="value">${dayLogs.sleep.quality}</span>
+              </div>
+            </div>
+          ` : ''}
 
-      // Sleep
-      if (dayLogs.sleep) {
-        doc.text(`Sleep: ${dayLogs.sleep.hours} hours (${dayLogs.sleep.quality})`, 30, yPosition);
-        yPosition += 8;
-      }
+          ${dayLogs.meals.length > 0 ? `
+            <div class="section">
+              <h3>Meals</h3>
+              <table>
+                <tr><th>Type</th><th>Description</th><th>Cheat Meal</th></tr>
+                ${dayLogs.meals.map((m: any) => `
+                  <tr>
+                    <td>${m.mealType}</td>
+                    <td>${m.description}</td>
+                    <td>${m.isCheatMeal ? 'Yes' : 'No'}</td>
+                  </tr>
+                `).join('')}
+              </table>
+            </div>
+          ` : ''}
 
-      // Meals
-      if (dayLogs.meals.length > 0) {
-        doc.text(`Meals: ${dayLogs.meals.length}`, 30, yPosition);
-        yPosition += 8;
-        dayLogs.meals.forEach(meal => {
-          if (yPosition > pageHeight - 20) {
-            doc.addPage();
-            yPosition = 20;
-          }
-          doc.setFontSize(9);
-          doc.text(`  - ${meal.mealType}: ${meal.description}${meal.isCheatMeal ? ' (Cheat)' : ''}`, 35, yPosition);
-          yPosition += 6;
-        });
-      }
+          ${dayLogs.meals.length === 0 && !dayLogs.weight && dayLogs.water.length === 0 && !dayLogs.sleep ? `
+            <p>No logs recorded for this date.</p>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
 
-      yPosition += 10;
-    });
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Weight Tracker - All Data Export</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+            h1 { color: #10b981; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
+            h2 { color: #10b981; margin-top: 30px; }
+            h3 { color: #374151; margin-top: 20px; }
+            .section { margin: 15px 0; }
+            .data-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
+            .label { font-weight: bold; color: #374151; }
+            .value { color: #10b981; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; font-size: 12px; }
+            th { background-color: #10b981; color: white; }
+            @media print {
+              body { padding: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Weight Tracker - Complete Data Export</h1>
+          <p><strong>Generated on:</strong> ${new Date().toLocaleDateString()}</p>
+          <p><strong>Total Dates:</strong> ${sortedDates.length}</p>
+          ${content}
+        </body>
+      </html>
+    `);
 
-    doc.save(`weight-tracker-all-data-${new Date().toISOString().split('T')[0]}.pdf`);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
   };
 
   const downloadFile = (content: string, filename: string, type: string) => {
