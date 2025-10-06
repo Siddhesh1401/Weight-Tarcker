@@ -47,7 +47,7 @@ async function apiCall<T>(
 
 // Log API
 export const logApi = {
-  // Save a meal, weight, water, or sleep log
+  // Save a meal, weight, water, or sleep log (creates new entry)
   async saveLog(logData: {
     date: string;
     meal_type: string;
@@ -62,6 +62,28 @@ export const logApi = {
   }) {
     return apiCall('/log', {
       method: 'POST',
+      body: JSON.stringify({
+        user_id: DEFAULT_USER_ID,
+        ...logData,
+      }),
+    });
+  },
+
+  // Update an existing log (upsert based on date + meal_type + time)
+  async updateLog(logData: {
+    date: string;
+    meal_type: string;
+    meal_notes?: string;
+    tea_biscuit?: boolean;
+    cheat_meal?: boolean;
+    weight?: number;
+    water_glasses?: number;
+    sleep_hours?: number;
+    sleep_quality?: string;
+    time?: string; // HH:MM format
+  }) {
+    return apiCall('/log', {
+      method: 'PUT',
       body: JSON.stringify({
         user_id: DEFAULT_USER_ID,
         ...logData,

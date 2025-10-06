@@ -158,7 +158,7 @@ function App() {
       // Update backend if online
       if (isOnline) {
         try {
-          await logApi.saveLog({
+          await logApi.updateLog({
             date: updatedMeal.date,
             meal_type: updatedMeal.mealType,
             meal_notes: description,
@@ -199,7 +199,7 @@ function App() {
           meal_notes: description,
           tea_biscuit: hadTea,
           cheat_meal: isCheatMeal,
-          time: time || now.toTimeString().slice(0, 5),
+          time: selectedTime,
         });
         console.log('✅ Meal saved to backend');
       } catch (error) {
@@ -241,7 +241,7 @@ function App() {
       // Update backend if online
       if (isOnline) {
         try {
-          await logApi.saveLog({
+          await logApi.updateLog({
             date: updatedWeight.date,
             meal_type: 'weight',
             weight: weight,
@@ -316,7 +316,7 @@ function App() {
       // Update backend if online
       if (isOnline) {
         try {
-          await logApi.saveLog({
+          await logApi.updateLog({
             date: updatedWater.date,
             meal_type: 'water',
             water_glasses: glasses,
@@ -391,7 +391,7 @@ function App() {
       // Update backend if online
       if (isOnline) {
         try {
-          await logApi.saveLog({
+          await logApi.updateLog({
             date: updatedSleep.date,
             meal_type: 'sleep',
             sleep_hours: hours,

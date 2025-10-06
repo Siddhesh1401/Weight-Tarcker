@@ -258,6 +258,69 @@ router.delete('/log/:id', async (req, res) => {
   }
 });
 
+// PUT /api/log - Update an existing log entry (upsert based on date + meal_type + time)
+router.put('/log', async (req, res) => {
+  try {
+    const { 
+      user_id, date, meal_type, meal_notes, tea_biscuit, cheat_meal, weight,
+      water_glasses, sleep_hours, sleep_quality, time
+    } = req.body;
+
+    // Validation
+    if (!user_id || !date || !meal_type) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: user_id, date, meal_type'
+      });
+    }
+
+    // Build query to find existing log
+    // For weight/sleep, we only have one per day, so match by date + type
+    // For water/meals, we match by date + type + time if time is provided
+    let query = { user_id, date, meal_type };
+    if (time && (meal_type === 'water' || ['breakfast', 'lunch', 'snacks', 'dinner', 'other'].includes(meal_type))) {
+      query.time = time;
+    }
+
+    // Update or create the log
+    const updatedLog = await Log.findOneAndUpdate(
+      query,
+      {
+        user_id,
+        date,
+        meal_type,
+        meal_notes: meal_notes || '',
+        tea_biscuit: tea_biscuit || false,
+        cheat_meal: cheat_meal || false,
+        weight: weight || null,
+        water_glasses: water_glasses || null,
+        sleep_hours: sleep_hours || null,
+        sleep_quality: sleep_quality || null,
+        time: time || null,
+        timestamp: new Date().toISOString()
+      },
+      { 
+        new: true,  // Return updated document
+        upsert: true,  // Create if doesn't exist
+        runValidators: true
+      }
+    );
+
+    res.json({
+      success: true,
+      message: 'Log entry updated successfully',
+      data: updatedLog
+    });
+  } catch (error) {
+    console.error('Error updating log:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update log entry',
+      error: error.message
+    });
+  }
+});
+
 // DELETE /api/logs - Delete all logs for a user
 router.delete('/logs', async (req, res) => {
   try {
