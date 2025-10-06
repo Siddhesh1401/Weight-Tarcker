@@ -275,7 +275,7 @@ function App() {
           date: newWeight.date,
           meal_type: 'weight',
           weight: weight,
-          time: time || now.toTimeString().slice(0, 5),
+          time: selectedTime,
         });
         console.log('✅ Weight saved to backend');
       } catch (error) {
@@ -348,7 +348,7 @@ function App() {
           date: newWater.date,
           meal_type: 'water',
           water_glasses: glasses,
-          time: time || now.toTimeString().slice(0, 5),
+          time: selectedTime,
         });
         console.log('✅ Water saved to backend');
       } catch (error) {
@@ -426,7 +426,7 @@ function App() {
           meal_type: 'sleep',
           sleep_hours: hours,
           sleep_quality: quality,
-          time: time || now.toTimeString().slice(0, 5),
+          time: selectedTime,
         });
         console.log('✅ Sleep saved to backend');
       } catch (error) {

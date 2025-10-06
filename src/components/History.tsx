@@ -428,9 +428,13 @@ export default function History({
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{water.glasses} glasses</span>
+                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          {typeof water.glasses === 'number' && Number.isFinite(water.glasses) 
+                            ? `${water.glasses} glasses` 
+                            : '⚠️ Invalid data'}
+                        </span>
                         <div className="flex gap-2">
-                          {onEditWater && (
+                          {onEditWater && typeof water.glasses === 'number' && Number.isFinite(water.glasses) && (
                             <button
                               onClick={() => onEditWater(water)}
                               className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
@@ -442,7 +446,7 @@ export default function History({
                             onClick={() => setDeleteItem({ 
                               type: 'Water', 
                               id: water.id, 
-                              description: `${water.glasses} glasses` 
+                              description: typeof water.glasses === 'number' ? `${water.glasses} glasses` : 'Invalid water log'
                             })}
                             className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
                           >
