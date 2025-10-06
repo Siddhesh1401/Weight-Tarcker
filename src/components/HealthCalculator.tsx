@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calculator, Ruler, Weight, User, Activity, Target, TrendingUp, AlertTriangle, Save } from 'lucide-react';
+import { Calculator, Ruler, Weight, Activity, Target, AlertTriangle, Save } from 'lucide-react';
 import { UserSettings } from '../types';
 
 interface HealthCalculatorProps {
@@ -315,10 +315,12 @@ export default function HealthCalculator({ settings, onUpdateSettings, className
     <div className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl border border-gray-100 dark:border-gray-600 ${className}`}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <Calculator className="text-emerald-600 dark:text-emerald-400" size={28} />
+        <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
+          <Calculator className="text-emerald-600 dark:text-emerald-400" size={24} />
+        </div>
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Health Calculators</h2>
-          <p className="text-gray-600 dark:text-gray-400">Calculate BMI and body fat percentage</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Calculate BMI and body fat percentage</p>
         </div>
       </div>
 
