@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Scale, Droplets, Moon, Coffee, Pizza, Trash2, Download, Filter, Edit2, BarChart3 } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Scale, Droplets, Moon, Coffee, Pizza, Trash2, Download, Filter, Edit2 } from 'lucide-react';
 import { MealEntry, WeightLog, WaterLog, SleepLog } from '../types';
 import DeleteConfirmation from './DeleteConfirmation';
 import ExportModal from './ExportModal';
-import HealthTrendsChart from './HealthTrendsChart';
 
 interface HistoryProps {
   meals: MealEntry[];
@@ -39,7 +38,6 @@ export default function History({
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportType, setExportType] = useState<'all' | 'single' | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'meals' | 'weight' | 'water' | 'sleep'>('all');
-  const [showTrends, setShowTrends] = useState(false);
 
   // Get unique dates from all logs
   const allDates = new Set<string>();
@@ -894,63 +892,40 @@ export default function History({
       <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-3xl p-4 md:p-6 shadow-lg border border-emerald-100 dark:border-gray-600">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3">
-            {showTrends ? (
-              <BarChart3 className="text-emerald-600 dark:text-emerald-400" size={24} />
-            ) : (
-              <Calendar className="text-emerald-600 dark:text-emerald-400" size={24} />
-            )}
+            <Calendar className="text-emerald-600 dark:text-emerald-400" size={24} />
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
-                {showTrends ? 'Health Trends' : 'History'}
+                History
               </h1>
               <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">
-                {showTrends ? 'Track your progress' : 'View your past logs'}
+                View your past logs
               </p>
             </div>
           </div>
           <div className="flex gap-2 md:gap-3">
             <button
-              onClick={() => setShowTrends(!showTrends)}
-              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-3 md:px-5 py-2 md:py-3 rounded-xl md:rounded-2xl text-sm md:text-base font-semibold transition-all transform hover:scale-[1.02] shadow-lg flex-1 md:flex-none justify-center"
+              onClick={() => {
+                setExportType('all');
+                setShowExportModal(true);
+              }}
+              className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white px-3 md:px-5 py-2 md:py-3 rounded-xl md:rounded-2xl text-sm md:text-base font-semibold transition-all transform hover:scale-[1.02] shadow-lg flex-1 md:flex-none justify-center"
             >
-              {showTrends ? <Calendar size={16} /> : <BarChart3 size={16} />}
-              <span className="hidden sm:inline">{showTrends ? 'History' : 'Trends'}</span>
+              <Download size={16} />
+              <span className="hidden sm:inline">Export All</span>
             </button>
-            {!showTrends && (
-              <button
-                onClick={() => {
-                  setExportType('all');
-                  setShowExportModal(true);
-                }}
-                className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white px-3 md:px-5 py-2 md:py-3 rounded-xl md:rounded-2xl text-sm md:text-base font-semibold transition-all transform hover:scale-[1.02] shadow-lg flex-1 md:flex-none justify-center"
-              >
-                <Download size={16} />
-                <span className="hidden sm:inline">Export All</span>
-              </button>
-            )}
           </div>
         </div>
       </div>
 
-      {showTrends ? (
-        <HealthTrendsChart
-          key={`trends-${meals.length}-${weights.length}-${waterLogs.length}-${sleepLogs.length}`}
-          meals={meals}
-          weights={weights}
-          waterLogs={waterLogs}
-          sleepLogs={sleepLogs}
-        />
+      {sortedDates.length === 0 ? (
+        <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-100 dark:border-gray-600 text-center">
+          <Calendar className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
+          <p className="text-gray-600 dark:text-gray-400">No logs yet. Start tracking!</p>
+        </div>
       ) : (
         <>
-          {sortedDates.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-100 dark:border-gray-600 text-center">
-              <Calendar className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
-              <p className="text-gray-600 dark:text-gray-400">No logs yet. Start tracking!</p>
-            </div>
-          ) : (
-            <>
-              {/* Filter Dropdown */}
-              {!selectedDate && (
+          {/* Filter Dropdown */}
+          {!selectedDate && (
                 <div className="bg-white dark:bg-gray-800 rounded-3xl p-4 md:p-6 shadow-lg border border-gray-100 dark:border-gray-600">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <h2 className="text-lg md:text-xl font-bold text-gray-800 dark:text-gray-100">Select a Date</h2>
@@ -1364,8 +1339,6 @@ export default function History({
               })()}
             </>
           )}
-        </>
-      )}
 
       {deleteItem && (
         <DeleteConfirmation
