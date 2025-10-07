@@ -47,6 +47,14 @@ const logSchema = new mongoose.Schema({
     enum: ['poor', 'fair', 'good', 'excellent', null],
     default: null
   },
+  bed_time: {
+    type: String,
+    default: null
+  },
+  sleep_notes: {
+    type: String,
+    default: null
+  },
   time: {
     type: String,
     default: () => {

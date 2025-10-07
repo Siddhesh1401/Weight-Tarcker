@@ -58,6 +58,8 @@ export const logApi = {
     water_glasses?: number;
     sleep_hours?: number;
     sleep_quality?: string;
+    bed_time?: string; // HH:MM format for sleep bed time
+    sleep_notes?: string; // Sleep notes
     time?: string; // HH:MM format
   }) {
     return apiCall('/log', {
@@ -81,6 +83,8 @@ export const logApi = {
     water_glasses?: number;
     sleep_hours?: number;
     sleep_quality?: string;
+    bed_time?: string; // HH:MM format for sleep bed time
+    sleep_notes?: string; // Sleep notes
     time?: string; // HH:MM format
   }) {
     return apiCall('/log', {

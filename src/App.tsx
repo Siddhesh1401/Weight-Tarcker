@@ -109,6 +109,8 @@ function App() {
               quality: log.sleep_quality || 'good',
               timestamp: log.timestamp,
               time: log.time,
+              bedTime: log.bed_time,
+              notes: log.sleep_notes,
             }));
 
           console.log('📊 Transformed logs:', {
@@ -476,6 +478,8 @@ function App() {
             meal_type: 'sleep',
             sleep_hours: hours,
             sleep_quality: quality,
+            bed_time: bedTime,
+            sleep_notes: notes,
             time: selectedWakeTime,
           });
         } catch (error) {
@@ -508,6 +512,8 @@ function App() {
           meal_type: 'sleep',
           sleep_hours: hours,
           sleep_quality: quality,
+          bed_time: bedTime,
+          sleep_notes: notes,
           time: selectedWakeTime,
         });
         console.log('✅ Sleep saved to backend');
