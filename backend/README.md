@@ -1,5 +1,5 @@
 # Weight Tracker Backend API
-
+ 
 Backend server for the Weight Tracker application built with Node.js, Express, and MongoDB Atlas.
 
 ## 🚀 Quick Start
