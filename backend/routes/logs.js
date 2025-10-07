@@ -8,7 +8,7 @@ router.post('/log', async (req, res) => {
   try {
     const { 
       user_id, date, meal_type, meal_notes, tea_biscuit, cheat_meal, weight,
-      water_glasses, sleep_hours, sleep_quality
+      water_glasses, sleep_hours, sleep_quality, bed_time, sleep_notes
     } = req.body;
 
     // Validation
@@ -29,7 +29,9 @@ router.post('/log', async (req, res) => {
       weight: weight || null,
       water_glasses: water_glasses || null,
       sleep_hours: sleep_hours || null,
-      sleep_quality: sleep_quality || null
+      sleep_quality: sleep_quality || null,
+      bed_time: bed_time || null,
+      sleep_notes: sleep_notes || null
     });
 
     await newLog.save();
@@ -263,7 +265,7 @@ router.put('/log', async (req, res) => {
   try {
     const { 
       user_id, date, meal_type, meal_notes, tea_biscuit, cheat_meal, weight,
-      water_glasses, sleep_hours, sleep_quality, time, log_id
+      water_glasses, sleep_hours, sleep_quality, bed_time, sleep_notes, time, log_id
     } = req.body;
 
     // Validation
@@ -293,6 +295,8 @@ router.put('/log', async (req, res) => {
           water_glasses: water_glasses || null,
           sleep_hours: sleep_hours || null,
           sleep_quality: sleep_quality || null,
+          bed_time: bed_time || null,
+          sleep_notes: sleep_notes || null,
           time: time || null,
           timestamp: new Date().toISOString()
         },
@@ -342,6 +346,8 @@ router.put('/log', async (req, res) => {
         water_glasses: water_glasses || null,
         sleep_hours: sleep_hours || null,
         sleep_quality: sleep_quality || null,
+        bed_time: bed_time || null,
+        sleep_notes: sleep_notes || null,
         time: time || null,
         timestamp: new Date().toISOString()
       },
