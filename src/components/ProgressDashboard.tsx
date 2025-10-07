@@ -167,20 +167,20 @@ export default function ProgressDashboard({ className = '', meals = [], weights 
   };
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`space-y-6 pb-6 ${className}`}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-3xl p-6 shadow-xl border border-emerald-100 dark:border-gray-600 animate-fadeIn">
+      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-3xl p-4 md:p-6 shadow-xl border border-emerald-100 dark:border-gray-600 animate-fadeIn">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-emerald-100 dark:bg-emerald-900 p-3 rounded-2xl smooth-hover hover:bg-emerald-200 dark:hover:bg-emerald-800">
-              <TrendingUp className="text-emerald-600 dark:text-emerald-400" size={28} />
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="bg-emerald-100 dark:bg-emerald-900 p-2 md:p-3 rounded-xl md:rounded-2xl smooth-hover hover:bg-emerald-200 dark:hover:bg-emerald-800">
+              <TrendingUp className="text-emerald-600 dark:text-emerald-400" size={20} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Progress Dashboard</h1>
-              <p className="text-gray-600 dark:text-gray-400">Track your health journey</p>
+              <h1 className="text-xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">Progress</h1>
+              <p className="text-xs md:text-base text-gray-600 dark:text-gray-400">Track your journey</p>
             </div>
           </div>
-          <Award className="text-emerald-500 dark:text-emerald-400 animate-bounce" size={32} />
+          <Award className="text-emerald-500 dark:text-emerald-400 animate-bounce" size={24} />
         </div>
       </div>
 

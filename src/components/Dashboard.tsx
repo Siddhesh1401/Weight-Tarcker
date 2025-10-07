@@ -182,19 +182,58 @@ export default function Dashboard({ meals, weights, waterLogs, sleepLogs, settin
             }).slice(-1)} {/* Only show the last water entry with progress */}
 
             {todaySleep && (
-              <div className="p-3 sm:p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 border-2 border-indigo-200 dark:border-indigo-700">
-                <div className="flex items-center justify-between mb-2">
+              <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 border-2 border-indigo-200 dark:border-indigo-700">
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <Moon size={16} className="text-indigo-600 dark:text-indigo-400" />
-                    <span className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">Sleep</span>
+                    <div className="p-1.5 bg-indigo-100 dark:bg-indigo-800 rounded-lg">
+                      <Moon size={16} className="text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <span className="text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200 uppercase">Sleep Log</span>
                   </div>
                   <div className="text-right">
                     <span className="text-lg sm:text-xl font-bold text-indigo-600 dark:text-indigo-400">{todaySleep.hours}h</span>
-                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 ml-2 capitalize">({todaySleep.quality})</span>
+                    <span className={`text-xs sm:text-sm font-semibold ml-2 capitalize ${
+                      todaySleep.quality === 'excellent' ? 'text-green-600 dark:text-green-400' :
+                      todaySleep.quality === 'good' ? 'text-blue-600 dark:text-blue-400' :
+                      todaySleep.quality === 'fair' ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-red-600 dark:text-red-400'
+                    }`}>
+                      ({todaySleep.quality})
+                    </span>
                   </div>
                 </div>
+
+                {/* Sleep Details Grid */}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {todaySleep.bedTime && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-indigo-100 dark:border-indigo-700">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">Bed Time</div>
+                      <div className="text-xs sm:text-sm font-semibold text-purple-600 dark:text-purple-400">
+                        🌙 {formatTime(todaySleep.bedTime)}
+                      </div>
+                    </div>
+                  )}
+                  {todaySleep.time && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-indigo-100 dark:border-indigo-700">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">Wake Time</div>
+                      <div className="text-xs sm:text-sm font-semibold text-orange-600 dark:text-orange-400">
+                        ☀️ {formatTime(todaySleep.time, todaySleep.timestamp)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Notes */}
+                {todaySleep.notes && (
+                  <div className="mb-3 bg-white dark:bg-gray-800 rounded-lg p-2 border border-indigo-100 dark:border-indigo-700">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">📝 Notes</div>
+                    <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{todaySleep.notes}</div>
+                  </div>
+                )}
+
+                {/* Progress Bar */}
                 {settings.sleepGoal && (
-                  <div className="mt-2">
+                  <div>
                     <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
                       <span>Goal: {settings.sleepGoal}h</span>
                       <span>{Math.round((todaySleep.hours / settings.sleepGoal) * 100)}%</span>

@@ -891,30 +891,30 @@ export default function History({
 
   return (
     <div className="space-y-6 pb-6 animate-fadeIn">
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-3xl p-6 shadow-lg border border-emerald-100 dark:border-gray-600">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-3xl p-4 md:p-6 shadow-lg border border-emerald-100 dark:border-gray-600">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3">
             {showTrends ? (
-              <BarChart3 className="text-emerald-600 dark:text-emerald-400" size={28} />
+              <BarChart3 className="text-emerald-600 dark:text-emerald-400" size={24} />
             ) : (
-              <Calendar className="text-emerald-600 dark:text-emerald-400" size={28} />
+              <Calendar className="text-emerald-600 dark:text-emerald-400" size={24} />
             )}
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
-                {showTrends ? 'Health Trends & Analytics' : 'History'}
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
+                {showTrends ? 'Health Trends' : 'History'}
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">
-                {showTrends ? 'Track your progress and discover correlations' : 'View your past logs'}
+              <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">
+                {showTrends ? 'Track your progress' : 'View your past logs'}
               </p>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 md:gap-3">
             <button
               onClick={() => setShowTrends(!showTrends)}
-              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all transform hover:scale-[1.02] shadow-lg"
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-3 md:px-5 py-2 md:py-3 rounded-xl md:rounded-2xl text-sm md:text-base font-semibold transition-all transform hover:scale-[1.02] shadow-lg flex-1 md:flex-none justify-center"
             >
-              {showTrends ? <Calendar size={18} /> : <BarChart3 size={18} />}
-              {showTrends ? 'History' : 'Trends'}
+              {showTrends ? <Calendar size={16} /> : <BarChart3 size={16} />}
+              <span className="hidden sm:inline">{showTrends ? 'History' : 'Trends'}</span>
             </button>
             {!showTrends && (
               <button
@@ -922,10 +922,10 @@ export default function History({
                   setExportType('all');
                   setShowExportModal(true);
                 }}
-                className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all transform hover:scale-[1.02] shadow-lg"
+                className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white px-3 md:px-5 py-2 md:py-3 rounded-xl md:rounded-2xl text-sm md:text-base font-semibold transition-all transform hover:scale-[1.02] shadow-lg flex-1 md:flex-none justify-center"
               >
-                <Download size={18} />
-                Export All
+                <Download size={16} />
+                <span className="hidden sm:inline">Export All</span>
               </button>
             )}
           </div>
@@ -951,14 +951,14 @@ export default function History({
             <>
               {/* Filter Dropdown */}
               {!selectedDate && (
-                <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-100 dark:border-gray-600">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Select a Date</h2>
-                    <div className="relative">
+                <div className="bg-white dark:bg-gray-800 rounded-3xl p-4 md:p-6 shadow-lg border border-gray-100 dark:border-gray-600">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <h2 className="text-lg md:text-xl font-bold text-gray-800 dark:text-gray-100">Select a Date</h2>
+                    <div className="relative w-full sm:w-auto">
                       <select
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value as any)}
-                        className="appearance-none bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-2xl px-5 py-3 pr-10 font-semibold text-gray-700 dark:text-gray-200 hover:border-emerald-500 dark:hover:border-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-colors"
+                        className="appearance-none w-full sm:w-auto bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl md:rounded-2xl px-4 md:px-5 py-2.5 md:py-3 pr-10 text-sm md:text-base font-semibold text-gray-700 dark:text-gray-200 hover:border-emerald-500 dark:hover:border-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-colors"
                       >
                         <option value="all">All Logs</option>
                         <option value="meals">Meals Only</option>
@@ -966,7 +966,7 @@ export default function History({
                         <option value="water">Water Only</option>
                         <option value="sleep">Sleep Only</option>
                       </select>
-                      <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" size={18} />
+                      <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" size={16} />
                     </div>
                   </div>
                 </div>
