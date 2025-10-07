@@ -186,7 +186,10 @@ export default function ProgressDashboard({ className = '', meals = [], weights 
 
       {/* Weight Chart */}
       <div className="animate-slideUp">
-        <WeightChart data={progressData.recentWeights} />
+        <WeightChart 
+          key={`weight-chart-${progressData.recentWeights.length}`}
+          data={progressData.recentWeights} 
+        />
       </div>
 
       {/* Activity Summary */}
@@ -332,6 +335,7 @@ export default function ProgressDashboard({ className = '', meals = [], weights 
       {/* Advanced Analytics */}
       <div className="mt-8">
         <HealthTrendsChart
+          key={`analytics-${meals.length}-${weights.length}-${waterLogs.length}-${sleepLogs.length}`}
           meals={meals}
           weights={weights}
           waterLogs={waterLogs}

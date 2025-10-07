@@ -934,6 +934,7 @@ export default function History({
 
       {showTrends ? (
         <HealthTrendsChart
+          key={`trends-${meals.length}-${weights.length}-${waterLogs.length}-${sleepLogs.length}`}
           meals={meals}
           weights={weights}
           waterLogs={waterLogs}
@@ -1131,46 +1132,95 @@ export default function History({
 
                     {/* Sleep */}
                     {selectedLogs.sleep && (
-                      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg border-2 border-indigo-200 dark:border-indigo-700">
-                        <div className="flex items-center justify-between">
+                      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-2xl p-5 shadow-lg border-2 border-indigo-200 dark:border-indigo-700">
+                        <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
-                            <Moon size={22} className="text-indigo-600 dark:text-indigo-400" />
+                            <div className="p-2 bg-indigo-100 dark:bg-indigo-800 rounded-xl">
+                              <Moon size={22} className="text-indigo-600 dark:text-indigo-400" />
+                            </div>
                             <div>
-                              <span className="font-semibold text-gray-700 dark:text-gray-200">Sleep</span>
+                              <span className="font-bold text-gray-800 dark:text-gray-100 text-lg">Sleep Log</span>
                               {selectedLogs.sleep.time && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                  {formatTime(selectedLogs.sleep.time, selectedLogs.sleep.timestamp)}
+                                <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                                  <span>⏰</span> Woke up at {formatTime(selectedLogs.sleep.time, selectedLogs.sleep.timestamp)}
                                 </p>
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <div className="text-right">
-                              <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{selectedLogs.sleep!.hours}h</span>
-                              <span className="text-sm text-gray-600 dark:text-gray-400 ml-2 capitalize">({selectedLogs.sleep!.quality})</span>
-                            </div>
-                            <div className="flex gap-2">
-                              {onEditSleep && (
-                                <button
-                                  onClick={() => onEditSleep(selectedLogs.sleep!)}
-                                  className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-                                >
-                                  <Edit2 size={18} />
-                                </button>
-                              )}
+                          <div className="flex gap-2">
+                            {onEditSleep && (
                               <button
-                                onClick={() => setDeleteItem({
-                                  type: 'Sleep',
-                                  id: selectedLogs.sleep!.id,
-                                  description: `${selectedLogs.sleep!.hours}h (${selectedLogs.sleep!.quality})`
-                                })}
-                                className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
+                                onClick={() => onEditSleep(selectedLogs.sleep!)}
+                                className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                               >
-                                <Trash2 size={20} />
+                                <Edit2 size={18} />
                               </button>
-                            </div>
+                            )}
+                            <button
+                              onClick={() => setDeleteItem({
+                                type: 'Sleep',
+                                id: selectedLogs.sleep!.id,
+                                description: `${selectedLogs.sleep!.hours}h (${selectedLogs.sleep!.quality})`
+                              })}
+                              className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
+                            >
+                              <Trash2 size={20} />
+                            </button>
                           </div>
                         </div>
+
+                        {/* Sleep Details Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {/* Duration */}
+                          <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-indigo-200 dark:border-indigo-700">
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Duration</div>
+                            <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400">{selectedLogs.sleep!.hours}h</div>
+                          </div>
+
+                          {/* Quality */}
+                          <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-indigo-200 dark:border-indigo-700">
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Quality</div>
+                            <div className={`text-sm font-semibold capitalize ${
+                              selectedLogs.sleep!.quality === 'excellent' ? 'text-green-600 dark:text-green-400' :
+                              selectedLogs.sleep!.quality === 'good' ? 'text-blue-600 dark:text-blue-400' :
+                              selectedLogs.sleep!.quality === 'fair' ? 'text-yellow-600 dark:text-yellow-400' :
+                              'text-red-600 dark:text-red-400'
+                            }`}>
+                              {selectedLogs.sleep!.quality === 'excellent' ? '😴 Excellent' :
+                               selectedLogs.sleep!.quality === 'good' ? '😊 Good' :
+                               selectedLogs.sleep!.quality === 'fair' ? '😐 Fair' :
+                               '😞 Poor'}
+                            </div>
+                          </div>
+
+                          {/* Bed Time */}
+                          {selectedLogs.sleep.bedTime && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-indigo-200 dark:border-indigo-700">
+                              <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Bed Time</div>
+                              <div className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                                🌙 {formatTime(selectedLogs.sleep.bedTime)}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Wake Time */}
+                          {selectedLogs.sleep.time && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-indigo-200 dark:border-indigo-700">
+                              <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Wake Time</div>
+                              <div className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                                ☀️ {formatTime(selectedLogs.sleep.time, selectedLogs.sleep.timestamp)}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Notes */}
+                        {selectedLogs.sleep.notes && (
+                          <div className="mt-3 bg-white dark:bg-gray-800 rounded-xl p-3 border border-indigo-200 dark:border-indigo-700">
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">📝 Notes</div>
+                            <div className="text-sm text-gray-700 dark:text-gray-300">{selectedLogs.sleep.notes}</div>
+                          </div>
+                        )}
                       </div>
                     )}
 

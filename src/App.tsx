@@ -163,7 +163,8 @@ function App() {
     if (!activeLogType || activeLogType === 'weight') return;
 
     const now = new Date();
-    const selectedDate = date || now.toISOString().split('T')[0];
+    // Use local date instead of UTC
+    const selectedDate = date || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const selectedTime = time || now.toTimeString().slice(0, 5);
     
     // Create timestamp preserving local time
@@ -268,7 +269,8 @@ function App() {
     }
 
     const now = new Date();
-    const selectedDate = date || now.toISOString().split('T')[0];
+    // Use local date instead of UTC
+    const selectedDate = date || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const selectedTime = time || now.toTimeString().slice(0, 5);
     
     // Create timestamp preserving local time
@@ -348,7 +350,8 @@ function App() {
 
   const handleSaveWater = async (glasses: number, time?: string, date?: string) => {
     const now = new Date();
-    const selectedDate = date || now.toISOString().split('T')[0];
+    // Use local date instead of UTC
+    const selectedDate = date || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const selectedTime = time || now.toTimeString().slice(0, 5);
     
     // Validate glasses is a valid number
@@ -439,7 +442,8 @@ function App() {
     }
 
     const now = new Date();
-    const selectedDate = date || now.toISOString().split('T')[0];
+    // Use local date instead of UTC
+    const selectedDate = date || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const selectedWakeTime = wakeTime || now.toTimeString().slice(0, 5);
     
     // Create timestamp preserving local time
@@ -672,7 +676,8 @@ function App() {
       
       <div className="max-w-md mx-auto px-4 py-6 animate-fadeIn bg-white dark:bg-gray-800 rounded-2xl shadow-xl mx-4 mb-4 border border-gray-100 dark:border-gray-700">
         {currentPage === 'dashboard' && (
-          <Dashboard
+          <Dashboard 
+            key={`dashboard-${meals.length}-${weights.length}-${waterLogs.length}-${sleepLogs.length}`}
             meals={meals}
             weights={weights}
             waterLogs={waterLogs}
@@ -684,6 +689,7 @@ function App() {
 
         {currentPage === 'history' && (
           <History 
+            key={`history-${meals.length}-${weights.length}-${waterLogs.length}-${sleepLogs.length}`}
             meals={meals} 
             weights={weights}
             waterLogs={waterLogs}
@@ -701,15 +707,14 @@ function App() {
 
         {currentPage === 'progress' && (
           <ProgressDashboard 
+            key={`progress-${meals.length}-${weights.length}-${waterLogs.length}-${sleepLogs.length}`}
             meals={meals} 
             weights={weights} 
             waterLogs={waterLogs}
             sleepLogs={sleepLogs}
             settings={settings}
           />
-        )}
-
-        {currentPage === 'settings' && (
+        )}        {currentPage === 'settings' && (
           <Settings
             settings={settings}
             onSave={handleSaveSettings}
