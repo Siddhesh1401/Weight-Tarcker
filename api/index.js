@@ -26,6 +26,8 @@ app.use(express.urlencoded({ extended: true }));
 // Debug middleware
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
+  console.log('URL:', req.url);
+  console.log('Original URL:', req.originalUrl);
   next();
 });
 
@@ -62,14 +64,14 @@ connectDB().catch(err => console.error('DB connection failed:', err));
 
 // Routes
 // Test route first
-app.get('/test', (req, res) => {
+app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working!', timestamp: new Date().toISOString() });
 });
 
 console.log('✅ Mounting logs router...');
-app.use('/', logsRouter);
+app.use('/api', logsRouter);
 console.log('✅ Mounting settings router...');
-app.use('/', settingsRouter);
+app.use('/api', settingsRouter);
 // app.use('/', templatesRouter);
 // app.use('/push', pushRouter);
 // app.use('/', emailRouter);
