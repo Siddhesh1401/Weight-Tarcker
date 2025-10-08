@@ -507,6 +507,25 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                     {testEmailStatus === 'sending' ? 'Sending...' : testEmailStatus === 'success' ? '✅ Test Email Sent!' : testEmailStatus === 'error' ? '❌ Failed to Send' : '📧 Send Test Email'}
                   </button>
                 </div>
+
+                {/* Save Email Preferences Button */}
+                <div className="pt-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        await emailApi.updateEmailPreferences(emailPreferences);
+                        alert('✅ Email preferences saved successfully!');
+                      } catch (error) {
+                        console.error('Failed to save email preferences:', error);
+                        alert('❌ Failed to save email preferences');
+                      }
+                    }}
+                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 px-6 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <Save size={20} />
+                    Save Email Preferences
+                  </button>
+                </div>
               </div>
             </div>
           </div>
