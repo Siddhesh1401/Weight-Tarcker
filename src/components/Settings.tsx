@@ -998,7 +998,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                   <div className="space-y-3">
                     {cronJobs.map((job) => (
                       <div 
-                        key={job.id} 
+                        key={job.jobId} 
                         className="group bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-700/30 rounded-2xl p-5 border-2 border-gray-200 dark:border-gray-600 hover:border-orange-300 dark:hover:border-orange-700 transition-all hover:shadow-lg"
                       >
                         <div className="flex items-start justify-between gap-4">
@@ -1039,11 +1039,11 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                                 type="button"
                                 onClick={async () => {
                                   try {
-                                    await cronJobsApi.toggleCronJob(job.id, !job.enabled);
+                                    await cronJobsApi.toggleCronJob(job.jobId, !job.enabled);
                                     // Refresh jobs list
                                     const jobs = await cronJobsApi.getCronJobs();
-                                    if (jobs && jobs.success) {
-                                      setCronJobs(jobs.jobs || []);
+                                    if (jobs && Array.isArray(jobs)) {
+                                      setCronJobs(jobs);
                                     }
                                   } catch (error) {
                                     alert('❌ Failed to toggle cron job');
@@ -1063,11 +1063,11 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                                 onClick={async () => {
                                   if (confirm(`🗑️ Are you sure you want to delete "${job.title}"?\n\nThis action cannot be undone.`)) {
                                     try {
-                                      await cronJobsApi.deleteCronJob(job.id);
+                                      await cronJobsApi.deleteCronJob(job.jobId);
                                       // Refresh jobs list
                                       const jobs = await cronJobsApi.getCronJobs();
-                                      if (jobs && jobs.success) {
-                                        setCronJobs(jobs.jobs || []);
+                                      if (jobs && Array.isArray(jobs)) {
+                                        setCronJobs(jobs);
                                       }
                                       alert('✅ Cron job deleted successfully');
                                     } catch (error) {
