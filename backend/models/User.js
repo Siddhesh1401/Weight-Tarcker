@@ -85,6 +85,21 @@ const userSchema = new mongoose.Schema({
       type: String,
       enum: ['daily', 'weekly', 'monthly', null],
       default: null
+    },
+    // Delivery schedule times
+    schedule: {
+      daily: {
+        type: String,
+        default: '20:00'
+      },
+      weekly: {
+        type: String,
+        default: '20:00'
+      },
+      monthly: {
+        type: String,
+        default: '20:00'
+      }
     }
   },
 }, { _id: false });

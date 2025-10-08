@@ -89,4 +89,9 @@ export interface EmailPreferences {
   weekly_summary: boolean;
   monthly_summary: boolean;
   custom_frequency?: 'daily' | 'weekly' | 'monthly';
+  schedule?: {
+    daily: string;
+    weekly: string;
+    monthly: string;
+  };
 }

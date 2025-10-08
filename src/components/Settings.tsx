@@ -34,7 +34,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
     weekly_summary: false,
     monthly_summary: false
   });
-  const [emailSchedule, setEmailSchedule] = useState(savedSettings.emailSchedule || settings.emailSchedule || {
+  const [emailSchedule, setEmailSchedule] = useState(savedSettings.emailSchedule || settings.emailSchedule || savedSettings.emailPreferences?.schedule || settings.emailPreferences?.schedule || {
     daily: '20:00',
     weekly: '20:00',
     monthly: '20:00'
@@ -60,7 +60,12 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
       try {
         const preferences = await emailApi.getEmailPreferences();
         if (preferences) {
-          setEmailPreferences(preferences);
+          // Extract schedule from preferences if it exists
+          const { schedule, ...prefsWithoutSchedule } = preferences;
+          setEmailPreferences(prefsWithoutSchedule);
+          if (schedule) {
+            setEmailSchedule(schedule);
+          }
         }
       } catch (error) {
         console.error('Failed to load email preferences:', error);
@@ -93,8 +98,14 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
       setSaveEmailStatus('saving');
       const prefsToSave = prefs || emailPreferences;
       
-      // Save to backend API
-      await emailApi.updateEmailPreferences(prefsToSave);
+      // Include schedule in preferences for database storage
+      const fullPreferences = {
+        ...prefsToSave,
+        schedule: emailSchedule
+      };
+      
+      // Save to backend API (includes schedule)
+      await emailApi.updateEmailPreferences(fullPreferences);
       
       // Save to localStorage directly without triggering navigation
       const currentSettings = JSON.parse(localStorage.getItem('settings') || '{}');
@@ -662,12 +673,8 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                       onChange={(e) => {
                         const newSchedule = { ...emailSchedule, daily: e.target.value };
                         setEmailSchedule(newSchedule);
-                        // Save schedule to localStorage directly
-                        const currentSettings = JSON.parse(localStorage.getItem('settings') || '{}');
-                        localStorage.setItem('settings', JSON.stringify({
-                          ...currentSettings,
-                          emailSchedule: newSchedule
-                        }));
+                        // Save to database via email preferences
+                        saveEmailPreferences();
                       }}
                       disabled={!emailPreferences.enabled || !emailPreferences.daily_summary}
                       className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 focus:outline-none transition-all disabled:opacity-50"
@@ -685,12 +692,8 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                       onChange={(e) => {
                         const newSchedule = { ...emailSchedule, weekly: e.target.value };
                         setEmailSchedule(newSchedule);
-                        // Save schedule to localStorage directly
-                        const currentSettings = JSON.parse(localStorage.getItem('settings') || '{}');
-                        localStorage.setItem('settings', JSON.stringify({
-                          ...currentSettings,
-                          emailSchedule: newSchedule
-                        }));
+                        // Save to database via email preferences
+                        saveEmailPreferences();
                       }}
                       disabled={!emailPreferences.enabled || !emailPreferences.weekly_summary}
                       className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 focus:outline-none transition-all disabled:opacity-50"
@@ -708,12 +711,8 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                       onChange={(e) => {
                         const newSchedule = { ...emailSchedule, monthly: e.target.value };
                         setEmailSchedule(newSchedule);
-                        // Save schedule to localStorage directly
-                        const currentSettings = JSON.parse(localStorage.getItem('settings') || '{}');
-                        localStorage.setItem('settings', JSON.stringify({
-                          ...currentSettings,
-                          emailSchedule: newSchedule
-                        }));
+                        // Save to database via email preferences
+                        saveEmailPreferences();
                       }}
                       disabled={!emailPreferences.enabled || !emailPreferences.monthly_summary}
                       className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 focus:outline-none transition-all disabled:opacity-50"
