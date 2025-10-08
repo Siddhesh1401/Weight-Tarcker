@@ -46,6 +46,8 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   const [backendUrl, setBackendUrl] = useState('https://weight-tarcker.vercel.app');
   const [cronApiKey, setCronApiKey] = useState(savedSettings.cronApiKey || settings.cronApiKey || '');
   const [cronApiKeySaveTimeout, setCronApiKeySaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [editingCronJob, setEditingCronJob] = useState<any | null>(null);
+  const [editCronTime, setEditCronTime] = useState<string>('20:00');
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -139,16 +141,19 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   };
 
   // Auto-save email preferences when they change (with debounce)
-  const saveEmailPreferences = async (prefs?: typeof emailPreferences) => {
+  const saveEmailPreferences = async (prefs?: typeof emailPreferences, schedule?: typeof emailSchedule) => {
     try {
       setSaveEmailStatus('saving');
       const prefsToSave = prefs || emailPreferences;
+      const scheduleToSave = schedule || emailSchedule;
       
       // Include schedule in preferences for database storage
       const fullPreferences = {
         ...prefsToSave,
-        schedule: emailSchedule
+        schedule: scheduleToSave
       };
+      
+      console.log('💾 Saving email preferences with schedule:', fullPreferences);
       
       // Save to backend API (includes schedule)
       await emailApi.updateEmailPreferences(fullPreferences);
@@ -158,7 +163,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
       const updatedSettings = {
         ...currentSettings,
         emailPreferences: prefsToSave,
-        emailSchedule,
+        emailSchedule: scheduleToSave,
         cronApiKey
       };
       localStorage.setItem('settings', JSON.stringify(updatedSettings));
@@ -719,8 +724,8 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                       onChange={(e) => {
                         const newSchedule = { ...emailSchedule, daily: e.target.value };
                         setEmailSchedule(newSchedule);
-                        // Save to database via email preferences
-                        saveEmailPreferences();
+                        // Save to database with the NEW schedule
+                        saveEmailPreferences(undefined, newSchedule);
                       }}
                       disabled={!emailPreferences.enabled || !emailPreferences.daily_summary}
                       className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 focus:outline-none transition-all disabled:opacity-50"
@@ -738,8 +743,8 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                       onChange={(e) => {
                         const newSchedule = { ...emailSchedule, weekly: e.target.value };
                         setEmailSchedule(newSchedule);
-                        // Save to database via email preferences
-                        saveEmailPreferences();
+                        // Save to database with the NEW schedule
+                        saveEmailPreferences(undefined, newSchedule);
                       }}
                       disabled={!emailPreferences.enabled || !emailPreferences.weekly_summary}
                       className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 focus:outline-none transition-all disabled:opacity-50"
@@ -757,8 +762,8 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                       onChange={(e) => {
                         const newSchedule = { ...emailSchedule, monthly: e.target.value };
                         setEmailSchedule(newSchedule);
-                        // Save to database via email preferences
-                        saveEmailPreferences();
+                        // Save to database with the NEW schedule
+                        saveEmailPreferences(undefined, newSchedule);
                       }}
                       disabled={!emailPreferences.enabled || !emailPreferences.monthly_summary}
                       className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 focus:outline-none transition-all disabled:opacity-50"
@@ -1039,11 +1044,16 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                               <button
                                 type="button"
                                 onClick={() => {
-                                  // Open cron-job.org edit page in new tab
-                                  window.open(`https://console.cron-job.org/jobs/${job.jobId}`, '_blank');
+                                  // Open edit modal
+                                  setEditingCronJob(job);
+                                  // Extract time from schedule (hours:minutes)
+                                  const hours = job.schedule?.hours?.[0] || 20;
+                                  const minutes = job.schedule?.minutes?.[0] || 0;
+                                  const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                                  setEditCronTime(timeStr);
                                 }}
                                 className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-lg transform hover:scale-105"
-                                title="Edit on cron-job.org"
+                                title="Edit schedule time"
                               >
                                 ✏️ Edit
                               </button>
@@ -1116,6 +1126,100 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                 <li className="list-decimal"><strong>Done!</strong> Your emails will be sent automatically 📬</li>
               </ol>
             </div>
+
+            {/* Edit Cron Job Modal */}
+            {editingCronJob && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+                <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 max-w-md w-full shadow-2xl border-2 border-orange-200 dark:border-orange-700 transform transition-all animate-scaleIn">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
+                      <Clock className="text-orange-600 dark:text-orange-400" size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Edit Schedule Time</h3>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">{editingCronJob.title}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Schedule Time (Asia/Kolkata)
+                      </label>
+                      <input
+                        type="time"
+                        value={editCronTime}
+                        onChange={(e) => setEditCronTime(e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 dark:focus:ring-orange-800 focus:outline-none transition-all text-lg font-mono"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        Current: {editingCronJob.schedule?.hours?.[0] || 'N/A'}:{String(editingCronJob.schedule?.minutes?.[0] || 0).padStart(2, '0')}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            // Parse the new time
+                            const [hoursStr, minutesStr] = editCronTime.split(':');
+                            const hours = parseInt(hoursStr, 10);
+                            const minutes = parseInt(minutesStr, 10);
+
+                            // Determine job type based on title
+                            const jobType = editingCronJob.title?.toLowerCase().includes('daily') ? 'daily' :
+                                          editingCronJob.title?.toLowerCase().includes('weekly') ? 'weekly' :
+                                          editingCronJob.title?.toLowerCase().includes('monthly') ? 'monthly' : null;
+
+                            if (!jobType) {
+                              alert('❌ Cannot determine job type');
+                              return;
+                            }
+
+                            // Update the schedule in email preferences
+                            const newSchedule = { ...emailSchedule, [jobType]: editCronTime };
+                            setEmailSchedule(newSchedule);
+                            await saveEmailPreferences(undefined, newSchedule);
+
+                            // Delete the old cron job
+                            await cronJobsApi.deleteCronJob(editingCronJob.jobId);
+
+                            // Wait a moment
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+
+                            // Recreate the cron job with new time
+                            await cronJobsApi.setupEmailSummaryJobs(backendUrl, cronApiKey);
+
+                            // Refresh jobs list
+                            const jobs = await cronJobsApi.getCronJobs();
+                            if (jobs && Array.isArray(jobs)) {
+                              setCronJobs(jobs);
+                            }
+
+                            setEditingCronJob(null);
+                            alert('✅ Cron job schedule updated successfully!');
+                          } catch (error) {
+                            console.error('Failed to update cron job:', error);
+                            alert('❌ Failed to update cron job schedule');
+                          }
+                        }}
+                        className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                      >
+                        💾 Save Changes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingCronJob(null)}
+                        className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
