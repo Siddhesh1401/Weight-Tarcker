@@ -79,7 +79,9 @@ router.post('/cron-jobs/setup-email-summaries', async (req, res) => {
     res.json({
       success: true,
       message: 'Email summary cron jobs created successfully',
-      jobs: createdJobs
+      data: {
+        jobs: createdJobs
+      }
     });
   } catch (error) {
     console.error('Error setting up email summary cron jobs:', error);
@@ -95,7 +97,7 @@ router.post('/cron-jobs/setup-email-summaries', async (req, res) => {
 router.get('/cron-jobs', async (req, res) => {
   try {
     const jobs = await cronJobOrgService.listJobs();
-    res.json({ success: true, jobs });
+    res.json({ success: true, data: jobs });
   } catch (error) {
     console.error('Error fetching cron jobs:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch cron jobs' });

@@ -96,8 +96,8 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
       setCronJobsLoading(true);
       try {
         const jobs = await cronJobsApi.getCronJobs();
-        if (jobs && jobs.success) {
-          setCronJobs(jobs.jobs || []);
+        if (jobs && Array.isArray(jobs)) {
+          setCronJobs(jobs);
         }
       } catch (error) {
         console.error('Failed to load cron jobs:', error);
@@ -926,17 +926,16 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                       const result = await cronJobsApi.setupEmailSummaryJobs(backendUrl, cronApiKey);
                       console.log('📊 Cron setup result:', result);
                       
-                      if (result && result.success) {
-                        alert('✅ Email summary cron jobs created successfully!');
+                      if (result && result.jobs) {
+                        alert(`✅ Successfully created ${result.jobs.length} email summary cron jobs!`);
                         // Refresh the jobs list
                         const jobs = await cronJobsApi.getCronJobs();
-                        if (jobs && jobs.success) {
-                          setCronJobs(jobs.jobs || []);
+                        if (jobs && jobs.length > 0) {
+                          setCronJobs(jobs);
                         }
                       } else {
-                        const errorMsg = result?.message || result?.error || 'Unknown error';
-                        console.error('❌ Cron setup failed:', errorMsg);
-                        alert(`❌ Failed to create cron jobs: ${errorMsg}`);
+                        console.error('❌ Cron setup failed: No jobs returned');
+                        alert('❌ Failed to create cron jobs: No jobs returned');
                       }
                     } catch (error: any) {
                       console.error('Cron job setup error:', error);
