@@ -95,29 +95,84 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   // Load cron jobs on mount - DISABLED to avoid rate limits
   // Jobs will be loaded manually via "Fetch Jobs" button
   useEffect(() => {
-    // Don't auto-load to avoid hitting rate limits
-    console.log('ℹ️ Auto-load disabled. Use "Fetch Existing Jobs" button to load cron jobs.');
+    // Load from cache immediately without API call
+    const cached = localStorage.getItem('cronJobsCache');
+    if (cached) {
+      try {
+        const { jobs, timestamp } = JSON.parse(cached);
+        const cacheAge = Date.now() - timestamp;
+        setCronJobs(jobs);
+        console.log('📦 Loaded', jobs.length, 'cron jobs from cache on mount (age:', Math.floor(cacheAge / 1000), 'seconds)');
+      } catch (e) {
+        console.error('Failed to load cache on mount:', e);
+      }
+    }
+    console.log('ℹ️ Auto-load disabled. Use "Fetch Existing Jobs" button to refresh from API.');
   }, []);
 
-  // Manual function to load cron jobs
-  const loadCronJobs = async () => {
+  // Manual function to load cron jobs with caching
+  const loadCronJobs = async (forceRefresh = false) => {
     // Only load if we have an API key
     if (!cronApiKey) {
       alert('⚠️ Please enter your Cron-Job.org API key first');
       return;
     }
+
+    // Try to load from cache first (unless force refresh)
+    if (!forceRefresh) {
+      const cached = localStorage.getItem('cronJobsCache');
+      if (cached) {
+        try {
+          const { jobs, timestamp } = JSON.parse(cached);
+          const cacheAge = Date.now() - timestamp;
+          const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+          
+          if (cacheAge < CACHE_DURATION) {
+            console.log('📦 Loading cron jobs from cache (age:', Math.floor(cacheAge / 1000), 'seconds)');
+            setCronJobs(jobs);
+            alert(`✅ Loaded ${jobs.length} cron job(s) from cache (${Math.floor(cacheAge / 1000)}s old)`);
+            return;
+          } else {
+            console.log('⏰ Cache expired, fetching fresh data...');
+          }
+        } catch (e) {
+          console.error('Failed to parse cache:', e);
+        }
+      }
+    }
     
+    // Fetch from API
     setCronJobsLoading(true);
     try {
       const jobs = await cronJobsApi.getCronJobs(cronApiKey);
       if (jobs && Array.isArray(jobs)) {
         setCronJobs(jobs);
+        
+        // Save to cache
+        localStorage.setItem('cronJobsCache', JSON.stringify({
+          jobs,
+          timestamp: Date.now()
+        }));
+        console.log('💾 Cached', jobs.length, 'cron jobs');
+        
         alert(`✅ Loaded ${jobs.length} cron job(s) successfully!`);
       }
     } catch (error: any) {
       console.error('Failed to load cron jobs:', error);
       if (error.message?.includes('Rate limit')) {
-        alert('⏰ Rate limit exceeded. Please wait 5-10 minutes and try again.\n\nTip: You can view/manage jobs directly at console.cron-job.org');
+        alert('⏰ Rate limit exceeded. Showing cached data if available.\n\nPlease wait 30-60 minutes before refreshing.\n\nTip: Manage jobs at console.cron-job.org');
+        
+        // Try to show cached data even if expired
+        const cached = localStorage.getItem('cronJobsCache');
+        if (cached) {
+          try {
+            const { jobs } = JSON.parse(cached);
+            setCronJobs(jobs);
+            console.log('📦 Showing cached jobs despite rate limit');
+          } catch (e) {
+            console.error('Failed to load cache:', e);
+          }
+        }
       } else {
         alert('❌ Failed to load cron jobs: ' + error.message);
       }
@@ -999,7 +1054,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
               <div className="mb-6">
                 <button
                   type="button"
-                  onClick={loadCronJobs}
+                  onClick={() => loadCronJobs(false)}
                   disabled={!cronApiKey || cronJobsLoading}
                   className="w-full py-3 px-6 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white"
                 >
@@ -1011,12 +1066,12 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                   ) : (
                     <>
                       <span className="text-xl">🔄</span>
-                      <span>Fetch Existing Jobs</span>
+                      <span>Refresh Jobs</span>
                     </>
                   )}
                 </button>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                  Click to manually load your cron jobs from cron-job.org
+                  Uses 5-minute cache to avoid rate limits. Jobs loaded on page load from cache.
                 </p>
               </div>
 
