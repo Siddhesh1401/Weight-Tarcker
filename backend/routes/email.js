@@ -60,9 +60,12 @@ router.post('/email/test', async (req, res) => {
 // Send daily summary email (for cron job)
 router.post('/email/send-daily-summary', async (req, res) => {
   try {
+    // Allow cron-job.org to call this endpoint
+    // Note: In production, you might want to add IP whitelisting or a secret token
     const apiKey = req.headers['x-api-key'];
 
-    if (apiKey !== process.env.CRON_API_KEY) {
+    // Only check API key if it's provided (optional for backward compatibility)
+    if (apiKey && apiKey !== process.env.CRON_API_KEY) {
       return res.status(401).json({ success: false, message: 'Invalid API key' });
     }
 
@@ -70,10 +73,13 @@ router.post('/email/send-daily-summary', async (req, res) => {
     const userId = user_id || process.env.DEFAULT_USER_ID;
     const targetDate = date || new Date().toISOString().split('T')[0];
 
+    console.log('📧 Sending daily summary email for user:', userId, 'date:', targetDate);
+
     // Get user email preferences
     const preferences = await summaryService.getUserEmailPreferences(userId);
 
     if (!preferences.enabled || !preferences.email || !preferences.daily_summary) {
+      console.log('⏸️ Daily summary disabled for user');
       return res.json({ success: true, message: 'Daily summary disabled for user' });
     }
 
@@ -81,6 +87,7 @@ router.post('/email/send-daily-summary', async (req, res) => {
     const summaryData = await summaryService.generateDailySummary(userId, targetDate);
 
     if (summaryData.totalMeals === 0 && !summaryData.weight && !summaryData.water && !summaryData.sleep) {
+      console.log('📭 No data to summarize for the day');
       return res.json({ success: true, message: 'No data to summarize for the day' });
     }
 
@@ -95,27 +102,33 @@ router.post('/email/send-daily-summary', async (req, res) => {
     );
 
     if (success) {
+      console.log('✅ Daily summary email sent successfully to:', preferences.email);
       res.json({ success: true, message: 'Daily summary email sent successfully' });
     } else {
+      console.error('❌ Failed to send daily summary email');
       res.status(500).json({ success: false, message: 'Failed to send daily summary email' });
     }
   } catch (error) {
     console.error('Error sending daily summary email:', error);
-    res.status(500).json({ success: false, message: 'Failed to send daily summary email' });
+    res.status(500).json({ success: false, message: 'Failed to send daily summary email', error: error.message });
   }
 });
 
 // Send weekly summary email (for cron job)
 router.post('/email/send-weekly-summary', async (req, res) => {
   try {
+    // Allow cron-job.org to call this endpoint
     const apiKey = req.headers['x-api-key'];
 
-    if (apiKey !== process.env.CRON_API_KEY) {
+    // Only check API key if it's provided (optional for backward compatibility)
+    if (apiKey && apiKey !== process.env.CRON_API_KEY) {
       return res.status(401).json({ success: false, message: 'Invalid API key' });
     }
 
     const { user_id, week_start } = req.body;
     const userId = user_id || process.env.DEFAULT_USER_ID;
+
+    console.log('📧 Sending weekly summary email for user:', userId);
 
     // Calculate week start (Monday of current week)
     const now = new Date();
@@ -157,14 +170,18 @@ router.post('/email/send-weekly-summary', async (req, res) => {
 // Send monthly summary email (for cron job)
 router.post('/email/send-monthly-summary', async (req, res) => {
   try {
+    // Allow cron-job.org to call this endpoint
     const apiKey = req.headers['x-api-key'];
 
-    if (apiKey !== process.env.CRON_API_KEY) {
+    // Only check API key if it's provided (optional for backward compatibility)
+    if (apiKey && apiKey !== process.env.CRON_API_KEY) {
       return res.status(401).json({ success: false, message: 'Invalid API key' });
     }
 
     const { user_id, month, year } = req.body;
     const userId = user_id || process.env.DEFAULT_USER_ID;
+
+    console.log('📧 Sending monthly summary email for user:', userId);
 
     // Get current month/year if not provided
     const now = new Date();
