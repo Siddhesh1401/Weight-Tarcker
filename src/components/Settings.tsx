@@ -1077,6 +1077,37 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                               <button
                                 type="button"
                                 onClick={async () => {
+                                  if (confirm(`📧 Send a test email now?\n\nThis will trigger "${job.title}" immediately.`)) {
+                                    try {
+                                      // Call the job's URL directly to trigger it
+                                      const response = await fetch(job.url, {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                        },
+                                      });
+                                      
+                                      if (response.ok) {
+                                        alert('✅ Test email sent successfully! Check your inbox.');
+                                      } else {
+                                        const error = await response.text();
+                                        alert(`⚠️ Test failed: ${response.status} ${error}`);
+                                      }
+                                    } catch (error) {
+                                      alert('❌ Failed to send test email');
+                                      console.error('Test email error:', error);
+                                    }
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                                title="Send test email now"
+                              >
+                                📧 Test
+                              </button>
+                              
+                              <button
+                                type="button"
+                                onClick={async () => {
                                   try {
                                     await cronJobsApi.toggleCronJob(job.jobId, !job.enabled, cronApiKey);
                                     // Refresh jobs list
