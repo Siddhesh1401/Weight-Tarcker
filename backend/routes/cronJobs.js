@@ -50,20 +50,31 @@ router.post('/cron-jobs/setup-email-summaries', async (req, res) => {
 
     const createdJobs = [];
 
+    // Helper function to delay between requests (rate limit: 1 req/sec)
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
     // Create daily summary job with user's schedule
+    console.log('Creating daily summary job...');
     const dailyJobData = cronJobOrgService.createEmailSummaryJob('daily', backendUrl, apiKey, schedule.daily);
     const dailyJob = await cronJobOrgService.createJob(dailyJobData, apiKey);
     createdJobs.push({ type: 'daily', job: dailyJob });
+    console.log('Daily job created, waiting 2 seconds before next request...');
+    await delay(2000); // Wait 2 seconds to respect rate limit
 
     // Create weekly summary job with user's schedule
+    console.log('Creating weekly summary job...');
     const weeklyJobData = cronJobOrgService.createEmailSummaryJob('weekly', backendUrl, apiKey, schedule.weekly);
     const weeklyJob = await cronJobOrgService.createJob(weeklyJobData, apiKey);
     createdJobs.push({ type: 'weekly', job: weeklyJob });
+    console.log('Weekly job created, waiting 2 seconds before next request...');
+    await delay(2000); // Wait 2 seconds to respect rate limit
 
     // Create monthly summary job with user's schedule
+    console.log('Creating monthly summary job...');
     const monthlyJobData = cronJobOrgService.createEmailSummaryJob('monthly', backendUrl, apiKey, schedule.monthly);
     const monthlyJob = await cronJobOrgService.createJob(monthlyJobData, apiKey);
     createdJobs.push({ type: 'monthly', job: monthlyJob });
+    console.log('All jobs created successfully!');
 
     res.json({
       success: true,
