@@ -48,6 +48,21 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   const [cronApiKeySaveTimeout, setCronApiKeySaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [editingCronJob, setEditingCronJob] = useState<any | null>(null);
   const [editCronTime, setEditCronTime] = useState<string>('20:00');
+
+  // API Usage Tracking
+  const [apiUsage, setApiUsage] = useState(() => {
+    const saved = localStorage.getItem('cronApiUsage');
+    return saved ? JSON.parse(saved) : {
+      today: 0,
+      lastReset: new Date().toDateString(),
+      history: []
+    };
+  });
+
+  // Manual cache management
+  const [manualJobId, setManualJobId] = useState('');
+  const [manualJobTitle, setManualJobTitle] = useState('');
+  const [manualJobTime, setManualJobTime] = useState('20:00');
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -110,6 +125,114 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
     console.log('ℹ️ Auto-load disabled. Use "Fetch Existing Jobs" button to refresh from API.');
   }, []);
 
+  // API Usage Tracking Functions
+  const trackApiCall = () => {
+    const today = new Date().toDateString();
+    const newUsage = { ...apiUsage };
+
+    // Reset counter if it's a new day
+    if (newUsage.lastReset !== today) {
+      newUsage.today = 0;
+      newUsage.lastReset = today;
+      newUsage.history = [];
+    }
+
+    newUsage.today += 1;
+    newUsage.history.push({
+      timestamp: new Date().toISOString(),
+      action: 'api_call'
+    });
+
+    // Keep only last 24 hours of history
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    newUsage.history = newUsage.history.filter(h => new Date(h.timestamp) > oneDayAgo);
+
+    setApiUsage(newUsage);
+    localStorage.setItem('cronApiUsage', JSON.stringify(newUsage));
+  };
+
+  const getUsageStats = () => {
+    const limits = {
+      perSecond: 1,
+      perMinute: 5,
+      perDay: 100
+    };
+
+    const recentCalls = apiUsage.history.filter(h => {
+      const callTime = new Date(h.timestamp);
+      const now = new Date();
+      return (now.getTime() - callTime.getTime()) < 60000; // Last minute
+    });
+
+    return {
+      today: apiUsage.today,
+      lastMinute: recentCalls.length,
+      limits,
+      isNearLimit: apiUsage.today >= 80 || recentCalls.length >= 4,
+      isOverLimit: apiUsage.today >= 100 || recentCalls.length >= 5
+    };
+  };
+
+  // Manual Cache Management Functions
+  const addManualJobToCache = () => {
+    if (!manualJobId || !manualJobTitle || !manualJobTime) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    const newJob = {
+      jobId: manualJobId,
+      title: manualJobTitle,
+      schedule: {
+        hours: [parseInt(manualJobTime.split(':')[0])],
+        minutes: [parseInt(manualJobTime.split(':')[1])],
+        timezone: 'Asia/Kolkata'
+      },
+      enabled: true,
+      url: `${backendUrl}/api/email/send-daily-summary`,
+      created: true,
+      nextExecution: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    };
+
+    const cached = localStorage.getItem('cronJobsCache');
+    let jobs = [];
+    if (cached) {
+      try {
+        const { jobs: existingJobs } = JSON.parse(cached);
+        jobs = existingJobs;
+      } catch (e) {
+        console.error('Failed to parse cache:', e);
+      }
+    }
+
+    // Check if job already exists
+    const existingIndex = jobs.findIndex((j: any) => j.jobId === manualJobId);
+    if (existingIndex >= 0) {
+      jobs[existingIndex] = newJob;
+    } else {
+      jobs.push(newJob);
+    }
+
+    localStorage.setItem('cronJobsCache', JSON.stringify({
+      jobs,
+      timestamp: Date.now()
+    }));
+
+    setCronJobs(jobs);
+    alert(`✅ Job "${manualJobTitle}" added to cache manually`);
+
+    // Clear form
+    setManualJobId('');
+    setManualJobTitle('');
+    setManualJobTime('20:00');
+  };
+
+  const clearCache = () => {
+    localStorage.removeItem('cronJobsCache');
+    setCronJobs([]);
+    alert('🗑️ Cache cleared. Jobs will be hidden until next API call.');
+  };
+
   // Manual function to load cron jobs with caching
   const loadCronJobs = async (forceRefresh = false) => {
     // Only load if we have an API key
@@ -144,6 +267,9 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
     // Fetch from API
     setCronJobsLoading(true);
     try {
+      // Track API usage
+      trackApiCall();
+
       const jobs = await cronJobsApi.getCronJobs(cronApiKey);
       if (jobs && Array.isArray(jobs)) {
         setCronJobs(jobs);
@@ -1068,13 +1194,175 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                 </div>
               </div>
 
+              {/* API Usage Tracking */}
+              <div className="mb-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-5 border-2 border-purple-200 dark:border-purple-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-purple-500 rounded-xl">
+                    <Activity className="text-white" size={18} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-800 dark:text-gray-100 text-base">📊 API Usage Tracker</h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Monitor your cron-job.org API calls</p>
+                  </div>
+                </div>
+
+                {(() => {
+                  const stats = getUsageStats();
+                  return (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      <div className="text-center">
+                        <div className={`text-2xl font-bold ${stats.today >= 80 ? 'text-red-500' : stats.today >= 50 ? 'text-yellow-500' : 'text-green-500'}`}>
+                          {stats.today}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Today</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-500">/100 max</div>
+                      </div>
+                      <div className="text-center">
+                        <div className={`text-2xl font-bold ${stats.lastMinute >= 4 ? 'text-red-500' : stats.lastMinute >= 2 ? 'text-yellow-500' : 'text-green-500'}`}>
+                          {stats.lastMinute}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Last Min</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-500">/5 max</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-500">
+                          {Math.max(0, 100 - stats.today)}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Remaining</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-500">Today</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-500">
+                          {Math.max(0, 5 - stats.lastMinute)}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Remaining</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-500">This Min</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {(() => {
+                  const stats = getUsageStats();
+                  return stats.isNearLimit || stats.isOverLimit ? (
+                    <div className={`p-3 rounded-xl border-2 ${stats.isOverLimit ? 'bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-700' : 'bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700'}`}>
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className={`flex-shrink-0 ${stats.isOverLimit ? 'text-red-500' : 'text-yellow-500'}`} size={16} />
+                        <p className={`text-sm font-semibold ${stats.isOverLimit ? 'text-red-700 dark:text-red-300' : 'text-yellow-700 dark:text-yellow-300'}`}>
+                          {stats.isOverLimit ? '🚨 Rate Limit Exceeded!' : '⚠️ Approaching Rate Limit'}
+                        </p>
+                      </div>
+                      <p className={`text-xs mt-1 ${stats.isOverLimit ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                        {stats.isOverLimit 
+                          ? 'Stop making API calls. Wait for reset at midnight UTC (5:30 AM IST).'
+                          : 'Reduce API calls to avoid hitting the limit.'
+                        }
+                      </p>
+                    </div>
+                  ) : null;
+                })()}
+              </div>
+
+              {/* Manual Cache Management */}
+              <div className="mb-6 bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-2xl p-5 border-2 border-green-200 dark:border-green-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-green-500 rounded-xl">
+                    <Database className="text-white" size={18} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-800 dark:text-gray-100 text-base">🛠️ Manual Cache Management</h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Add jobs manually when API is rate limited</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Job ID</label>
+                    <input
+                      type="text"
+                      value={manualJobId}
+                      onChange={(e) => setManualJobId(e.target.value)}
+                      placeholder="e.g., 9773293"
+                      className="w-full px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                    <input
+                      type="text"
+                      value={manualJobTitle}
+                      onChange={(e) => setManualJobTitle(e.target.value)}
+                      placeholder="e.g., Daily Summary"
+                      className="w-full px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Time (HH:MM)</label>
+                    <input
+                      type="text"
+                      value={manualJobTime}
+                      onChange={(e) => setManualJobTime(e.target.value)}
+                      placeholder="23:56"
+                      className="w-full px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={addManualJobToCache}
+                    className="flex-1 py-2 px-4 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-md"
+                  >
+                    <span>➕</span>
+                    Add to Cache
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearCache}
+                    className="py-2 px-4 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-md"
+                  >
+                    <span>🗑️</span>
+                    Clear Cache
+                  </button>
+                </div>
+
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  💡 Manual jobs appear immediately without API calls. Use when rate limited.
+                </p>
+              </div>
+
               {/* Fetch Jobs Button */}
               <div className="mb-6">
+                {(() => {
+                  const stats = getUsageStats();
+                  return stats.isNearLimit || stats.isOverLimit ? (
+                    <div className={`mb-4 p-3 rounded-xl border-2 ${stats.isOverLimit ? 'bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-700' : 'bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700'}`}>
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className={`flex-shrink-0 ${stats.isOverLimit ? 'text-red-500' : 'text-yellow-500'}`} size={16} />
+                        <p className={`text-sm font-semibold ${stats.isOverLimit ? 'text-red-700 dark:text-red-300' : 'text-yellow-700 dark:text-yellow-300'}`}>
+                          {stats.isOverLimit ? '🚨 Rate Limit Active - Button Disabled' : '⚠️ High API Usage - Use Carefully'}
+                        </p>
+                      </div>
+                      <p className={`text-xs mt-1 ${stats.isOverLimit ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                        {stats.isOverLimit 
+                          ? 'API calls are blocked until rate limit resets.'
+                          : 'Consider using manual cache management instead.'
+                        }
+                      </p>
+                    </div>
+                  ) : null;
+                })()}
+
                 <button
                   type="button"
                   onClick={() => loadCronJobs(false)}
-                  disabled={!cronApiKey || cronJobsLoading}
-                  className="w-full py-3 px-6 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white"
+                  disabled={!cronApiKey || cronJobsLoading || getUsageStats().isOverLimit}
+                  className={`w-full py-3 px-6 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                    getUsageStats().isOverLimit 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white'
+                  }`}
                 >
                   {cronJobsLoading ? (
                     <>
