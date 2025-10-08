@@ -107,6 +107,14 @@ router.post('/cron-jobs/setup-email-summaries', async (req, res) => {
   try {
     const { backendUrl, apiKey, userId } = req.body;
 
+    console.log('Setup email summaries request:', {
+      hasBackendUrl: !!backendUrl,
+      backendUrl,
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey ? apiKey.length : 0,
+      userId: userId || process.env.DEFAULT_USER_ID
+    });
+
     if (!backendUrl || !apiKey) {
       return res.status(400).json({
         success: false,
@@ -118,6 +126,13 @@ router.post('/cron-jobs/setup-email-summaries', async (req, res) => {
     const User = (await import('../models/User.js')).default;
     const user = await User.findOne({ _id: userId || process.env.DEFAULT_USER_ID });
     
+    console.log('User found:', {
+      userId: userId || process.env.DEFAULT_USER_ID,
+      hasUser: !!user,
+      hasEmailNotifications: !!(user && user.email_notifications),
+      hasSchedule: !!(user && user.email_notifications && user.email_notifications.schedule)
+    });
+    
     let schedule = {
       daily: '20:00',
       weekly: '20:00',
@@ -126,6 +141,9 @@ router.post('/cron-jobs/setup-email-summaries', async (req, res) => {
 
     if (user && user.email_notifications && user.email_notifications.schedule) {
       schedule = user.email_notifications.schedule;
+      console.log('Using user schedule:', schedule);
+    } else {
+      console.log('Using default schedule:', schedule);
     }
 
     const createdJobs = [];
