@@ -210,9 +210,10 @@ class CronJobOrgService {
     
     // cron-job.org API uses arrays for schedule
     // [-1] means "every" (e.g., [-1] for hours = every hour)
+    // Using Asia/Kolkata timezone for Mumbai, India
     const schedules = {
       daily: {
-        timezone: 'UTC',
+        timezone: 'Asia/Kolkata',  // Mumbai timezone
         hours: [hours],        // Specific hour
         minutes: [minutes],    // Specific minute
         mdays: [-1],          // Every day of month
@@ -220,7 +221,7 @@ class CronJobOrgService {
         wdays: [-1]           // Every day of week
       },
       weekly: {
-        timezone: 'UTC',
+        timezone: 'Asia/Kolkata',  // Mumbai timezone
         hours: [hours],
         minutes: [minutes],
         mdays: [-1],          // Every day of month
@@ -228,7 +229,7 @@ class CronJobOrgService {
         wdays: [1]            // Only Monday (0=Sunday, 1=Monday, etc.)
       },
       monthly: {
-        timezone: 'UTC',
+        timezone: 'Asia/Kolkata',  // Mumbai timezone
         hours: [hours],
         minutes: [minutes],
         mdays: [1],           // Only 1st day of month
