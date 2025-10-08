@@ -45,6 +45,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   const [cronJobsLoading, setCronJobsLoading] = useState(false);
   const [backendUrl, setBackendUrl] = useState('https://weight-tarcker.vercel.app');
   const [cronApiKey, setCronApiKey] = useState(savedSettings.cronApiKey || settings.cronApiKey || '');
+  const [cronApiKeySaveTimeout, setCronApiKeySaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -110,11 +111,16 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   // Auto-save cron API key to database (with debounce)
   const saveCronApiKey = async (apiKey: string) => {
     try {
-      console.log('💾 Saving cron API key to database...', { keyLength: apiKey.length });
-      await settingsApi.saveSettings({
+      console.log('💾 Saving cron API key to database...', { 
+        keyLength: apiKey.length,
+        keyPreview: apiKey.substring(0, 10) + '...'
+      });
+      
+      const response = await settingsApi.saveSettings({
         cron_api_key: apiKey
       });
-      console.log('✅ Cron API key saved to database successfully');
+      
+      console.log('✅ Cron API key saved to database successfully', response);
       
       // Also update localStorage
       const currentSettings = JSON.parse(localStorage.getItem('settings') || '{}');
@@ -123,8 +129,12 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
         cronApiKey: apiKey
       };
       localStorage.setItem('settings', JSON.stringify(updatedSettings));
+      console.log('✅ Cron API key saved to localStorage');
     } catch (error) {
       console.error('❌ Failed to save cron API key:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message, error.stack);
+      }
     }
   };
 
@@ -870,9 +880,21 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                     value={cronApiKey}
                     onChange={(e) => {
                       const newKey = e.target.value;
+                      console.log('🔑 API key input changed:', { length: newKey.length });
                       setCronApiKey(newKey);
-                      // Auto-save to database
-                      saveCronApiKey(newKey);
+                      
+                      // Clear existing timeout
+                      if (cronApiKeySaveTimeout) {
+                        clearTimeout(cronApiKeySaveTimeout);
+                      }
+                      
+                      // Debounce: save after 1 second of no typing
+                      const timeout = setTimeout(() => {
+                        console.log('⏱️ Debounce timeout triggered, saving API key...');
+                        saveCronApiKey(newKey);
+                      }, 1000);
+                      
+                      setCronApiKeySaveTimeout(timeout);
                     }}
                     placeholder="Enter your cron-job.org API key"
                     className="w-full px-5 py-4 pl-12 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-2xl focus:border-orange-500 focus:ring-4 focus:ring-orange-200 dark:focus:ring-orange-800 focus:outline-none transition-all shadow-sm text-base font-mono text-sm"
