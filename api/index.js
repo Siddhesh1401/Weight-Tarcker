@@ -11,6 +11,8 @@ import settingsRouter from '../backend/routes/settings.js';
 // import emailRouter from '../backend/routes/email.js';
 // import cronJobsRouter from '../backend/routes/cronJobs.js';
 
+console.log('✅ All imports loaded successfully');
+
 const app = express();
 
 // Middleware
@@ -49,16 +51,25 @@ const connectDB = async () => {
   }
 };
 
-// Connect to database
-connectDB();
+// Connect to database (non-blocking)
+connectDB().catch(err => console.error('DB connection failed:', err));
 
 // Routes
+// Test route first
+app.get('/test', (req, res) => {
+  res.json({ message: 'API is working!', timestamp: new Date().toISOString() });
+});
+
+console.log('✅ Mounting logs router...');
 app.use('/', logsRouter);
+console.log('✅ Mounting settings router...');
 app.use('/', settingsRouter);
 // app.use('/', templatesRouter);
 // app.use('/push', pushRouter);
 // app.use('/', emailRouter);
 // app.use('/', cronJobsRouter);
+
+console.log('✅ All routes mounted successfully');
 
 // Health check
 app.get('/', (req, res) => {
