@@ -220,4 +220,36 @@
   .dark .scrollbar-thin {
     scrollbar-color: #4b5563 transparent;
   }
+
+  /* Fade In Animation */
+  .animate-fade-in {
+    animation: fadeInAnim 0.4s ease-out;
+  }
+
+  @keyframes fadeInAnim {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Slide Down Animation */
+  .animate-slide-down {
+    animation: slideDownAnim 0.3s ease-out;
+  }
+
+  @keyframes slideDownAnim {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

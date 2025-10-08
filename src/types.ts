@@ -74,6 +74,12 @@ export interface UserSettings {
   bmi?: number;
   bodyFat?: number;
   emailPreferences?: EmailPreferences;
+  emailSchedule?: {
+    daily: string;
+    weekly: string;
+    monthly: string;
+  };
+  cronApiKey?: string;
 }
 
 export interface EmailPreferences {

@@ -31,10 +31,17 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
     weekly_summary: false,
     monthly_summary: false
   });
+  const [emailSchedule, setEmailSchedule] = useState(settings.emailSchedule || {
+    daily: '20:00',
+    weekly: '20:00',
+    monthly: '20:00'
+  });
   const [testEmailStatus, setTestEmailStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const [saveEmailStatus, setSaveEmailStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [cronJobs, setCronJobs] = useState<any[]>([]);
   const [cronJobsLoading, setCronJobsLoading] = useState(false);
-  const [backendUrl, setBackendUrl] = useState('');
+  const [backendUrl, setBackendUrl] = useState('https://weight-tarcker.vercel.app');
+  const [cronApiKey, setCronApiKey] = useState(settings.cronApiKey || '');
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -76,6 +83,28 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
     };
     loadCronJobs();
   }, []);
+
+  // Auto-save email preferences when they change (with debounce)
+  const saveEmailPreferences = async (prefs?: typeof emailPreferences) => {
+    try {
+      setSaveEmailStatus('saving');
+      const prefsToSave = prefs || emailPreferences;
+      await emailApi.updateEmailPreferences(prefsToSave);
+      // Also save schedule and API key to user settings
+      await onSave({
+        ...formData,
+        emailPreferences: prefsToSave,
+        emailSchedule,
+        cronApiKey
+      });
+      setSaveEmailStatus('saved');
+      setTimeout(() => setSaveEmailStatus('idle'), 2000);
+    } catch (error) {
+      console.error('Failed to save email preferences:', error);
+      setSaveEmailStatus('error');
+      setTimeout(() => setSaveEmailStatus('idle'), 3000);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -374,299 +403,595 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
         )}
 
         {activeTab === 'email' && (
-          <div className="space-y-6">
-            {/* Email Settings Header */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-100 dark:border-gray-600">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-                  <Mail className="text-blue-500" size={20} />
+          <div className="space-y-6 animate-fade-in">
+            {/* Save Status Badge */}
+            {saveEmailStatus !== 'idle' && (
+              <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-2xl shadow-2xl font-semibold flex items-center gap-3 animate-slide-down ${
+                saveEmailStatus === 'saving' ? 'bg-blue-500 text-white' :
+                saveEmailStatus === 'saved' ? 'bg-green-500 text-white' :
+                'bg-red-500 text-white'
+              }`}>
+                {saveEmailStatus === 'saving' && (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    <span>Saving preferences...</span>
+                  </>
+                )}
+                {saveEmailStatus === 'saved' && (
+                  <>
+                    <span className="text-xl">✅</span>
+                    <span>Saved successfully!</span>
+                  </>
+                )}
+                {saveEmailStatus === 'error' && (
+                  <>
+                    <span className="text-xl">❌</span>
+                    <span>Failed to save</span>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Info Banner */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-3xl p-5 border-2 border-blue-200 dark:border-blue-800 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-blue-500 rounded-xl">
+                  <Mail className="text-white" size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Email Notifications</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Get personalized health summaries via email</p>
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">📬 Email Notifications</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                    Get beautiful, personalized health summaries delivered to your inbox! 
+                    Your preferences are <span className="font-semibold text-blue-600 dark:text-blue-400">auto-saved</span> instantly.
+                  </p>
                 </div>
               </div>
+            </div>
 
-              {/* Email Configuration */}
-              <div className="space-y-4">
-                {/* Enable Email Notifications */}
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-2xl">
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Enable Email Notifications
-                    </label>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Receive automated health summaries
-                    </p>
+            {/* Main Email Settings Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-700">
+              
+              {/* Enable Toggle Section */}
+              <div className="mb-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border-2 border-blue-100 dark:border-blue-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🔔</span>
+                    <div>
+                      <label className="text-base font-bold text-gray-800 dark:text-gray-100">
+                        Enable Email Notifications
+                      </label>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                        Turn on to receive automated health summaries
+                      </p>
+                    </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={emailPreferences.enabled}
-                      onChange={(e) => setEmailPreferences({ ...emailPreferences, enabled: e.target.checked })}
+                      onChange={(e) => {
+                        const newPrefs = { ...emailPreferences, enabled: e.target.checked };
+                        setEmailPreferences(newPrefs);
+                        saveEmailPreferences(newPrefs);
+                      }}
                       className="sr-only peer"
                     />
-                    <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600`}></div>
+                    <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-indigo-600 shadow-lg"></div>
                   </label>
                 </div>
+              </div>
 
-                {/* Email Address */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Email Address
-                  </label>
+              {/* Email Address Input */}
+              <div className="mb-6">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                  <span className="text-xl">📧</span>
+                  Your Email Address
+                </label>
+                <div className="relative">
                   <input
                     type="email"
                     value={emailPreferences.email}
-                    onChange={(e) => setEmailPreferences({ ...emailPreferences, email: e.target.value })}
+                    onChange={(e) => {
+                      const newPrefs = { ...emailPreferences, email: e.target.value };
+                      setEmailPreferences(newPrefs);
+                      saveEmailPreferences(newPrefs);
+                    }}
                     placeholder="your-email@example.com"
-                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                    className="w-full px-5 py-4 pl-12 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800 focus:outline-none transition-all shadow-sm text-base"
                     disabled={!emailPreferences.enabled}
                   />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 </div>
+              </div>
 
-                {/* Summary Types */}
+              {/* Summary Types - Beautiful Cards */}
+              <div className="mb-6">
+                <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                  <span className="text-xl">📊</span>
+                  Choose Your Summary Types
+                </h4>
+                
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className={`p-4 rounded-2xl border-2 transition-all ${emailPreferences.daily_summary ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'}`}>
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={emailPreferences.daily_summary}
-                        onChange={(e) => setEmailPreferences({ ...emailPreferences, daily_summary: e.target.checked })}
-                        disabled={!emailPreferences.enabled}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                      />
-                      <div>
-                        <div className="font-semibold text-gray-700 dark:text-gray-300">Daily Summary</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">Previous day's activities</div>
-                      </div>
-                    </label>
-                  </div>
-
-                  <div className={`p-4 rounded-2xl border-2 transition-all ${emailPreferences.weekly_summary ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'}`}>
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={emailPreferences.weekly_summary}
-                        onChange={(e) => setEmailPreferences({ ...emailPreferences, weekly_summary: e.target.checked })}
-                        disabled={!emailPreferences.enabled}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                      />
-                      <div>
-                        <div className="font-semibold text-gray-700 dark:text-gray-300">Weekly Summary</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">Weekly trends & progress</div>
-                      </div>
-                    </label>
-                  </div>
-
-                  <div className={`p-4 rounded-2xl border-2 transition-all ${emailPreferences.monthly_summary ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'}`}>
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={emailPreferences.monthly_summary}
-                        onChange={(e) => setEmailPreferences({ ...emailPreferences, monthly_summary: e.target.checked })}
-                        disabled={!emailPreferences.enabled}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                      />
-                      <div>
-                        <div className="font-semibold text-gray-700 dark:text-gray-300">Monthly Summary</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">Monthly insights & goals</div>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Test Email Button */}
-                <div className="pt-4">
+                  {/* Daily Summary Card */}
                   <button
-                    onClick={async () => {
-                      if (!emailPreferences.email) {
-                        alert('Please enter your email address first');
-                        return;
-                      }
-
-                      setTestEmailStatus('sending');
-                      try {
-                        await emailApi.sendTestEmail(emailPreferences.email);
-                        setTestEmailStatus('success');
-                        setTimeout(() => setTestEmailStatus('idle'), 3000);
-                      } catch (error) {
-                        setTestEmailStatus('error');
-                        setTimeout(() => setTestEmailStatus('idle'), 3000);
-                      }
+                    type="button"
+                    onClick={() => {
+                      if (!emailPreferences.enabled) return;
+                      const newPrefs = { ...emailPreferences, daily_summary: !emailPreferences.daily_summary };
+                      setEmailPreferences(newPrefs);
+                      saveEmailPreferences(newPrefs);
                     }}
-                    disabled={!emailPreferences.enabled || !emailPreferences.email || testEmailStatus === 'sending'}
-                    className={`w-full py-3 px-6 rounded-2xl font-semibold transition-all flex items-center justify-center gap-2 ${
-                      testEmailStatus === 'success'
-                        ? 'bg-green-500 text-white'
-                        : testEmailStatus === 'error'
-                        ? 'bg-red-500 text-white'
-                        : 'bg-blue-500 hover:bg-blue-600 text-white disabled:bg-gray-300 dark:disabled:bg-gray-600'
-                    }`}
+                    disabled={!emailPreferences.enabled}
+                    className={`p-5 rounded-2xl border-3 transition-all duration-300 transform hover:scale-105 cursor-pointer text-left ${
+                      emailPreferences.daily_summary 
+                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-600 shadow-xl shadow-blue-500/50' 
+                        : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700'
+                    } ${!emailPreferences.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {testEmailStatus === 'sending' ? 'Sending...' : testEmailStatus === 'success' ? '✅ Test Email Sent!' : testEmailStatus === 'error' ? '❌ Failed to Send' : '📧 Send Test Email'}
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-3xl">{emailPreferences.daily_summary ? '🌅' : '☀️'}</span>
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        emailPreferences.daily_summary 
+                          ? 'bg-white border-white' 
+                          : 'border-gray-300 dark:border-gray-500'
+                      }`}>
+                        {emailPreferences.daily_summary && <span className="text-blue-600 text-sm font-bold">✓</span>}
+                      </div>
+                    </div>
+                    <h5 className={`font-bold mb-1 ${
+                      emailPreferences.daily_summary 
+                        ? 'text-white' 
+                        : 'text-gray-800 dark:text-gray-100'
+                    }`}>Daily Summary</h5>
+                    <p className={`text-xs ${
+                      emailPreferences.daily_summary 
+                        ? 'text-blue-100' 
+                        : 'text-gray-600 dark:text-gray-400'
+                    }`}>
+                      Yesterday's activities & progress
+                    </p>
+                  </button>
+
+                  {/* Weekly Summary Card */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!emailPreferences.enabled) return;
+                      const newPrefs = { ...emailPreferences, weekly_summary: !emailPreferences.weekly_summary };
+                      setEmailPreferences(newPrefs);
+                      saveEmailPreferences(newPrefs);
+                    }}
+                    disabled={!emailPreferences.enabled}
+                    className={`p-5 rounded-2xl border-3 transition-all duration-300 transform hover:scale-105 cursor-pointer text-left ${
+                      emailPreferences.weekly_summary 
+                        ? 'bg-gradient-to-br from-purple-500 to-pink-600 border-purple-600 shadow-xl shadow-purple-500/50' 
+                        : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-700'
+                    } ${!emailPreferences.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-3xl">{emailPreferences.weekly_summary ? '📈' : '📊'}</span>
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        emailPreferences.weekly_summary 
+                          ? 'bg-white border-white' 
+                          : 'border-gray-300 dark:border-gray-500'
+                      }`}>
+                        {emailPreferences.weekly_summary && <span className="text-purple-600 text-sm font-bold">✓</span>}
+                      </div>
+                    </div>
+                    <h5 className={`font-bold mb-1 ${
+                      emailPreferences.weekly_summary 
+                        ? 'text-white' 
+                        : 'text-gray-800 dark:text-gray-100'
+                    }`}>Weekly Summary</h5>
+                    <p className={`text-xs ${
+                      emailPreferences.weekly_summary 
+                        ? 'text-purple-100' 
+                        : 'text-gray-600 dark:text-gray-400'
+                    }`}>
+                      7-day trends & insights
+                    </p>
+                  </button>
+
+                  {/* Monthly Summary Card */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!emailPreferences.enabled) return;
+                      const newPrefs = { ...emailPreferences, monthly_summary: !emailPreferences.monthly_summary };
+                      setEmailPreferences(newPrefs);
+                      saveEmailPreferences(newPrefs);
+                    }}
+                    disabled={!emailPreferences.enabled}
+                    className={`p-5 rounded-2xl border-3 transition-all duration-300 transform hover:scale-105 cursor-pointer text-left ${
+                      emailPreferences.monthly_summary 
+                        ? 'bg-gradient-to-br from-orange-500 to-red-600 border-orange-600 shadow-xl shadow-orange-500/50' 
+                        : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:border-orange-300 dark:hover:border-orange-700'
+                    } ${!emailPreferences.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-3xl">{emailPreferences.monthly_summary ? '🎯' : '📅'}</span>
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        emailPreferences.monthly_summary 
+                          ? 'bg-white border-white' 
+                          : 'border-gray-300 dark:border-gray-500'
+                      }`}>
+                        {emailPreferences.monthly_summary && <span className="text-orange-600 text-sm font-bold">✓</span>}
+                      </div>
+                    </div>
+                    <h5 className={`font-bold mb-1 ${
+                      emailPreferences.monthly_summary 
+                        ? 'text-white' 
+                        : 'text-gray-800 dark:text-gray-100'
+                    }`}>Monthly Summary</h5>
+                    <p className={`text-xs ${
+                      emailPreferences.monthly_summary 
+                        ? 'text-orange-100' 
+                        : 'text-gray-600 dark:text-gray-400'
+                    }`}>
+                      30-day insights & achievements
+                    </p>
                   </button>
                 </div>
+              </div>
 
-                {/* Save Email Preferences Button */}
-                <div className="pt-2">
-                  <button
-                    onClick={async () => {
-                      try {
-                        await emailApi.updateEmailPreferences(emailPreferences);
-                        alert('✅ Email preferences saved successfully!');
-                      } catch (error) {
-                        console.error('Failed to save email preferences:', error);
-                        alert('❌ Failed to save email preferences');
-                      }
-                    }}
-                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 px-6 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2"
-                  >
-                    <Save size={20} />
-                    Save Email Preferences
-                  </button>
+              {/* Schedule Settings */}
+              <div className="mb-6 p-5 bg-gray-50 dark:bg-gray-700/30 rounded-2xl">
+                <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                  <span className="text-xl">⏰</span>
+                  Delivery Schedule
+                </h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Daily Time */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                      Daily at
+                    </label>
+                    <input
+                      type="time"
+                      value={emailSchedule.daily}
+                      onChange={(e) => {
+                        const newSchedule = { ...emailSchedule, daily: e.target.value };
+                        setEmailSchedule(newSchedule);
+                        // Save schedule to settings
+                        onSave({ ...formData, emailSchedule: newSchedule });
+                      }}
+                      disabled={!emailPreferences.enabled || !emailPreferences.daily_summary}
+                      className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 focus:outline-none transition-all disabled:opacity-50"
+                    />
+                  </div>
+
+                  {/* Weekly Time */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                      Weekly at
+                    </label>
+                    <input
+                      type="time"
+                      value={emailSchedule.weekly}
+                      onChange={(e) => {
+                        const newSchedule = { ...emailSchedule, weekly: e.target.value };
+                        setEmailSchedule(newSchedule);
+                        // Save schedule to settings
+                        onSave({ ...formData, emailSchedule: newSchedule });
+                      }}
+                      disabled={!emailPreferences.enabled || !emailPreferences.weekly_summary}
+                      className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 focus:outline-none transition-all disabled:opacity-50"
+                    />
+                  </div>
+
+                  {/* Monthly Time */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                      Monthly at
+                    </label>
+                    <input
+                      type="time"
+                      value={emailSchedule.monthly}
+                      onChange={(e) => {
+                        const newSchedule = { ...emailSchedule, monthly: e.target.value };
+                        setEmailSchedule(newSchedule);
+                        // Save schedule to settings
+                        onSave({ ...formData, emailSchedule: newSchedule });
+                      }}
+                      disabled={!emailPreferences.enabled || !emailPreferences.monthly_summary}
+                      className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 focus:outline-none transition-all disabled:opacity-50"
+                    />
+                  </div>
                 </div>
+              </div>
+
+              {/* Test Email Button */}
+              <div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!emailPreferences.email) {
+                      alert('Please enter your email address first');
+                      return;
+                    }
+
+                    setTestEmailStatus('sending');
+                    try {
+                      await emailApi.sendTestEmail(emailPreferences.email);
+                      setTestEmailStatus('success');
+                      setTimeout(() => setTestEmailStatus('idle'), 3000);
+                    } catch (error) {
+                      setTestEmailStatus('error');
+                      setTimeout(() => setTestEmailStatus('idle'), 3000);
+                    }
+                  }}
+                  disabled={!emailPreferences.enabled || !emailPreferences.email || testEmailStatus === 'sending'}
+                  className={`w-full py-4 px-6 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-3 shadow-lg transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                    testEmailStatus === 'success'
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-green-500/50'
+                      : testEmailStatus === 'error'
+                      ? 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-red-500/50'
+                      : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-blue-500/50'
+                  }`}
+                >
+                  {testEmailStatus === 'sending' && (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                      <span>Sending Test Email...</span>
+                    </>
+                  )}
+                  {testEmailStatus === 'success' && (
+                    <>
+                      <span className="text-2xl">✅</span>
+                      <span>Test Email Sent Successfully!</span>
+                    </>
+                  )}
+                  {testEmailStatus === 'error' && (
+                    <>
+                      <span className="text-2xl">❌</span>
+                      <span>Failed to Send - Try Again</span>
+                    </>
+                  )}
+                  {testEmailStatus === 'idle' && (
+                    <>
+                      <span className="text-2xl">📧</span>
+                      <span>Send Test Email</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
         )}
 
         {activeTab === 'cron' && (
-          <div className="space-y-6">
-            {/* Cron Jobs Management */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-100 dark:border-gray-600">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
-                  <Timer className="text-orange-500" size={20} />
+          <div className="space-y-6 animate-fade-in">
+            {/* Info Banner */}
+            <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-3xl p-5 border-2 border-orange-200 dark:border-orange-800 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-orange-500 rounded-xl">
+                  <Timer className="text-white" size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Cron Jobs Management</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Manage your automated email summaries</p>
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">⚡ Automated Email Delivery</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                    Set up cron jobs to automatically send your health summaries at scheduled times. 
+                    Uses <span className="font-semibold text-orange-600 dark:text-orange-400">cron-job.org</span> for reliable delivery.
+                  </p>
                 </div>
               </div>
+            </div>
 
+            {/* Configuration Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-700">
+              
               {/* Backend URL Input */}
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Backend URL
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                  <span className="text-xl">🔗</span>
+                  Backend API URL
                 </label>
-                <input
-                  type="url"
-                  value={backendUrl}
-                  onChange={(e) => setBackendUrl(e.target.value)}
-                  placeholder="https://your-backend.vercel.app"
-                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none"
-                />
+                <div className="relative">
+                  <input
+                    type="url"
+                    value={backendUrl}
+                    onChange={(e) => setBackendUrl(e.target.value)}
+                    placeholder="https://your-backend.vercel.app"
+                    className="w-full px-5 py-4 pl-12 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-2xl focus:border-orange-500 focus:ring-4 focus:ring-orange-200 dark:focus:ring-orange-800 focus:outline-none transition-all shadow-sm text-base font-mono text-sm"
+                  />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🌐</div>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-1">
+                  💡 This is your Vercel backend URL where the email endpoints are hosted
+                </p>
               </div>
 
-              {/* Setup Email Summary Jobs */}
+              {/* Cron API Key Input */}
+              <div className="mb-6">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                  <span className="text-xl">🔑</span>
+                  Cron-Job.org API Key
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={cronApiKey}
+                    onChange={(e) => setCronApiKey(e.target.value)}
+                    placeholder="Enter your cron-job.org API key"
+                    className="w-full px-5 py-4 pl-12 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-2xl focus:border-orange-500 focus:ring-4 focus:ring-orange-200 dark:focus:ring-orange-800 focus:outline-none transition-all shadow-sm text-base font-mono text-sm"
+                  />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔐</div>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-1">
+                  💡 Get your API key from <a href="https://console.cron-job.org" target="_blank" rel="noopener noreferrer" className="text-orange-600 dark:text-orange-400 hover:underline font-semibold">console.cron-job.org</a>
+                </p>
+              </div>
+
+              {/* Setup Button */}
               <div className="mb-6">
                 <button
+                  type="button"
                   onClick={async () => {
                     if (!backendUrl) {
-                      alert('Please enter your backend URL first');
+                      alert('⚠️ Please enter your backend URL first');
+                      return;
+                    }
+                    if (!cronApiKey) {
+                      alert('⚠️ Please enter your Cron-Job.org API key first');
                       return;
                     }
 
                     try {
                       setCronJobsLoading(true);
-                      const result = await cronJobsApi.setupEmailSummaryJobs(backendUrl, 'your-cron-api-key');
+                      const result = await cronJobsApi.setupEmailSummaryJobs(backendUrl, cronApiKey);
                       if (result && result.success) {
-                        alert('Email summary cron jobs created successfully!');
+                        alert('✅ Email summary cron jobs created successfully!');
                         // Refresh the jobs list
                         const jobs = await cronJobsApi.getCronJobs();
                         if (jobs && jobs.success) {
                           setCronJobs(jobs.jobs || []);
                         }
+                      } else {
+                        alert('❌ Failed to create cron jobs. Please check your API key and try again.');
                       }
                     } catch (error) {
-                      alert('Failed to create email summary cron jobs');
+                      console.error('Cron job setup error:', error);
+                      alert('❌ Failed to create email summary cron jobs. Please check your settings.');
                     } finally {
                       setCronJobsLoading(false);
                     }
                   }}
-                  disabled={!backendUrl || cronJobsLoading}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-3 px-6 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!backendUrl || !cronApiKey || cronJobsLoading}
+                  className="w-full py-4 px-6 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-3 shadow-lg transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-orange-500/50"
                 >
-                  {cronJobsLoading ? 'Setting up...' : '⚡ Setup Email Summary Jobs'}
+                  {cronJobsLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                      <span>Setting up cron jobs...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-2xl">⚡</span>
+                      <span>Setup Email Summary Jobs</span>
+                    </>
+                  )}
                 </button>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                  This will create 3 cron jobs: Daily, Weekly, and Monthly summaries
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t-2 border-gray-200 dark:border-gray-700"></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="px-4 bg-white dark:bg-gray-800 text-sm font-bold text-gray-500 dark:text-gray-400">
+                    YOUR CRON JOBS
+                  </span>
+                </div>
               </div>
 
               {/* Cron Jobs List */}
               <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Your Cron Jobs</h4>
-
                 {cronJobsLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400">Loading cron jobs...</p>
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-200 dark:border-orange-900 border-t-orange-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600 dark:text-gray-400 font-semibold">Loading cron jobs...</p>
                   </div>
                 ) : cronJobs.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Timer className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <p className="text-gray-600 dark:text-gray-400">No cron jobs found</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                      Click "Setup Email Summary Jobs" to create automated email summaries
+                  <div className="text-center py-12 bg-gray-50 dark:bg-gray-700/30 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600">
+                    <div className="mb-4">
+                      <Timer className="mx-auto h-16 w-16 text-gray-300 dark:text-gray-600" strokeWidth={1.5} />
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-400 font-semibold mb-2">No cron jobs found</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-500">
+                      Click <span className="font-bold text-orange-600 dark:text-orange-400">"Setup Email Summary Jobs"</span> above to get started
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {cronJobs.map((job) => (
-                      <div key={job.id} className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-4 border border-gray-200 dark:border-gray-600">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h5 className="font-semibold text-gray-800 dark:text-gray-100">{job.title}</h5>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{job.url}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-500">Schedule: {job.schedule}</p>
+                      <div 
+                        key={job.id} 
+                        className="group bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-700/30 rounded-2xl p-5 border-2 border-gray-200 dark:border-gray-600 hover:border-orange-300 dark:hover:border-orange-700 transition-all hover:shadow-lg"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-2xl">
+                                {job.title?.toLowerCase().includes('daily') ? '🌅' : 
+                                 job.title?.toLowerCase().includes('weekly') ? '📊' : 
+                                 job.title?.toLowerCase().includes('monthly') ? '📅' : '⚙️'}
+                              </span>
+                              <h5 className="font-bold text-gray-800 dark:text-gray-100 text-base truncate">
+                                {job.title || 'Unnamed Job'}
+                              </h5>
+                            </div>
+                            <div className="space-y-1 ml-11">
+                              <p className="text-xs text-gray-600 dark:text-gray-400 truncate font-mono">
+                                🔗 {job.url || 'No URL'}
+                              </p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                                ⏰ {job.schedule || 'No schedule'}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          
+                          <div className="flex flex-col items-end gap-2">
+                            {/* Status Badge */}
+                            <span className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-md ${
                               job.enabled
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
+                                ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white'
+                                : 'bg-gray-300 text-gray-600 dark:bg-gray-600 dark:text-gray-300'
                             }`}>
-                              {job.enabled ? 'Active' : 'Disabled'}
+                              {job.enabled ? '✅ Active' : '⏸️ Paused'}
                             </span>
-                            <button
-                              onClick={async () => {
-                                try {
-                                  await cronJobsApi.toggleCronJob(job.id, !job.enabled);
-                                  // Refresh jobs list
-                                  const jobs = await cronJobsApi.getCronJobs();
-                                  if (jobs && jobs.success) {
-                                    setCronJobs(jobs.jobs || []);
-                                  }
-                                } catch (error) {
-                                  alert('Failed to toggle cron job');
-                                }
-                              }}
-                              className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
-                                job.enabled
-                                  ? 'bg-red-500 hover:bg-red-600 text-white'
-                                  : 'bg-green-500 hover:bg-green-600 text-white'
-                              }`}
-                            >
-                              {job.enabled ? 'Disable' : 'Enable'}
-                            </button>
-                            <button
-                              onClick={async () => {
-                                if (confirm('Are you sure you want to delete this cron job?')) {
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={async () => {
                                   try {
-                                    await cronJobsApi.deleteCronJob(job.id);
+                                    await cronJobsApi.toggleCronJob(job.id, !job.enabled);
                                     // Refresh jobs list
                                     const jobs = await cronJobsApi.getCronJobs();
                                     if (jobs && jobs.success) {
                                       setCronJobs(jobs.jobs || []);
                                     }
                                   } catch (error) {
-                                    alert('Failed to delete cron job');
+                                    alert('❌ Failed to toggle cron job');
                                   }
-                                }
-                              }}
-                              className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded-xl text-xs font-semibold transition-all"
-                            >
-                              Delete
-                            </button>
+                                }}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-lg transform hover:scale-105 ${
+                                  job.enabled
+                                    ? 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white'
+                                    : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
+                                }`}
+                              >
+                                {job.enabled ? '⏸️ Pause' : '▶️ Resume'}
+                              </button>
+                              
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (confirm(`🗑️ Are you sure you want to delete "${job.title}"?\n\nThis action cannot be undone.`)) {
+                                    try {
+                                      await cronJobsApi.deleteCronJob(job.id);
+                                      // Refresh jobs list
+                                      const jobs = await cronJobsApi.getCronJobs();
+                                      if (jobs && jobs.success) {
+                                        setCronJobs(jobs.jobs || []);
+                                      }
+                                      alert('✅ Cron job deleted successfully');
+                                    } catch (error) {
+                                      alert('❌ Failed to delete cron job');
+                                    }
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                              >
+                                🗑️
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -674,6 +999,21 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Help Card */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-5 border-2 border-blue-200 dark:border-blue-800">
+              <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                <span className="text-xl">💡</span>
+                Quick Setup Guide
+              </h4>
+              <ol className="space-y-2 text-sm text-gray-700 dark:text-gray-300 ml-7">
+                <li className="list-decimal"><strong>Get API Key:</strong> Visit <a href="https://console.cron-job.org" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline font-semibold">console.cron-job.org</a> and create an account</li>
+                <li className="list-decimal"><strong>Generate Key:</strong> Go to Account → API → Create new API key</li>
+                <li className="list-decimal"><strong>Enter Details:</strong> Paste your Backend URL and API Key above</li>
+                <li className="list-decimal"><strong>Setup Jobs:</strong> Click "Setup Email Summary Jobs" button</li>
+                <li className="list-decimal"><strong>Done!</strong> Your emails will be sent automatically 📬</li>
+              </ol>
             </div>
           </div>
         )}
