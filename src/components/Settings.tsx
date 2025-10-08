@@ -24,14 +24,17 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [notifSettings, setNotifSettings] = useState<NotifSettings>(notificationService.getSettings());
-  const [emailPreferences, setEmailPreferences] = useState(settings.emailPreferences || {
+  
+  // Load settings from localStorage, fallback to props
+  const savedSettings = JSON.parse(localStorage.getItem('settings') || '{}');
+  const [emailPreferences, setEmailPreferences] = useState(savedSettings.emailPreferences || settings.emailPreferences || {
     enabled: false,
     email: '',
     daily_summary: false,
     weekly_summary: false,
     monthly_summary: false
   });
-  const [emailSchedule, setEmailSchedule] = useState(settings.emailSchedule || {
+  const [emailSchedule, setEmailSchedule] = useState(savedSettings.emailSchedule || settings.emailSchedule || {
     daily: '20:00',
     weekly: '20:00',
     monthly: '20:00'
@@ -41,7 +44,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   const [cronJobs, setCronJobs] = useState<any[]>([]);
   const [cronJobsLoading, setCronJobsLoading] = useState(false);
   const [backendUrl, setBackendUrl] = useState('https://weight-tarcker.vercel.app');
-  const [cronApiKey, setCronApiKey] = useState(settings.cronApiKey || '');
+  const [cronApiKey, setCronApiKey] = useState(savedSettings.cronApiKey || settings.cronApiKey || '');
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
