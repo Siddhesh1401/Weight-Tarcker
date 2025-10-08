@@ -1038,6 +1038,18 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
+                                onClick={() => {
+                                  // Open cron-job.org edit page in new tab
+                                  window.open(`https://console.cron-job.org/jobs/${job.jobId}`, '_blank');
+                                }}
+                                className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                                title="Edit on cron-job.org"
+                              >
+                                ✏️ Edit
+                              </button>
+                              
+                              <button
+                                type="button"
                                 onClick={async () => {
                                   try {
                                     await cronJobsApi.toggleCronJob(job.jobId, !job.enabled);
