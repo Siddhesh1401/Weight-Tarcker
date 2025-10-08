@@ -45,7 +45,6 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   const [cronJobsLoading, setCronJobsLoading] = useState(false);
   const [backendUrl, setBackendUrl] = useState('https://weight-tarcker.vercel.app');
   const [cronApiKey, setCronApiKey] = useState(savedSettings.cronApiKey || settings.cronApiKey || '');
-  const [cronApiKeyTimeout, setCronApiKeyTimeout] = useState<NodeJS.Timeout | null>(null);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
