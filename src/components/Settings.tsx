@@ -1018,7 +1018,8 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                                 🔗 {job.url || 'No URL'}
                               </p>
                               <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                                ⏰ {job.schedule || 'No schedule'}
+                                ⏰ {job.schedule?.timezone || 'UTC'} - 
+                                {job.schedule?.hours?.join(',') || 'N/A'}:{job.schedule?.minutes?.join(',') || 'N/A'}
                               </p>
                             </div>
                           </div>
