@@ -6,10 +6,10 @@ import mongoose from 'mongoose';
 // Import routes
 import logsRouter from '../backend/routes/logs.js';
 import settingsRouter from '../backend/routes/settings.js';
-import templatesRouter from '../backend/routes/templates.js';
-import pushRouter from '../backend/routes/push-serverless.js';
-import emailRouter from '../backend/routes/email.js';
-import cronJobsRouter from '../backend/routes/cronJobs.js';
+// import templatesRouter from '../backend/routes/templates.js';
+// import pushRouter from '../backend/routes/push-serverless.js';
+// import emailRouter from '../backend/routes/email.js';
+// import cronJobsRouter from '../backend/routes/cronJobs.js';
 
 const app = express();
 
@@ -55,10 +55,10 @@ connectDB();
 // Routes
 app.use('/', logsRouter);
 app.use('/', settingsRouter);
-app.use('/', templatesRouter);
-app.use('/push', pushRouter);
-app.use('/', emailRouter);
-app.use('/', cronJobsRouter);
+// app.use('/', templatesRouter);
+// app.use('/push', pushRouter);
+// app.use('/', emailRouter);
+// app.use('/', cronJobsRouter);
 
 // Health check
 app.get('/', (req, res) => {
