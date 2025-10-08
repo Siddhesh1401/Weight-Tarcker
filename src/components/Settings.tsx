@@ -159,22 +159,40 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
       }
     } catch (error: any) {
       console.error('Failed to load cron jobs:', error);
-      if (error.message?.includes('Rate limit')) {
-        alert('⏰ Rate limit exceeded. Showing cached data if available.\n\nPlease wait 30-60 minutes before refreshing.\n\nTip: Manage jobs at console.cron-job.org');
-        
-        // Try to show cached data even if expired
-        const cached = localStorage.getItem('cronJobsCache');
-        if (cached) {
-          try {
-            const { jobs } = JSON.parse(cached);
-            setCronJobs(jobs);
-            console.log('📦 Showing cached jobs despite rate limit');
-          } catch (e) {
-            console.error('Failed to load cache:', e);
+      
+      // Always try to show cached data when API fails
+      const cached = localStorage.getItem('cronJobsCache');
+      let cacheLoaded = false;
+      
+      if (cached) {
+        try {
+          const { jobs, timestamp } = JSON.parse(cached);
+          setCronJobs(jobs);
+          const cacheAge = Math.floor((Date.now() - timestamp) / 1000);
+          console.log('📦 Showing cached jobs after API error (age:', cacheAge, 'seconds)');
+          cacheLoaded = true;
+          
+          if (error.message?.includes('Rate limit')) {
+            alert(`⏰ Rate limit exceeded! Showing cached data (${cacheAge}s old).\n\n` +
+                  `Please wait 30-60 minutes before refreshing.\n\n` +
+                  `You have ${jobs.length} job(s) from cache.`);
+          } else {
+            alert(`⚠️ API error. Showing cached data (${cacheAge}s old).\n\n` +
+                  `Error: ${error.message}\n\n` +
+                  `You have ${jobs.length} job(s) from cache.`);
           }
+        } catch (e) {
+          console.error('Failed to load cache:', e);
         }
-      } else {
-        alert('❌ Failed to load cron jobs: ' + error.message);
+      }
+      
+      // Only show error if cache wasn't loaded
+      if (!cacheLoaded) {
+        if (error.message?.includes('Rate limit')) {
+          alert('⏰ Rate limit exceeded and no cache available.\n\nPlease wait 30-60 minutes before trying again.');
+        } else {
+          alert('❌ Failed to load cron jobs: ' + error.message);
+        }
       }
     } finally {
       setCronJobsLoading(false);
