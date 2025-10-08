@@ -15,6 +15,7 @@ class CronJobOrgService {
     const apiKey = customApiKey || this.apiKey;
     
     console.log('Making request to cron-job.org:', {
+      url,
       endpoint,
       method: options.method || 'GET',
       hasApiKey: !!apiKey,
@@ -44,13 +45,14 @@ class CronJobOrgService {
           try {
             // Log for debugging
             console.log('Cron-job.org API Response:', {
+              url,
               statusCode: res.statusCode,
               dataLength: data.length,
-              data: data.substring(0, 200) // First 200 chars
+              data: data.substring(0, 500) // First 500 chars for better debugging
             });
 
             if (!data || data.trim() === '') {
-              reject(new Error(`Empty response from cron-job.org API. Status: ${res.statusCode}. Check if API key is valid.`));
+              reject(new Error(`Empty response from cron-job.org API. Status: ${res.statusCode}. URL: ${url}. Check if API key is valid.`));
               return;
             }
 
@@ -59,7 +61,7 @@ class CronJobOrgService {
             if (res.statusCode >= 200 && res.statusCode < 300) {
               resolve(response);
             } else {
-              reject(new Error(`API Error: ${res.statusCode} - ${response.message || JSON.stringify(response)}`));
+              reject(new Error(`API Error: ${res.statusCode} - ${response.error?.message || response.message || JSON.stringify(response)}`));
             }
           } catch (error) {
             reject(new Error(`Failed to parse response: ${error.message}. Raw data: ${data.substring(0, 100)}`));
