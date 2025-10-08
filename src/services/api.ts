@@ -424,7 +424,11 @@ export const cronJobsApi = {
   setupEmailSummaryJobs: async (backendUrl: string, apiKey: string): Promise<any> => {
     return apiCall('/cron-jobs/setup-email-summaries', {
       method: 'POST',
-      body: JSON.stringify({ backendUrl, apiKey }),
+      body: JSON.stringify({ 
+        backendUrl, 
+        apiKey,
+        userId: DEFAULT_USER_ID 
+      }),
     });
   },
 };
