@@ -29,13 +29,17 @@ async function apiCall<T>(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      const errorMessage = errorData.message || errorData.error || `HTTP error! status: ${response.status}`;
+      console.error(`❌ API Error (${response.status}):`, errorMessage, errorData);
+      throw new Error(errorMessage);
     }
 
     const data: ApiResponse<T> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.message || 'API request failed');
+      const errorMessage = data.message || data.error || 'API request failed';
+      console.error('❌ API returned error:', errorMessage, data);
+      throw new Error(errorMessage);
     }
 
     return data.data as T;

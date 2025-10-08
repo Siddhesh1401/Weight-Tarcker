@@ -922,7 +922,10 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
 
                     try {
                       setCronJobsLoading(true);
+                      console.log('🚀 Setting up email summary cron jobs...', { backendUrl, cronApiKeyLength: cronApiKey.length });
                       const result = await cronJobsApi.setupEmailSummaryJobs(backendUrl, cronApiKey);
+                      console.log('📊 Cron setup result:', result);
+                      
                       if (result && result.success) {
                         alert('✅ Email summary cron jobs created successfully!');
                         // Refresh the jobs list
@@ -931,11 +934,14 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                           setCronJobs(jobs.jobs || []);
                         }
                       } else {
-                        alert('❌ Failed to create cron jobs. Please check your API key and try again.');
+                        const errorMsg = result?.message || result?.error || 'Unknown error';
+                        console.error('❌ Cron setup failed:', errorMsg);
+                        alert(`❌ Failed to create cron jobs: ${errorMsg}`);
                       }
-                    } catch (error) {
+                    } catch (error: any) {
                       console.error('Cron job setup error:', error);
-                      alert('❌ Failed to create email summary cron jobs. Please check your settings.');
+                      const errorMsg = error?.message || error?.toString() || 'Unknown error';
+                      alert(`❌ Failed to create email summary cron jobs: ${errorMsg}`);
                     } finally {
                       setCronJobsLoading(false);
                     }
