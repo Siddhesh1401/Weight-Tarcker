@@ -102,6 +102,11 @@ const userSchema = new mongoose.Schema({
       }
     }
   },
+  // Cron job API key for automated tasks
+  cron_api_key: {
+    type: String,
+    default: ''
+  }
 }, { _id: false });
 
 const User = mongoose.model('User', userSchema);

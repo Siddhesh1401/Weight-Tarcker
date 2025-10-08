@@ -7,7 +7,7 @@ import DietPlan from './DietPlan';
 import NotificationSettings from './NotificationSettings';
 import HealthCalculator from './HealthCalculator';
 import notificationService, { NotificationSettings as NotifSettings } from '../services/notifications';
-import { emailApi, cronJobsApi } from '../services/api';
+import { emailApi, cronJobsApi, settingsApi } from '../services/api';
 
 interface SettingsProps {
   settings: UserSettings;
@@ -74,6 +74,21 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
     loadEmailPreferences();
   }, []);
 
+  // Load cron API key from database on mount
+  useEffect(() => {
+    const loadCronApiKey = async () => {
+      try {
+        const settingsData = await settingsApi.getSettings();
+        if (settingsData && settingsData.cron_api_key) {
+          setCronApiKey(settingsData.cron_api_key);
+        }
+      } catch (error) {
+        console.error('Failed to load cron API key:', error);
+      }
+    };
+    loadCronApiKey();
+  }, []);
+
   // Load cron jobs on mount
   useEffect(() => {
     const loadCronJobs = async () => {
@@ -91,6 +106,26 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
     };
     loadCronJobs();
   }, []);
+
+  // Auto-save cron API key to database
+  const saveCronApiKey = async (apiKey: string) => {
+    try {
+      await settingsApi.saveSettings({
+        cron_api_key: apiKey
+      });
+      console.log('✅ Cron API key saved to database');
+      
+      // Also update localStorage
+      const currentSettings = JSON.parse(localStorage.getItem('settings') || '{}');
+      const updatedSettings = {
+        ...currentSettings,
+        cronApiKey: apiKey
+      };
+      localStorage.setItem('settings', JSON.stringify(updatedSettings));
+    } catch (error) {
+      console.error('Failed to save cron API key:', error);
+    }
+  };
 
   // Auto-save email preferences when they change (with debounce)
   const saveEmailPreferences = async (prefs?: typeof emailPreferences) => {
@@ -832,7 +867,12 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                   <input
                     type="password"
                     value={cronApiKey}
-                    onChange={(e) => setCronApiKey(e.target.value)}
+                    onChange={(e) => {
+                      const newKey = e.target.value;
+                      setCronApiKey(newKey);
+                      // Auto-save to database
+                      saveCronApiKey(newKey);
+                    }}
                     placeholder="Enter your cron-job.org API key"
                     className="w-full px-5 py-4 pl-12 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-2xl focus:border-orange-500 focus:ring-4 focus:ring-orange-200 dark:focus:ring-orange-800 focus:outline-none transition-all shadow-sm text-base font-mono text-sm"
                   />

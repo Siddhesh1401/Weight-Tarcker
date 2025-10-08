@@ -172,6 +172,7 @@ export const settingsApi = {
       email?: string;
       goal_weight: number;
       created_at: string;
+      cron_api_key?: string;
     }>(`/settings?${params.toString()}`);
   },
 
@@ -190,6 +191,7 @@ export const settingsApi = {
       snacks?: string[];
       dinner?: string[];
     };
+    cron_api_key?: string;
   }) {
     return apiCall('/settings', {
       method: 'POST',
