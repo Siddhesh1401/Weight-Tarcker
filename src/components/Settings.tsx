@@ -92,29 +92,39 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
     loadCronApiKey();
   }, []);
 
-  // Load cron jobs on mount
+  // Load cron jobs on mount - DISABLED to avoid rate limits
+  // Jobs will be loaded manually via "Fetch Jobs" button
   useEffect(() => {
-    const loadCronJobs = async () => {
-      // Only load if we have an API key
-      if (!cronApiKey) {
-        console.log('⏸️ Skipping cron jobs load - no API key');
-        return;
+    // Don't auto-load to avoid hitting rate limits
+    console.log('ℹ️ Auto-load disabled. Use "Fetch Existing Jobs" button to load cron jobs.');
+  }, []);
+
+  // Manual function to load cron jobs
+  const loadCronJobs = async () => {
+    // Only load if we have an API key
+    if (!cronApiKey) {
+      alert('⚠️ Please enter your Cron-Job.org API key first');
+      return;
+    }
+    
+    setCronJobsLoading(true);
+    try {
+      const jobs = await cronJobsApi.getCronJobs(cronApiKey);
+      if (jobs && Array.isArray(jobs)) {
+        setCronJobs(jobs);
+        alert(`✅ Loaded ${jobs.length} cron job(s) successfully!`);
       }
-      
-      setCronJobsLoading(true);
-      try {
-        const jobs = await cronJobsApi.getCronJobs(cronApiKey);
-        if (jobs && Array.isArray(jobs)) {
-          setCronJobs(jobs);
-        }
-      } catch (error) {
-        console.error('Failed to load cron jobs:', error);
-      } finally {
-        setCronJobsLoading(false);
+    } catch (error: any) {
+      console.error('Failed to load cron jobs:', error);
+      if (error.message?.includes('Rate limit')) {
+        alert('⏰ Rate limit exceeded. Please wait 5-10 minutes and try again.\n\nTip: You can view/manage jobs directly at console.cron-job.org');
+      } else {
+        alert('❌ Failed to load cron jobs: ' + error.message);
       }
-    };
-    loadCronJobs();
-  }, [cronApiKey]); // Re-load when API key changes
+    } finally {
+      setCronJobsLoading(false);
+    }
+  };
 
   // Auto-save cron API key to database (with debounce)
   const saveCronApiKey = async (apiKey: string) => {
@@ -939,11 +949,8 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                       
                       if (result && result.jobs) {
                         alert(`✅ Successfully created ${result.jobs.length} email summary cron jobs!`);
-                        // Refresh the jobs list
-                        const jobs = await cronJobsApi.getCronJobs(cronApiKey);
-                        if (jobs && jobs.length > 0) {
-                          setCronJobs(jobs);
-                        }
+                        // Refresh the jobs list manually
+                        await loadCronJobs();
                       } else {
                         console.error('❌ Cron setup failed: No jobs returned');
                         alert('❌ Failed to create cron jobs: No jobs returned');
@@ -986,6 +993,31 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                     YOUR CRON JOBS
                   </span>
                 </div>
+              </div>
+
+              {/* Fetch Jobs Button */}
+              <div className="mb-6">
+                <button
+                  type="button"
+                  onClick={loadCronJobs}
+                  disabled={!cronApiKey || cronJobsLoading}
+                  className="w-full py-3 px-6 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white"
+                >
+                  {cronJobsLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      <span>Loading jobs...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xl">🔄</span>
+                      <span>Fetch Existing Jobs</span>
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                  Click to manually load your cron jobs from cron-job.org
+                </p>
               </div>
 
               {/* Cron Jobs List */}
