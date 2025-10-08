@@ -3,6 +3,83 @@ import cronJobOrgService from '../services/cronJobOrgService.js';
 
 const router = express.Router();
 
+// Create email summary cron jobs (convenience endpoint)
+// IMPORTANT: This must come BEFORE parameterized routes like /cron-jobs/:jobId
+router.post('/cron-jobs/setup-email-summaries', async (req, res) => {
+  try {
+    const { backendUrl, apiKey, userId } = req.body;
+
+    console.log('Setup email summaries request:', {
+      hasBackendUrl: !!backendUrl,
+      backendUrl,
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey ? apiKey.length : 0,
+      userId: userId || process.env.DEFAULT_USER_ID
+    });
+
+    if (!backendUrl || !apiKey) {
+      return res.status(400).json({
+        success: false,
+        message: 'Backend URL and API key are required'
+      });
+    }
+
+    // Get user's email preferences to get schedule times
+    const User = (await import('../models/User.js')).default;
+    const user = await User.findOne({ _id: userId || process.env.DEFAULT_USER_ID });
+    
+    console.log('User found:', {
+      userId: userId || process.env.DEFAULT_USER_ID,
+      hasUser: !!user,
+      hasEmailNotifications: !!(user && user.email_notifications),
+      hasSchedule: !!(user && user.email_notifications && user.email_notifications.schedule)
+    });
+    
+    let schedule = {
+      daily: '20:00',
+      weekly: '20:00',
+      monthly: '20:00'
+    };
+
+    if (user && user.email_notifications && user.email_notifications.schedule) {
+      schedule = user.email_notifications.schedule;
+      console.log('Using user schedule:', schedule);
+    } else {
+      console.log('Using default schedule:', schedule);
+    }
+
+    const createdJobs = [];
+
+    // Create daily summary job with user's schedule
+    const dailyJobData = cronJobOrgService.createEmailSummaryJob('daily', backendUrl, apiKey, schedule.daily);
+    const dailyJob = await cronJobOrgService.createJob(dailyJobData, apiKey);
+    createdJobs.push({ type: 'daily', job: dailyJob });
+
+    // Create weekly summary job with user's schedule
+    const weeklyJobData = cronJobOrgService.createEmailSummaryJob('weekly', backendUrl, apiKey, schedule.weekly);
+    const weeklyJob = await cronJobOrgService.createJob(weeklyJobData, apiKey);
+    createdJobs.push({ type: 'weekly', job: weeklyJob });
+
+    // Create monthly summary job with user's schedule
+    const monthlyJobData = cronJobOrgService.createEmailSummaryJob('monthly', backendUrl, apiKey, schedule.monthly);
+    const monthlyJob = await cronJobOrgService.createJob(monthlyJobData, apiKey);
+    createdJobs.push({ type: 'monthly', job: monthlyJob });
+
+    res.json({
+      success: true,
+      message: 'Email summary cron jobs created successfully',
+      jobs: createdJobs
+    });
+  } catch (error) {
+    console.error('Error setting up email summary cron jobs:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to create email summary cron jobs',
+      error: error.message 
+    });
+  }
+});
+
 // Get all cron jobs
 router.get('/cron-jobs', async (req, res) => {
   try {
@@ -99,82 +176,6 @@ router.post('/cron-jobs/:jobId/test', async (req, res) => {
   } catch (error) {
     console.error('Error testing cron job:', error);
     res.status(500).json({ success: false, message: 'Failed to test cron job' });
-  }
-});
-
-// Create email summary cron jobs (convenience endpoint)
-router.post('/cron-jobs/setup-email-summaries', async (req, res) => {
-  try {
-    const { backendUrl, apiKey, userId } = req.body;
-
-    console.log('Setup email summaries request:', {
-      hasBackendUrl: !!backendUrl,
-      backendUrl,
-      hasApiKey: !!apiKey,
-      apiKeyLength: apiKey ? apiKey.length : 0,
-      userId: userId || process.env.DEFAULT_USER_ID
-    });
-
-    if (!backendUrl || !apiKey) {
-      return res.status(400).json({
-        success: false,
-        message: 'Backend URL and API key are required'
-      });
-    }
-
-    // Get user's email preferences to get schedule times
-    const User = (await import('../models/User.js')).default;
-    const user = await User.findOne({ _id: userId || process.env.DEFAULT_USER_ID });
-    
-    console.log('User found:', {
-      userId: userId || process.env.DEFAULT_USER_ID,
-      hasUser: !!user,
-      hasEmailNotifications: !!(user && user.email_notifications),
-      hasSchedule: !!(user && user.email_notifications && user.email_notifications.schedule)
-    });
-    
-    let schedule = {
-      daily: '20:00',
-      weekly: '20:00',
-      monthly: '20:00'
-    };
-
-    if (user && user.email_notifications && user.email_notifications.schedule) {
-      schedule = user.email_notifications.schedule;
-      console.log('Using user schedule:', schedule);
-    } else {
-      console.log('Using default schedule:', schedule);
-    }
-
-    const createdJobs = [];
-
-    // Create daily summary job with user's schedule
-    const dailyJobData = cronJobOrgService.createEmailSummaryJob('daily', backendUrl, apiKey, schedule.daily);
-    const dailyJob = await cronJobOrgService.createJob(dailyJobData, apiKey);
-    createdJobs.push({ type: 'daily', job: dailyJob });
-
-    // Create weekly summary job with user's schedule
-    const weeklyJobData = cronJobOrgService.createEmailSummaryJob('weekly', backendUrl, apiKey, schedule.weekly);
-    const weeklyJob = await cronJobOrgService.createJob(weeklyJobData, apiKey);
-    createdJobs.push({ type: 'weekly', job: weeklyJob });
-
-    // Create monthly summary job with user's schedule
-    const monthlyJobData = cronJobOrgService.createEmailSummaryJob('monthly', backendUrl, apiKey, schedule.monthly);
-    const monthlyJob = await cronJobOrgService.createJob(monthlyJobData, apiKey);
-    createdJobs.push({ type: 'monthly', job: monthlyJob });
-
-    res.json({
-      success: true,
-      message: 'Email summary cron jobs created successfully',
-      jobs: createdJobs
-    });
-  } catch (error) {
-    console.error('Error setting up email summary cron jobs:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to create email summary cron jobs',
-      error: error.message 
-    });
   }
 });
 
