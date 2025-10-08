@@ -23,6 +23,12 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Debug middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
+  next();
+});
+
 // MongoDB Connection
 let isConnected = false;
 
@@ -112,4 +118,6 @@ app.get('/', (req, res) => {
 });
 
 // Export for Vercel
-export default app;
+export default (req, res) => {
+  return app(req, res);
+};
