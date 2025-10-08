@@ -99,16 +99,17 @@ class CronJobOrgService {
         job: {
           url: jobData.url,
           enabled: jobData.enabled !== false,
-          schedule: jobData.schedule,
-          timezone: jobData.timezone || 'UTC',
           title: jobData.title,
-          httpMethod: jobData.method || 'POST',
-          httpHeaders: jobData.headers || [],
+          saveResponses: jobData.saveResponses || false,
+          requestMethod: jobData.requestMethod || 1, // 1 = POST
+          schedule: jobData.schedule, // Should already be in correct format from createEmailSummaryJob
         }
       };
 
+      console.log('Creating job with payload:', JSON.stringify(payload, null, 2));
+
       const response = await this.makeRequest('/jobs', {
-        method: 'POST',
+        method: 'PUT', // Documentation says PUT for creating jobs
         body: payload,
       }, customApiKey);
 
@@ -202,13 +203,38 @@ class CronJobOrgService {
 
   // Helper method to create standard email summary jobs
   createEmailSummaryJob(type, backendUrl, apiKey, scheduleTime = '20:00') {
-    // Convert time from HH:MM to cron format
-    const [hours, minutes] = scheduleTime.split(':');
+    // Convert time from HH:MM format to cron-job.org API format
+    const [hoursStr, minutesStr] = scheduleTime.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
     
+    // cron-job.org API uses arrays for schedule
+    // [-1] means "every" (e.g., [-1] for hours = every hour)
     const schedules = {
-      daily: `${minutes} ${hours} * * *`,           // Daily at specified time
-      weekly: `${minutes} ${hours} * * 1`,          // Every Monday at specified time
-      monthly: `${minutes} ${hours} 1 * *`          // 1st of month at specified time
+      daily: {
+        timezone: 'UTC',
+        hours: [hours],        // Specific hour
+        minutes: [minutes],    // Specific minute
+        mdays: [-1],          // Every day of month
+        months: [-1],         // Every month
+        wdays: [-1]           // Every day of week
+      },
+      weekly: {
+        timezone: 'UTC',
+        hours: [hours],
+        minutes: [minutes],
+        mdays: [-1],          // Every day of month
+        months: [-1],         // Every month
+        wdays: [1]            // Only Monday (0=Sunday, 1=Monday, etc.)
+      },
+      monthly: {
+        timezone: 'UTC',
+        hours: [hours],
+        minutes: [minutes],
+        mdays: [1],           // Only 1st day of month
+        months: [-1],         // Every month
+        wdays: [-1]           // Every day of week
+      }
     };
 
     const titles = {
@@ -226,14 +252,10 @@ class CronJobOrgService {
     return {
       url: `${backendUrl}${endpoints[type]}`,
       enabled: true,
-      schedule: schedules[type],
-      timezone: 'UTC',
       title: titles[type],
-      method: 'POST',
-      headers: [
-        { name: 'x-api-key', value: apiKey },
-        { name: 'Content-Type', value: 'application/json' }
-      ]
+      saveResponses: false,
+      requestMethod: 1, // 1 = POST according to API docs
+      schedule: schedules[type]
     };
   }
 }
