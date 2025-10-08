@@ -35,6 +35,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   const [cronJobs, setCronJobs] = useState<any[]>([]);
   const [cronJobsLoading, setCronJobsLoading] = useState(false);
   const [backendUrl, setBackendUrl] = useState('');
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     // Initialize notifications if enabled
