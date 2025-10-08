@@ -73,4 +73,14 @@ export interface UserSettings {
   bodyFatMethod?: 'navy' | 'jackson-pollock' | 'boer' | 'hume';
   bmi?: number;
   bodyFat?: number;
+  emailPreferences?: EmailPreferences;
+}
+
+export interface EmailPreferences {
+  enabled: boolean;
+  email: string;
+  daily_summary: boolean;
+  weekly_summary: boolean;
+  monthly_summary: boolean;
+  custom_frequency?: 'daily' | 'weekly' | 'monthly';
 }

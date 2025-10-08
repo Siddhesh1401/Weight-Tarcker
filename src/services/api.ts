@@ -287,6 +287,135 @@ export const templatesApi = {
   },
 };
 
+// Email API
+export const emailApi = {
+  // Get email preferences
+  getEmailPreferences: async (userId?: string): Promise<any> => {
+    return apiCall(`/email/preferences${userId ? `?user_id=${userId}` : ''}`);
+  },
+
+  // Update email preferences
+  updateEmailPreferences: async (preferences: any, userId?: string): Promise<any> => {
+    return apiCall('/email/preferences', {
+      method: 'POST',
+      body: JSON.stringify({
+        preferences,
+        user_id: userId || DEFAULT_USER_ID
+      }),
+    });
+  },
+
+  // Send test email
+  sendTestEmail: async (email: string): Promise<any> => {
+    return apiCall('/email/test', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  // Send daily summary (for cron jobs)
+  sendDailySummary: async (userId?: string, date?: string): Promise<any> => {
+    return apiCall('/email/send-daily-summary', {
+      method: 'POST',
+      headers: {
+        'x-api-key': import.meta.env.VITE_CRON_API_KEY || '',
+      },
+      body: JSON.stringify({
+        user_id: userId || DEFAULT_USER_ID,
+        date,
+      }),
+    });
+  },
+
+  // Send weekly summary (for cron jobs)
+  sendWeeklySummary: async (userId?: string, weekStart?: string): Promise<any> => {
+    return apiCall('/email/send-weekly-summary', {
+      method: 'POST',
+      headers: {
+        'x-api-key': import.meta.env.VITE_CRON_API_KEY || '',
+      },
+      body: JSON.stringify({
+        user_id: userId || DEFAULT_USER_ID,
+        week_start: weekStart,
+      }),
+    });
+  },
+
+  // Send monthly summary (for cron jobs)
+  sendMonthlySummary: async (userId?: string, month?: number, year?: number): Promise<any> => {
+    return apiCall('/email/send-monthly-summary', {
+      method: 'POST',
+      headers: {
+        'x-api-key': import.meta.env.VITE_CRON_API_KEY || '',
+      },
+      body: JSON.stringify({
+        user_id: userId || DEFAULT_USER_ID,
+        month,
+        year,
+      }),
+    });
+  },
+};
+
+// Cron Jobs API
+export const cronJobsApi = {
+  // List all cron jobs
+  getCronJobs: async (): Promise<any> => {
+    return apiCall('/cron-jobs');
+  },
+
+  // Create a new cron job
+  createCronJob: async (jobData: any): Promise<any> => {
+    return apiCall('/cron-jobs', {
+      method: 'POST',
+      body: JSON.stringify({ jobData }),
+    });
+  },
+
+  // Update an existing cron job
+  updateCronJob: async (jobId: string, jobData: any): Promise<any> => {
+    return apiCall(`/cron-jobs/${jobId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ jobData }),
+    });
+  },
+
+  // Delete a cron job
+  deleteCronJob: async (jobId: string): Promise<any> => {
+    return apiCall(`/cron-jobs/${jobId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Toggle cron job (enable/disable)
+  toggleCronJob: async (jobId: string, enabled: boolean): Promise<any> => {
+    return apiCall(`/cron-jobs/${jobId}/toggle`, {
+      method: 'POST',
+      body: JSON.stringify({ enabled }),
+    });
+  },
+
+  // Get specific cron job details
+  getCronJob: async (jobId: string): Promise<any> => {
+    return apiCall(`/cron-jobs/${jobId}`);
+  },
+
+  // Test cron job execution
+  testCronJob: async (jobId: string): Promise<any> => {
+    return apiCall(`/cron-jobs/${jobId}/test`, {
+      method: 'POST',
+    });
+  },
+
+  // Setup email summary cron jobs (convenience method)
+  setupEmailSummaryJobs: async (backendUrl: string, apiKey: string): Promise<any> => {
+    return apiCall('/cron-jobs/setup-email-summaries', {
+      method: 'POST',
+      body: JSON.stringify({ backendUrl, apiKey }),
+    });
+  },
+};
+
 // Health check
 export const healthCheck = async (): Promise<boolean> => {
   try {

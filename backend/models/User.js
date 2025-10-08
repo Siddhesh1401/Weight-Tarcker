@@ -57,10 +57,36 @@ const userSchema = new mongoose.Schema({
       default: []
     }
   },
-  created_at: {
-    type: Date,
-    default: Date.now
-  }
+  // Email notification preferences
+  email_notifications: {
+    enabled: {
+      type: Boolean,
+      default: false
+    },
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      sparse: true
+    },
+    daily_summary: {
+      type: Boolean,
+      default: false
+    },
+    weekly_summary: {
+      type: Boolean,
+      default: false
+    },
+    monthly_summary: {
+      type: Boolean,
+      default: false
+    },
+    custom_frequency: {
+      type: String,
+      enum: ['daily', 'weekly', 'monthly', null],
+      default: null
+    }
+  },
 }, { _id: false });
 
 const User = mongoose.model('User', userSchema);
