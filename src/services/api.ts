@@ -291,18 +291,29 @@ export const templatesApi = {
 export const emailApi = {
   // Get email preferences
   getEmailPreferences: async (userId?: string): Promise<any> => {
-    return apiCall(`/email/preferences${userId ? `?user_id=${userId}` : ''}`);
+    const response = await fetch(`${API_BASE_URL}/email/preferences${userId ? `?user_id=${userId}` : ''}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data = await response.json();
+    return data.preferences; // Return preferences directly
   },
 
   // Update email preferences
   updateEmailPreferences: async (preferences: any, userId?: string): Promise<any> => {
-    return apiCall('/email/preferences', {
+    const response = await fetch(`${API_BASE_URL}/email/preferences`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         preferences,
         user_id: userId || DEFAULT_USER_ID
       }),
     });
+    const data = await response.json();
+    return data.preferences; // Return updated preferences
   },
 
   // Send test email
