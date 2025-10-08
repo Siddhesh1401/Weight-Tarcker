@@ -208,6 +208,14 @@ class CronJobOrgService {
     const hours = parseInt(hoursStr, 10);
     const minutes = parseInt(minutesStr, 10);
     
+    console.log(`Creating ${type} job with schedule time ${scheduleTime}:`, {
+      originalTime: scheduleTime,
+      parsedHours: hours,
+      parsedMinutes: minutes,
+      hoursArray: [hours],
+      minutesArray: [minutes]
+    });
+    
     // cron-job.org API uses arrays for schedule
     // [-1] means "every" (e.g., [-1] for hours = every hour)
     // Using Asia/Kolkata timezone for Mumbai, India
