@@ -1062,7 +1062,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                                 type="button"
                                 onClick={async () => {
                                   try {
-                                    await cronJobsApi.toggleCronJob(job.jobId, !job.enabled);
+                                    await cronJobsApi.toggleCronJob(job.jobId, !job.enabled, cronApiKey);
                                     // Refresh jobs list
                                     const jobs = await cronJobsApi.getCronJobs();
                                     if (jobs && Array.isArray(jobs)) {
@@ -1086,7 +1086,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                                 onClick={async () => {
                                   if (confirm(`🗑️ Are you sure you want to delete "${job.title}"?\n\nThis action cannot be undone.`)) {
                                     try {
-                                      await cronJobsApi.deleteCronJob(job.jobId);
+                                      await cronJobsApi.deleteCronJob(job.jobId, cronApiKey);
                                       // Refresh jobs list
                                       const jobs = await cronJobsApi.getCronJobs();
                                       if (jobs && Array.isArray(jobs)) {
@@ -1183,7 +1183,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                             await saveEmailPreferences(undefined, newSchedule);
 
                             // Delete the old cron job
-                            await cronJobsApi.deleteCronJob(editingCronJob.jobId);
+                            await cronJobsApi.deleteCronJob(editingCronJob.jobId, cronApiKey);
 
                             // Wait a moment
                             await new Promise(resolve => setTimeout(resolve, 2000));

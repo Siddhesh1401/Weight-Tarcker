@@ -398,17 +398,18 @@ export const cronJobsApi = {
   },
 
   // Delete a cron job
-  deleteCronJob: async (jobId: string): Promise<any> => {
+  deleteCronJob: async (jobId: string, apiKey: string): Promise<any> => {
     return apiCall(`/cron-jobs/${jobId}`, {
       method: 'DELETE',
+      body: JSON.stringify({ apiKey }),
     });
   },
 
   // Toggle cron job (enable/disable)
-  toggleCronJob: async (jobId: string, enabled: boolean): Promise<any> => {
+  toggleCronJob: async (jobId: string, enabled: boolean, apiKey: string): Promise<any> => {
     return apiCall(`/cron-jobs/${jobId}/toggle`, {
       method: 'POST',
-      body: JSON.stringify({ enabled }),
+      body: JSON.stringify({ enabled, apiKey }),
     });
   },
 

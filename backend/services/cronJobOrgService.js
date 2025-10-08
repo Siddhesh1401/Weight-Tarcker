@@ -148,11 +148,11 @@ class CronJobOrgService {
   }
 
   // Delete a cron job
-  async deleteJob(jobId) {
+  async deleteJob(jobId, customApiKey = null) {
     try {
       await this.makeRequest(`/jobs/${jobId}`, {
         method: 'DELETE',
-      });
+      }, customApiKey);
 
       return true;
     } catch (error) {
@@ -162,12 +162,16 @@ class CronJobOrgService {
   }
 
   // Enable/disable a cron job
-  async toggleJob(jobId, enabled) {
+  async toggleJob(jobId, enabled, customApiKey = null) {
     try {
-      const response = await this.makeRequest(`/jobs/${jobId}/toggle`, {
-        method: 'POST',
-        body: { enabled },
-      });
+      const response = await this.makeRequest(`/jobs/${jobId}`, {
+        method: 'PATCH',
+        body: { 
+          job: {
+            enabled: enabled
+          }
+        },
+      }, customApiKey);
 
       return response.job;
     } catch (error) {

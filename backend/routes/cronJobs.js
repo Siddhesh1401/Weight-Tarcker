@@ -143,8 +143,22 @@ router.put('/cron-jobs/:jobId', async (req, res) => {
 router.delete('/cron-jobs/:jobId', async (req, res) => {
   try {
     const { jobId } = req.params;
+    const { apiKey } = req.body;
 
-    await cronJobOrgService.deleteJob(jobId);
+    console.log('Delete cron job request:', {
+      jobId,
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey ? apiKey.length : 0
+    });
+
+    if (!apiKey) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'API key is required' 
+      });
+    }
+
+    await cronJobOrgService.deleteJob(jobId, apiKey);
     res.json({ success: true, message: 'Cron job deleted successfully' });
   } catch (error) {
     console.error('Error deleting cron job:', error);
@@ -156,9 +170,23 @@ router.delete('/cron-jobs/:jobId', async (req, res) => {
 router.post('/cron-jobs/:jobId/toggle', async (req, res) => {
   try {
     const { jobId } = req.params;
-    const { enabled } = req.body;
+    const { enabled, apiKey } = req.body;
 
-    const job = await cronJobOrgService.toggleJob(jobId, enabled);
+    console.log('Toggle cron job request:', {
+      jobId,
+      enabled,
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey ? apiKey.length : 0
+    });
+
+    if (!apiKey) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'API key is required' 
+      });
+    }
+
+    const job = await cronJobOrgService.toggleJob(jobId, enabled, apiKey);
     res.json({ success: true, job });
   } catch (error) {
     console.error('Error toggling cron job:', error);
