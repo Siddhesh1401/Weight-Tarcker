@@ -8,14 +8,17 @@ class CronJobOrgService {
   }
 
   // Helper method to make API requests
-  async makeRequest(endpoint, options = {}) {
+  async makeRequest(endpoint, options = {}, customApiKey = null) {
     const url = `${this.baseURL}${endpoint}`;
+    
+    // Use custom API key if provided, otherwise fall back to environment variable
+    const apiKey = customApiKey || this.apiKey;
 
     const requestOptions = {
       method: options.method || 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         ...options.headers,
       },
       ...options,
@@ -68,7 +71,7 @@ class CronJobOrgService {
   }
 
   // Create a new cron job
-  async createJob(jobData) {
+  async createJob(jobData, customApiKey = null) {
     try {
       const payload = {
         job: {
@@ -85,7 +88,7 @@ class CronJobOrgService {
       const response = await this.makeRequest('/jobs', {
         method: 'POST',
         body: payload,
-      });
+      }, customApiKey);
 
       return response.job;
     } catch (error) {
@@ -176,11 +179,14 @@ class CronJobOrgService {
   }
 
   // Helper method to create standard email summary jobs
-  createEmailSummaryJob(type, backendUrl, apiKey) {
+  createEmailSummaryJob(type, backendUrl, apiKey, scheduleTime = '20:00') {
+    // Convert time from HH:MM to cron format
+    const [hours, minutes] = scheduleTime.split(':');
+    
     const schedules = {
-      daily: '0 7 * * *',      // 7 AM daily
-      weekly: '0 8 * * 1',     // 8 AM every Monday
-      monthly: '0 9 1 * *'     // 9 AM on 1st of month
+      daily: `${minutes} ${hours} * * *`,           // Daily at specified time
+      weekly: `${minutes} ${hours} * * 1`,          // Every Monday at specified time
+      monthly: `${minutes} ${hours} 1 * *`          // 1st of month at specified time
     };
 
     const titles = {
