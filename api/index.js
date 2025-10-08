@@ -6,10 +6,10 @@ import mongoose from 'mongoose';
 // Import routes
 import logsRouter from '../backend/routes/logs.js';
 import settingsRouter from '../backend/routes/settings.js';
-// import templatesRouter from '../backend/routes/templates.js';
-// import pushRouter from '../backend/routes/push-serverless.js';
-// import emailRouter from '../backend/routes/email.js';
-// import cronJobsRouter from '../backend/routes/cronJobs.js';
+import templatesRouter from '../backend/routes/templates.js';
+import pushRouter from '../backend/routes/push-serverless.js';
+import emailRouter from '../backend/routes/email.js';
+import cronJobsRouter from '../backend/routes/cronJobs.js';
 
 console.log('✅ All imports loaded successfully');
 
@@ -72,10 +72,14 @@ console.log('✅ Mounting logs router...');
 app.use('/api', logsRouter);
 console.log('✅ Mounting settings router...');
 app.use('/api', settingsRouter);
-// app.use('/', templatesRouter);
-// app.use('/push', pushRouter);
-// app.use('/', emailRouter);
-// app.use('/', cronJobsRouter);
+console.log('✅ Mounting templates router...');
+app.use('/api', templatesRouter);
+console.log('✅ Mounting push router...');
+app.use('/api/push', pushRouter);
+console.log('✅ Mounting email router...');
+app.use('/api', emailRouter);
+console.log('✅ Mounting cron jobs router...');
+app.use('/api', cronJobsRouter);
 
 console.log('✅ All routes mounted successfully');
 
