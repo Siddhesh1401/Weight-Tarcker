@@ -45,6 +45,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   const [cronJobsLoading, setCronJobsLoading] = useState(false);
   const [backendUrl, setBackendUrl] = useState('https://weight-tarcker.vercel.app');
   const [cronApiKey, setCronApiKey] = useState(savedSettings.cronApiKey || settings.cronApiKey || '');
+  const [cronApiKeyTimeout, setCronApiKeyTimeout] = useState<NodeJS.Timeout | null>(null);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -107,13 +108,14 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
     loadCronJobs();
   }, []);
 
-  // Auto-save cron API key to database
+  // Auto-save cron API key to database (with debounce)
   const saveCronApiKey = async (apiKey: string) => {
     try {
+      console.log('💾 Saving cron API key to database...', { keyLength: apiKey.length });
       await settingsApi.saveSettings({
         cron_api_key: apiKey
       });
-      console.log('✅ Cron API key saved to database');
+      console.log('✅ Cron API key saved to database successfully');
       
       // Also update localStorage
       const currentSettings = JSON.parse(localStorage.getItem('settings') || '{}');
@@ -123,7 +125,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
       };
       localStorage.setItem('settings', JSON.stringify(updatedSettings));
     } catch (error) {
-      console.error('Failed to save cron API key:', error);
+      console.error('❌ Failed to save cron API key:', error);
     }
   };
 
