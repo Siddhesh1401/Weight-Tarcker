@@ -96,7 +96,23 @@ router.post('/cron-jobs/setup-email-summaries', async (req, res) => {
 // Get all cron jobs
 router.get('/cron-jobs', async (req, res) => {
   try {
-    const jobs = await cronJobOrgService.listJobs();
+    // Get API key from query parameter or header
+    const apiKey = req.query.apiKey || req.headers['x-api-key'];
+    
+    console.log('Get cron jobs request:', {
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey ? apiKey.length : 0,
+      source: req.query.apiKey ? 'query' : req.headers['x-api-key'] ? 'header' : 'none'
+    });
+
+    if (!apiKey) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'API key is required (pass as ?apiKey=xxx or X-API-Key header)' 
+      });
+    }
+
+    const jobs = await cronJobOrgService.listJobs(apiKey);
     res.json({ success: true, data: jobs });
   } catch (error) {
     console.error('Error fetching cron jobs:', error);

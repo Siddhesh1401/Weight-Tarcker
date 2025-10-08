@@ -82,9 +82,9 @@ class CronJobOrgService {
   }
 
   // List all cron jobs
-  async listJobs() {
+  async listJobs(customApiKey = null) {
     try {
-      const response = await this.makeRequest('/jobs');
+      const response = await this.makeRequest('/jobs', {}, customApiKey);
       return response.jobs || [];
     } catch (error) {
       console.error('Failed to list cron jobs:', error.message);

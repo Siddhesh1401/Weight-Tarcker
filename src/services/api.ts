@@ -377,8 +377,8 @@ export const emailApi = {
 // Cron Jobs API
 export const cronJobsApi = {
   // List all cron jobs
-  getCronJobs: async (): Promise<any> => {
-    return apiCall('/cron-jobs');
+  getCronJobs: async (apiKey: string): Promise<any> => {
+    return apiCall(`/cron-jobs?apiKey=${encodeURIComponent(apiKey)}`);
   },
 
   // Create a new cron job

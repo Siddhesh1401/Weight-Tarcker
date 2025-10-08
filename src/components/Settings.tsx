@@ -95,9 +95,15 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   // Load cron jobs on mount
   useEffect(() => {
     const loadCronJobs = async () => {
+      // Only load if we have an API key
+      if (!cronApiKey) {
+        console.log('⏸️ Skipping cron jobs load - no API key');
+        return;
+      }
+      
       setCronJobsLoading(true);
       try {
-        const jobs = await cronJobsApi.getCronJobs();
+        const jobs = await cronJobsApi.getCronJobs(cronApiKey);
         if (jobs && Array.isArray(jobs)) {
           setCronJobs(jobs);
         }
@@ -108,7 +114,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
       }
     };
     loadCronJobs();
-  }, []);
+  }, [cronApiKey]); // Re-load when API key changes
 
   // Auto-save cron API key to database (with debounce)
   const saveCronApiKey = async (apiKey: string) => {
@@ -934,7 +940,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                       if (result && result.jobs) {
                         alert(`✅ Successfully created ${result.jobs.length} email summary cron jobs!`);
                         // Refresh the jobs list
-                        const jobs = await cronJobsApi.getCronJobs();
+                        const jobs = await cronJobsApi.getCronJobs(cronApiKey);
                         if (jobs && jobs.length > 0) {
                           setCronJobs(jobs);
                         }
@@ -1064,7 +1070,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                                   try {
                                     await cronJobsApi.toggleCronJob(job.jobId, !job.enabled, cronApiKey);
                                     // Refresh jobs list
-                                    const jobs = await cronJobsApi.getCronJobs();
+                                    const jobs = await cronJobsApi.getCronJobs(cronApiKey);
                                     if (jobs && Array.isArray(jobs)) {
                                       setCronJobs(jobs);
                                     }
@@ -1088,7 +1094,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                                     try {
                                       await cronJobsApi.deleteCronJob(job.jobId, cronApiKey);
                                       // Refresh jobs list
-                                      const jobs = await cronJobsApi.getCronJobs();
+                                      const jobs = await cronJobsApi.getCronJobs(cronApiKey);
                                       if (jobs && Array.isArray(jobs)) {
                                         setCronJobs(jobs);
                                       }
@@ -1192,7 +1198,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                             await cronJobsApi.setupEmailSummaryJobs(backendUrl, cronApiKey);
 
                             // Refresh jobs list
-                            const jobs = await cronJobsApi.getCronJobs();
+                            const jobs = await cronJobsApi.getCronJobs(cronApiKey);
                             if (jobs && Array.isArray(jobs)) {
                               setCronJobs(jobs);
                             }
