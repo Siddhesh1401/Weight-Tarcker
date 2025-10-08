@@ -116,7 +116,21 @@ router.get('/cron-jobs', async (req, res) => {
     res.json({ success: true, data: jobs });
   } catch (error) {
     console.error('Error fetching cron jobs:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch cron jobs' });
+    
+    // Check if it's a rate limit error
+    if (error.message && error.message.includes('429')) {
+      return res.status(429).json({ 
+        success: false, 
+        message: 'Rate limit exceeded. Please wait a few minutes before trying again.',
+        error: error.message 
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch cron jobs',
+      error: error.message 
+    });
   }
 });
 

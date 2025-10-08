@@ -990,7 +990,17 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
 
               {/* Cron Jobs List */}
               <div className="space-y-4">
-                {cronJobsLoading ? (
+                {!cronApiKey ? (
+                  <div className="text-center py-12 bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl border-2 border-dashed border-yellow-300 dark:border-yellow-700">
+                    <div className="mb-4">
+                      <AlertTriangle className="mx-auto h-16 w-16 text-yellow-500 dark:text-yellow-400" strokeWidth={1.5} />
+                    </div>
+                    <p className="text-gray-700 dark:text-gray-300 font-semibold mb-2">⚠️ API Key Required</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Please enter your Cron-Job.org API key above to view and manage your cron jobs
+                    </p>
+                  </div>
+                ) : cronJobsLoading ? (
                   <div className="text-center py-12">
                     <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-200 dark:border-orange-900 border-t-orange-500 mx-auto mb-4"></div>
                     <p className="text-gray-600 dark:text-gray-400 font-semibold">Loading cron jobs...</p>
