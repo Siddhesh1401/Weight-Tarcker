@@ -5,6 +5,12 @@ import { generateDailySummaryTemplate, generateWeeklySummaryTemplate, generateMo
 
 const router = express.Router();
 
+// Helper function to get local date in YYYY-MM-DD format
+const getLocalDate = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
+
 // Get email preferences for user
 router.get('/email/preferences', async (req, res) => {
   try {
@@ -57,6 +63,67 @@ router.post('/email/test', async (req, res) => {
   }
 });
 
+// Debug endpoint to check today's summary data
+router.get('/email/debug-daily-summary', async (req, res) => {
+  try {
+    const userId = req.query.user_id || process.env.DEFAULT_USER_ID;
+    const targetDate = req.query.date || getLocalDate();
+
+    console.log('🔍 Debugging daily summary for user:', userId, 'date:', targetDate);
+
+    // Get all logs for debugging
+    const allLogs = await Log.find({ user_id: userId }).sort({ date: -1 }).limit(10);
+    const todaysLogs = await Log.find({ user_id: userId, date: targetDate });
+
+    console.log('📊 All recent logs:', allLogs.map(log => ({
+      date: log.date,
+      meal_type: log.meal_type,
+      time: log.time,
+      meal_notes: log.meal_notes
+    })));
+
+    console.log('📊 Today\'s logs:', todaysLogs.map(log => ({
+      date: log.date,
+      meal_type: log.meal_type,
+      time: log.time,
+      meal_notes: log.meal_notes
+    })));
+
+    // Generate daily summary data
+    const summaryData = await summaryService.generateDailySummary(userId, targetDate);
+
+    res.json({
+      success: true,
+      debug: {
+        userId,
+        targetDate,
+        serverTime: new Date().toISOString(),
+        localTime: new Date().toLocaleString(),
+        totalLogsInDB: await Log.countDocuments({ user_id: userId }),
+        recentLogs: allLogs.map(log => ({
+          id: log._id,
+          date: log.date,
+          meal_type: log.meal_type,
+          time: log.time,
+          meal_notes: log.meal_notes?.substring(0, 50)
+        })),
+        todaysLogs: todaysLogs.map(log => ({
+          id: log._id,
+          date: log.date,
+          meal_type: log.meal_type,
+          time: log.time,
+          meal_notes: log.meal_notes?.substring(0, 50)
+        })),
+        summaryData,
+        hasData: summaryData.totalMeals > 0 || summaryData.weight || summaryData.water || summaryData.sleep
+      }
+    });
+  } catch (error) {
+    console.error('Error debugging daily summary:', error);
+    res.status(500).json({ success: false, message: 'Failed to debug daily summary', error: error.message });
+  }
+});
+
 // Send daily summary email (for cron job)
 router.post('/email/send-daily-summary', async (req, res) => {
   try {
@@ -71,7 +138,7 @@ router.post('/email/send-daily-summary', async (req, res) => {
 
     const { user_id, date } = req.body;
     const userId = user_id || process.env.DEFAULT_USER_ID;
-    const targetDate = date || new Date().toISOString().split('T')[0];
+    const targetDate = date || getLocalDate();
 
     console.log('📧 Sending daily summary email for user:', userId, 'date:', targetDate);
 
