@@ -1472,19 +1472,24 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                                 onClick={async () => {
                                   if (confirm(`📧 Send a test email now?\n\nThis will trigger "${job.title}" immediately.`)) {
                                     try {
-                                      // Call the job's URL directly to trigger it
+                                      // Call the job's URL directly to trigger it with proper authentication
                                       const response = await fetch(job.url, {
                                         method: 'POST',
                                         headers: {
                                           'Content-Type': 'application/json',
+                                          'x-api-key': cronApiKey, // Include the cron API key for authentication
                                         },
+                                        body: JSON.stringify({
+                                          user_id: 'user_001', // Default user ID
+                                        }),
                                       });
                                       
                                       if (response.ok) {
-                                        alert('✅ Test email sent successfully! Check your inbox.');
+                                        const result = await response.json();
+                                        alert(`✅ Test email sent successfully!\n\n${result.message || 'Check your inbox.'}`);
                                       } else {
                                         const error = await response.text();
-                                        alert(`⚠️ Test failed: ${response.status} ${error}`);
+                                        alert(`⚠️ Test failed: ${response.status}\n\n${error}`);
                                       }
                                     } catch (error) {
                                       alert('❌ Failed to send test email');
