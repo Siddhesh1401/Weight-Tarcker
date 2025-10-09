@@ -115,6 +115,8 @@ router.get('/email/debug-daily-summary', async (req, res) => {
         targetDate,
         serverTime: new Date().toISOString(),
         localTime: new Date().toLocaleString(),
+        serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        clientTimezone: 'IST (assumed)', // Frontend uses IST
         totalLogsInDB: await Log.countDocuments({ user_id: userId }),
         uniqueMealTypes,
         uniqueDates,
@@ -139,6 +141,35 @@ router.get('/email/debug-daily-summary', async (req, res) => {
   } catch (error) {
     console.error('Error debugging daily summary:', error);
     res.status(500).json({ success: false, message: 'Failed to debug daily summary', error: error.message });
+  }
+});
+
+// Simple debug endpoint for date calculations
+router.get('/debug-date', async (req, res) => {
+  try {
+    const now = new Date();
+    const serverTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+    // Calculate IST time (UTC+5:30)
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istTime = new Date(now.getTime() + istOffset);
+    
+    res.json({
+      server: {
+        timezone: serverTimezone,
+        currentTime: now.toISOString(),
+        localTime: now.toLocaleString(),
+        dateString: getLocalDate()
+      },
+      ist: {
+        currentTime: istTime.toISOString(),
+        localTime: istTime.toLocaleString(),
+        dateString: `${istTime.getUTCFullYear()}-${String(istTime.getUTCMonth() + 1).padStart(2, '0')}-${String(istTime.getUTCDate()).padStart(2, '0')}`
+      },
+      explanation: "Frontend saves dates in IST, backend should query using same timezone logic"
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
