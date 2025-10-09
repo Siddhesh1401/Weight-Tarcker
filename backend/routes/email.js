@@ -72,22 +72,38 @@ router.get('/email/debug-daily-summary', async (req, res) => {
     console.log('🔍 Debugging daily summary for user:', userId, 'date:', targetDate);
 
     // Get all logs for debugging
-    const allLogs = await Log.find({ user_id: userId }).sort({ date: -1 }).limit(10);
+    const allLogs = await Log.find({ user_id: userId }).sort({ date: -1 }).limit(20);
     const todaysLogs = await Log.find({ user_id: userId, date: targetDate });
+    
+    // Get logs from last 3 days for debugging
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const recentLogs = await Log.find({ 
+      user_id: userId, 
+      date: { $gte: threeDaysAgo.toISOString().split('T')[0] }
+    }).sort({ date: -1, timestamp: -1 }).limit(50);
+    
+    // Get unique meal types and dates
+    const allUserLogs = await Log.find({ user_id: userId });
+    const uniqueMealTypes = [...new Set(allUserLogs.map(log => log.meal_type))];
+    const uniqueDates = [...new Set(allUserLogs.map(log => log.date))].sort().reverse();
 
     console.log('📊 All recent logs:', allLogs.map(log => ({
       date: log.date,
       meal_type: log.meal_type,
       time: log.time,
-      meal_notes: log.meal_notes
+      meal_notes: log.meal_notes?.substring(0, 30)
     })));
 
     console.log('📊 Today\'s logs:', todaysLogs.map(log => ({
       date: log.date,
       meal_type: log.meal_type,
       time: log.time,
-      meal_notes: log.meal_notes
+      meal_notes: log.meal_notes?.substring(0, 30)
     })));
+
+    console.log('📊 Unique meal types:', uniqueMealTypes);
+    console.log('📊 Unique dates:', uniqueDates);
 
     // Generate daily summary data
     const summaryData = await summaryService.generateDailySummary(userId, targetDate);
@@ -100,7 +116,9 @@ router.get('/email/debug-daily-summary', async (req, res) => {
         serverTime: new Date().toISOString(),
         localTime: new Date().toLocaleString(),
         totalLogsInDB: await Log.countDocuments({ user_id: userId }),
-        recentLogs: allLogs.map(log => ({
+        uniqueMealTypes,
+        uniqueDates,
+        recentLogs: recentLogs.map(log => ({
           id: log._id,
           date: log.date,
           meal_type: log.meal_type,
@@ -138,20 +156,40 @@ router.post('/email/send-daily-summary', async (req, res) => {
 
     const { user_id, date } = req.body;
     const userId = user_id || process.env.DEFAULT_USER_ID;
-    const targetDate = date || getLocalDate();
+    let targetDate = date || getLocalDate();
 
-    console.log('📧 Sending daily summary email for user:', userId, 'date:', targetDate);
+    console.log('📧 Starting daily summary for user:', userId, 'initial date:', targetDate);
 
-    // Get user email preferences
-    const preferences = await summaryService.getUserEmailPreferences(userId);
+    // If no data found for today, try yesterday (timezone issues)
+    let summaryData = await summaryService.generateDailySummary(userId, targetDate);
+    
+    if (summaryData.totalMeals === 0 && !summaryData.weight && !summaryData.water && !summaryData.sleep) {
+      console.log('📭 No data for today, trying yesterday...');
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+      console.log('📧 Trying yesterday:', yesterdayStr);
+      
+      summaryData = await summaryService.generateDailySummary(userId, yesterdayStr);
+      if (summaryData.totalMeals > 0 || summaryData.weight || summaryData.water || summaryData.sleep) {
+        targetDate = yesterdayStr;
+        console.log('📧 Found data for yesterday, using that date');
+      }
+    }
 
     if (!preferences.enabled || !preferences.email || !preferences.daily_summary) {
       console.log('⏸️ Daily summary disabled for user');
       return res.json({ success: true, message: 'Daily summary disabled for user' });
     }
 
-    // Generate daily summary data
-    const summaryData = await summaryService.generateDailySummary(userId, targetDate);
+    console.log('📧 Daily summary result:', {
+      targetDate,
+      totalMeals: summaryData.totalMeals,
+      hasWeight: !!summaryData.weight,
+      hasWater: !!summaryData.water,
+      hasSleep: !!summaryData.sleep,
+      hasData: summaryData.totalMeals > 0 || summaryData.weight || summaryData.water || summaryData.sleep
+    });
 
     if (summaryData.totalMeals === 0 && !summaryData.weight && !summaryData.water && !summaryData.sleep) {
       console.log('📭 No data to summarize for the day');

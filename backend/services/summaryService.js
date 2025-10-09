@@ -16,10 +16,22 @@ class SummaryService {
         date: date
       });
 
+      console.log(`🔍 Querying logs for user ${userId} on date ${date}`);
+      console.log(`   - Found ${dayLogs.length} logs for this date`);
+
       // Filter and organize data
       const meals = dayLogs.filter(log =>
         ['breakfast', 'lunch', 'snacks', 'dinner', 'other'].includes(log.meal_type)
       );
+
+      // Debug: Log what we found
+      console.log(`📊 Summary for ${userId} on ${date}:`);
+      console.log(`   - Total day logs: ${dayLogs.length}`);
+      console.log(`   - Filtered meals: ${meals.length}`);
+      console.log(`   - Day logs by type:`, dayLogs.reduce((acc, log) => {
+        acc[log.meal_type] = (acc[log.meal_type] || 0) + 1;
+        return acc;
+      }, {}));
 
       const weight = dayLogs.find(log => log.meal_type === 'weight' && log.weight);
       const water = dayLogs.find(log => log.meal_type === 'water' && log.water_glasses);
