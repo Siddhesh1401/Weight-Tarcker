@@ -8,7 +8,7 @@ router.post('/log', async (req, res) => {
   try {
     const { 
       user_id, date, meal_type, meal_notes, tea_biscuit, cheat_meal, weight,
-      water_glasses, sleep_hours, sleep_quality, bed_time, sleep_notes
+      water_glasses, sleep_hours, sleep_quality, bed_time, sleep_notes, time
     } = req.body;
 
     // Validation
@@ -31,7 +31,8 @@ router.post('/log', async (req, res) => {
       sleep_hours: sleep_hours || null,
       sleep_quality: sleep_quality || null,
       bed_time: bed_time || null,
-      sleep_notes: sleep_notes || null
+      sleep_notes: sleep_notes || null,
+      time: time || undefined // Use provided time or let model default handle it
     });
 
     await newLog.save();
