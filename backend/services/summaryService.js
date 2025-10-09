@@ -239,14 +239,45 @@ class SummaryService {
   // Get user email preferences
   async getUserEmailPreferences(userId) {
     try {
-      const user = await User.findOne({ _id: userId });
+      let user = await User.findOne({ _id: userId });
       if (!user) {
-        throw new Error('User not found');
+        // Create default user if not exists
+        console.log(`📧 Creating default user ${userId}`);
+        user = await User.findOneAndUpdate(
+          { _id: userId },
+          { 
+            _id: userId,
+            name: 'Default User',
+            email: null,
+            goal_weight: 70,
+            email_notifications: {
+              enabled: false,
+              email: null,
+              daily_summary: false,
+              weekly_summary: false,
+              monthly_summary: false
+            }
+          },
+          { new: true, upsert: true }
+        );
       }
-      return user.email_notifications || {};
+      return user.email_notifications || {
+        enabled: false,
+        email: null,
+        daily_summary: false,
+        weekly_summary: false,
+        monthly_summary: false
+      };
     } catch (error) {
       console.error('Error getting email preferences:', error);
-      throw error;
+      // Return default preferences on error
+      return {
+        enabled: false,
+        email: null,
+        daily_summary: false,
+        weekly_summary: false,
+        monthly_summary: false
+      };
     }
   }
 

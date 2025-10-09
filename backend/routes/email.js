@@ -160,8 +160,23 @@ router.post('/email/send-daily-summary', async (req, res) => {
 
     console.log('📧 Starting daily summary for user:', userId, 'initial date:', targetDate);
 
+    // Get user email preferences FIRST
+    let preferences;
+    try {
+      preferences = await summaryService.getUserEmailPreferences(userId);
+    } catch (error) {
+      console.error('❌ Error getting email preferences:', error);
+      return res.status(500).json({ success: false, message: 'Error getting email preferences', error: error.message });
+    }
+
     // If no data found for today, try yesterday (timezone issues)
-    let summaryData = await summaryService.generateDailySummary(userId, targetDate);
+    let summaryData;
+    try {
+      summaryData = await summaryService.generateDailySummary(userId, targetDate);
+    } catch (error) {
+      console.error('❌ Error generating daily summary:', error);
+      return res.status(500).json({ success: false, message: 'Error generating daily summary', error: error.message });
+    }
     
     if (summaryData.totalMeals === 0 && !summaryData.weight && !summaryData.water && !summaryData.sleep) {
       console.log('📭 No data for today, trying yesterday...');
@@ -170,10 +185,16 @@ router.post('/email/send-daily-summary', async (req, res) => {
       const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
       console.log('📧 Trying yesterday:', yesterdayStr);
       
-      summaryData = await summaryService.generateDailySummary(userId, yesterdayStr);
-      if (summaryData.totalMeals > 0 || summaryData.weight || summaryData.water || summaryData.sleep) {
-        targetDate = yesterdayStr;
-        console.log('📧 Found data for yesterday, using that date');
+      try {
+        const yesterdayData = await summaryService.generateDailySummary(userId, yesterdayStr);
+        if (yesterdayData.totalMeals > 0 || yesterdayData.weight || yesterdayData.water || yesterdayData.sleep) {
+          summaryData = yesterdayData;
+          targetDate = yesterdayStr;
+          console.log('📧 Found data for yesterday, using that date');
+        }
+      } catch (error) {
+        console.error('❌ Error generating yesterday summary:', error);
+        // Continue with today's data
       }
     }
 
