@@ -5,10 +5,14 @@ import { generateDailySummaryTemplate, generateWeeklySummaryTemplate, generateMo
 
 const router = express.Router();
 
-// Helper function to get local date in YYYY-MM-DD format
+// Helper function to get local date in YYYY-MM-DD format (IST timezone)
 const getLocalDate = () => {
+  // Use IST timezone explicitly to match client expectations
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  // Create date string in IST timezone
+  const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+  const istTime = new Date(now.getTime() + istOffset);
+  return `${istTime.getUTCFullYear()}-${String(istTime.getUTCMonth() + 1).padStart(2, '0')}-${String(istTime.getUTCDate()).padStart(2, '0')}`;
 };
 
 // Get email preferences for user
