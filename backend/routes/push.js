@@ -1,6 +1,7 @@
 import express from 'express';
 import webpush from 'web-push';
 import cron from 'node-cron';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -21,6 +22,40 @@ const subscriptions = new Map();
 const userSettings = new Map();
 const userTimezones = new Map();
 
+// Load notification settings from database
+async function loadNotificationSettings() {
+  try {
+    console.log('🔄 Loading notification settings and subscriptions from database...');
+    const users = await User.find({
+      $or: [
+        { 'push_notifications.enabled': true },
+        { push_subscription: { $exists: true } }
+      ]
+    });
+
+    for (const user of users) {
+      // Load notification settings
+      if (user.push_notifications) {
+        userSettings.set(user._id, user.push_notifications);
+        console.log(`✅ Loaded settings for user ${user._id}`);
+      }
+
+      // Load push subscription
+      if (user.push_subscription) {
+        subscriptions.set(user._id, user.push_subscription);
+        console.log(`✅ Loaded subscription for user ${user._id}`);
+      }
+    }
+
+    console.log(`📊 Loaded data for ${users.length} users`);
+  } catch (error) {
+    console.error('❌ Error loading notification settings:', error);
+  }
+}
+
+// Initialize settings on startup
+loadNotificationSettings();
+
 // Get VAPID public key
 router.get('/vapid-public-key', (req, res) => {
   res.json({ publicKey: VAPID_PUBLIC_KEY });
@@ -30,20 +65,51 @@ router.get('/vapid-public-key', (req, res) => {
 router.post('/subscribe', async (req, res) => {
   try {
     const { subscription, userId, settings, timezone } = req.body;
-    
+
     if (!subscription || !userId) {
       return res.status(400).json({ error: 'Missing subscription or userId' });
     }
 
-    // Store subscription
+    // Store subscription in memory
     subscriptions.set(userId, subscription);
-    
-    // Store user settings if provided
+
+    // Save subscription to database
+    await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        $set: {
+          push_subscription: subscription
+        }
+      },
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true
+      }
+    );
+
+    // Store user settings in database and memory
     if (settings) {
+      await User.findOneAndUpdate(
+        { _id: userId },
+        {
+          $set: {
+            push_notifications: {
+              ...settings,
+              enabled: true
+            }
+          }
+        },
+        {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true
+        }
+      );
       userSettings.set(userId, settings);
     }
 
-    // Store user timezone (default to IST if not provided)
+    // Store user timezone in memory (for now - could be saved to user profile later)
     if (timezone) {
       userTimezones.set(userId, timezone);
       console.log(`🌍 Stored timezone for user ${userId}: ${timezone}`);
@@ -53,7 +119,7 @@ router.post('/subscribe', async (req, res) => {
     }
 
     console.log(`✅ User ${userId} subscribed to push notifications`);
-    
+
     // Send a test notification
     const payload = JSON.stringify({
       title: '🎉 Subscribed!',
@@ -73,16 +139,14 @@ router.post('/subscribe', async (req, res) => {
         console.warn('💡 FCM endpoint format may need updating. Subscription saved but test notification failed.');
       }
     }
-    
+
     res.json({ success: true, message: 'Subscribed successfully' });
   } catch (error) {
     console.error('Subscription error:', error);
     res.status(500).json({ error: error.message });
   }
-});
-
-// Update user notification settings
-router.post('/update-settings', (req, res) => {
+});// Update user notification settings
+router.post('/update-settings', async (req, res) => {
   try {
     const { userId, settings } = req.body;
     
@@ -90,8 +154,27 @@ router.post('/update-settings', (req, res) => {
       return res.status(400).json({ error: 'Missing userId or settings' });
     }
 
+    // Save to database
+    const user = await User.findOneAndUpdate(
+      { _id: userId },
+      { 
+        $set: { 
+          push_notifications: {
+            ...settings,
+            enabled: true // Always enable if they're updating settings
+          }
+        }
+      },
+      { 
+        upsert: true, 
+        new: true,
+        setDefaultsOnInsert: true
+      }
+    );
+
+    // Also update in-memory cache for immediate effect
     userSettings.set(userId, settings);
-    console.log(`✅ Updated settings for user ${userId}`);
+    console.log(`✅ Updated and saved settings for user ${userId}`);
     
     res.json({ success: true });
   } catch (error) {
@@ -101,20 +184,32 @@ router.post('/update-settings', (req, res) => {
 });
 
 // Unsubscribe from push notifications
-router.post('/unsubscribe', (req, res) => {
+router.post('/unsubscribe', async (req, res) => {
   try {
     const { userId } = req.body;
-    
+
     if (!userId) {
       return res.status(400).json({ error: 'Missing userId' });
     }
 
+    // Remove from memory
     subscriptions.delete(userId);
     userSettings.delete(userId);
     userTimezones.delete(userId);
-    
-    console.log(`✅ User ${userId} unsubscribed`);
-    
+
+    // Remove subscription from database and disable notifications
+    await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        $unset: { push_subscription: 1 },
+        $set: {
+          'push_notifications.enabled': false
+        }
+      }
+    );
+
+    console.log(`✅ User ${userId} unsubscribed and disabled push notifications`);
+
     res.json({ success: true });
   } catch (error) {
     console.error('Unsubscribe error:', error);
@@ -122,10 +217,59 @@ router.post('/unsubscribe', (req, res) => {
   }
 });
 
+// Get current notification settings for a user
+router.get('/settings/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId' });
+    }
+
+    const user = await User.findOne({ _id: userId });
+
+    if (!user || !user.push_notifications) {
+      return res.json({
+        enabled: false,
+        breakfastTime: '08:00',
+        lunchTime: '13:00',
+        dinnerTime: '20:00',
+        weightReminder: false,
+        weightTime: '07:00',
+        sleepReminder: false,
+        sleepTime: '22:00',
+        waterReminder: false,
+        waterInterval: 2,
+        motivationalQuotes: false,
+        quoteTime: '09:00'
+      });
+    }
+
+    res.json(user.push_notifications);
+  } catch (error) {
+    console.error('Get settings error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Send notification to specific user
 async function sendNotificationToUser(userId, notificationData) {
-  const subscription = subscriptions.get(userId);
-  
+  let subscription = subscriptions.get(userId);
+
+  // If not in memory, try to load from database
+  if (!subscription) {
+    try {
+      const user = await User.findOne({ _id: userId });
+      if (user && user.push_subscription) {
+        subscription = user.push_subscription;
+        subscriptions.set(userId, subscription); // Cache it in memory
+        console.log(`📥 Loaded subscription from database for user ${userId}`);
+      }
+    } catch (error) {
+      console.error(`❌ Error loading subscription for user ${userId}:`, error);
+    }
+  }
+
   if (!subscription) {
     console.log(`⚠️ No subscription found for user ${userId}`);
     return false;
@@ -143,6 +287,11 @@ async function sendNotificationToUser(userId, notificationData) {
       subscriptions.delete(userId);
       userSettings.delete(userId);
       userTimezones.delete(userId);
+      // Also remove from database
+      await User.findOneAndUpdate(
+        { _id: userId },
+        { $unset: { push_subscription: 1 } }
+      );
     } else if (error.statusCode === 404) {
       console.warn(`⚠️ Invalid endpoint for user ${userId} (404) - may need resubscription`);
       // Don't delete immediately, could be temporary FCM issue
@@ -153,20 +302,31 @@ async function sendNotificationToUser(userId, notificationData) {
     } else {
       console.error(`❌ Error sending notification to user ${userId}:`, error.message);
     }
-    
+
     return false;
   }
 }
 
 // Send notification to all users
 async function sendNotificationToAll(notificationData) {
-  const promises = [];
-  
-  for (const [userId, subscription] of subscriptions.entries()) {
-    promises.push(sendNotificationToUser(userId, notificationData));
+  try {
+    // Get all users with push notifications enabled
+    const users = await User.find({
+      'push_notifications.enabled': true,
+      push_subscription: { $exists: true }
+    });
+
+    const promises = [];
+
+    for (const user of users) {
+      promises.push(sendNotificationToUser(user._id, notificationData));
+    }
+
+    await Promise.all(promises);
+    console.log(`✅ Sent notification to ${users.length} users`);
+  } catch (error) {
+    console.error('❌ Error sending notification to all users:', error);
   }
-  
-  await Promise.all(promises);
 }
 
 // Scheduled notifications using cron
@@ -243,30 +403,36 @@ function setupScheduledNotifications() {
       const timezone = userTimezones.get(userId) || 'Asia/Kolkata'; // Default to IST
 
       // Schedule meal reminders
-      scheduleUserNotification(userId, settings, timezone, 'breakfast', '🍳 Breakfast Time!', 'Don\'t forget to log your breakfast', '08:00');
-      scheduleUserNotification(userId, settings, timezone, 'lunch', '🍽️ Lunch Time!', 'Remember to log your lunch', '13:00');
-      scheduleUserNotification(userId, settings, timezone, 'dinner', '🍲 Dinner Time!', 'Time to log your dinner', '20:00');
+      const breakfastTime = settings.breakfastTime || '08:00';
+      const lunchTime = settings.lunchTime || '13:00';
+      const dinnerTime = settings.dinnerTime || '20:00';
+      scheduleUserNotification(userId, settings, timezone, 'breakfast', '🍳 Breakfast Time!', 'Don\'t forget to log your breakfast', breakfastTime);
+      scheduleUserNotification(userId, settings, timezone, 'lunch', '🍽️ Lunch Time!', 'Remember to log your lunch', lunchTime);
+      scheduleUserNotification(userId, settings, timezone, 'dinner', '🍲 Dinner Time!', 'Time to log your dinner', dinnerTime);
 
       // Schedule weight reminder
       if (settings.weightReminder) {
-        scheduleUserNotification(userId, settings, timezone, 'weight', '⚖️ Weight Check', 'Log your weight for today', '07:00');
+        const weightTime = settings.weightTime || '07:00';
+        scheduleUserNotification(userId, settings, timezone, 'weight', '⚖️ Weight Check', 'Log your weight for today', weightTime);
       }
 
       // Schedule sleep reminder
       if (settings.sleepReminder) {
-        scheduleUserNotification(userId, settings, timezone, 'sleep', '😴 Sleep Reminder', 'Don\'t forget to log your sleep from yesterday', '22:00');
+        const sleepTime = settings.sleepTime || '22:00';
+        scheduleUserNotification(userId, settings, timezone, 'sleep', '😴 Sleep Reminder', 'Don\'t forget to log your sleep from yesterday', sleepTime);
       }
 
       // Schedule motivational quote
       if (settings.motivationalQuotes) {
-        scheduleUserNotification(userId, settings, 'motivation', '✨ Daily Motivation',
+        const quoteTime = settings.quoteTime || '09:00';
+        scheduleUserNotification(userId, settings, timezone, 'motivation', '✨ Daily Motivation',
           [
             'Every small step counts! Keep going! 💪',
             'You\'re doing great! Stay consistent! 🌟',
             'Believe in yourself! You can do this! 🎯',
             'Progress, not perfection! 📈',
             'Your health is an investment! 💚',
-          ][Math.floor(Math.random() * 5)], '09:00');
+          ][Math.floor(Math.random() * 5)], quoteTime);
       }
     });
   });

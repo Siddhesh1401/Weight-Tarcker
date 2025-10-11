@@ -106,6 +106,65 @@ const userSchema = new mongoose.Schema({
   cron_api_key: {
     type: String,
     default: ''
+  },
+  // Push notification settings
+  push_notifications: {
+    enabled: {
+      type: Boolean,
+      default: true
+    },
+    breakfastTime: {
+      type: String,
+      default: '08:00'
+    },
+    lunchTime: {
+      type: String,
+      default: '13:00'
+    },
+    dinnerTime: {
+      type: String,
+      default: '20:00'
+    },
+    weightReminder: {
+      type: Boolean,
+      default: false
+    },
+    weightTime: {
+      type: String,
+      default: '07:00'
+    },
+    sleepReminder: {
+      type: Boolean,
+      default: false
+    },
+    sleepTime: {
+      type: String,
+      default: '22:00'
+    },
+    waterReminder: {
+      type: Boolean,
+      default: false
+    },
+    waterInterval: {
+      type: Number,
+      default: 2
+    },
+    motivationalQuotes: {
+      type: Boolean,
+      default: false
+    },
+    quoteTime: {
+      type: String,
+      default: '09:00'
+    }
+  },
+  // Push notification subscription
+  push_subscription: {
+    endpoint: String,
+    keys: {
+      p256dh: String,
+      auth: String
+    }
   }
 }, { _id: false });
 
