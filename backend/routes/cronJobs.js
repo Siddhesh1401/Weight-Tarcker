@@ -283,6 +283,12 @@ router.post('/cron-jobs/setup-push-reminders', async (req, res) => {
 
     const settings = user.push_notifications;
     console.log('User push notification settings:', settings);
+    console.log('Sleep reminder check:', {
+      sleepReminder: settings.sleepReminder,
+      enabled: settings.enabled,
+      sleepTime: settings.sleepTime,
+      condition: settings.sleepReminder && settings.enabled && settings.sleepTime
+    });
 
     const createdJobs = [];
 
@@ -299,6 +305,14 @@ router.post('/cron-jobs/setup-push-reminders', async (req, res) => {
       { type: 'water', time: settings.waterInterval ? `${new Date().getHours()}:${new Date().getMinutes()}` : null, enabled: settings.waterReminder && settings.enabled }, // Water reminders need special handling
       { type: 'quotes', time: settings.quoteTime, enabled: settings.motivationalQuotes && settings.enabled }
     ];
+
+    console.log('Reminder types to process:', reminderTypes.map(r => ({
+      type: r.type,
+      enabled: r.enabled,
+      hasTime: !!r.time,
+      time: r.time,
+      willCreate: r.enabled && r.time
+    })));
 
     for (const reminder of reminderTypes) {
       if (reminder.enabled && reminder.time) {
