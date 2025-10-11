@@ -105,6 +105,20 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
                 const hasPermission = await notificationService.requestPermission();
                 if (hasPermission) {
                   updateSettings({ enabled: true });
+                  
+                  // Force re-subscription to push notifications for background delivery
+                  try {
+                    const { pushNotificationService } = await import('../services/pushNotifications');
+                    const subscribed = await pushNotificationService.subscribe(notifSettings);
+                    if (subscribed) {
+                      console.log('✅ Push notifications subscribed for background delivery');
+                    } else {
+                      console.warn('⚠️ Push subscription failed - notifications may only work when app is open');
+                    }
+                  } catch (error) {
+                    console.warn('⚠️ Push subscription not available:', error);
+                  }
+                  
                   await notificationService.startAll();
                   console.log('✅ Notifications enabled and started!');
                 } else {

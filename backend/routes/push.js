@@ -6,8 +6,8 @@ import User from '../models/User.js';
 const router = express.Router();
 
 // VAPID keys for web push (these should be in .env in production)
-const VAPID_PUBLIC_KEY = 'BHUxpw8ggEg1ONIp4_fKVTih4nGhpVa4NRliHMPHSIsrO-TfkpmeZRAkcNX2ysdY0ERYYcpT3Rzc00IN-TePwSk';
-const VAPID_PRIVATE_KEY = 'rZnl2k2rB4VsDqWBxLHMXOTObUCxklfc4CWjGvewQvo';
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BHUxpw8ggEg1ONIp4_fKVTih4nGhpVa4NRliHMPHSIsrO-TfkpmeZRAkcNX2ysdY0ERYYcpT3Rzc00IN-TePwSk';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'rZnl2k2rB4VsDqWBxLHMXOTObUCxklfc4CWjGvewQvo';
 
 webpush.setVapidDetails(
   'mailto:your-email@example.com',
