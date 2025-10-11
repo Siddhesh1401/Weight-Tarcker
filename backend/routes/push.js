@@ -592,4 +592,111 @@ router.get('/debug/:userId', (req, res) => {
   }
 });
 
+// Send scheduled reminder notifications (called by cron jobs)
+router.post('/send-reminder', async (req, res) => {
+  try {
+    const { reminderType, userId, apiKey } = req.body;
+
+    console.log(`🔔 Processing ${reminderType} reminder for user ${userId}`);
+
+    if (!reminderType || !userId) {
+      return res.status(400).json({ error: 'Missing reminderType or userId' });
+    }
+
+    // Verify API key if provided
+    if (apiKey && apiKey !== process.env.CRON_API_KEY) {
+      return res.status(401).json({ error: 'Invalid API key' });
+    }
+
+    // Get user settings from database
+    const user = await User.findOne({ _id: userId });
+    if (!user || !user.push_notifications) {
+      console.log(`⚠️ No push notification settings found for user ${userId}`);
+      return res.json({ success: false, message: 'User not found or notifications disabled' });
+    }
+
+    const settings = user.push_notifications;
+
+    // Check if this type of reminder is enabled
+    const reminderEnabled = {
+      breakfast: settings.breakfastTime && settings.enabled,
+      lunch: settings.lunchTime && settings.enabled,
+      dinner: settings.dinnerTime && settings.enabled,
+      sleep: settings.sleepReminder && settings.enabled,
+      weight: settings.weightReminder && settings.enabled,
+      water: settings.waterReminder && settings.enabled,
+      quotes: settings.motivationalQuotes && settings.enabled
+    };
+
+    if (!reminderEnabled[reminderType]) {
+      console.log(`⚠️ ${reminderType} reminder is disabled for user ${userId}`);
+      return res.json({ success: false, message: `${reminderType} reminder is disabled` });
+    }
+
+    // Define reminder messages
+    const reminderMessages = {
+      breakfast: {
+        title: '🍳 Breakfast Time!',
+        body: 'Time to start your day with a healthy breakfast!'
+      },
+      lunch: {
+        title: '🍽️ Lunch Time!',
+        body: 'Fuel your body with a nutritious lunch!'
+      },
+      dinner: {
+        title: '🍽️ Dinner Time!',
+        body: 'Enjoy a balanced dinner to end your day right!'
+      },
+      sleep: {
+        title: '😴 Bedtime Reminder',
+        body: 'Time to wind down and get some rest!'
+      },
+      weight: {
+        title: '⚖️ Weight Check',
+        body: 'Don\'t forget to log your weight today!'
+      },
+      water: {
+        title: '💧 Hydration Reminder',
+        body: 'Stay hydrated! Drink some water now.'
+      },
+      quotes: {
+        title: '💪 Stay Motivated',
+        body: 'Every small step counts towards your goals!'
+      }
+    };
+
+    const message = reminderMessages[reminderType];
+    if (!message) {
+      return res.status(400).json({ error: 'Invalid reminder type' });
+    }
+
+    // Send the notification
+    const sent = await sendNotificationToUser(userId, {
+      title: message.title,
+      body: message.body,
+      icon: '/favicon.svg',
+      badge: '/favicon.svg',
+      tag: `reminder-${reminderType}`,
+      requireInteraction: false,
+      actions: [
+        {
+          action: 'open',
+          title: 'Open App'
+        }
+      ]
+    });
+
+    if (sent) {
+      console.log(`✅ ${reminderType} reminder sent to user ${userId}`);
+      res.json({ success: true, message: `${reminderType} reminder sent` });
+    } else {
+      console.log(`⚠️ ${reminderType} reminder failed - no subscription for user ${userId}`);
+      res.json({ success: false, message: 'No subscription found' });
+    }
+  } catch (error) {
+    console.error('Send reminder error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

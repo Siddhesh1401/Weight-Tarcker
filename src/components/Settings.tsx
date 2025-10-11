@@ -1110,9 +1110,9 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                   <Timer className="text-white" size={24} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">⚡ Automated Email Delivery</h3>
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">⚡ Automated Email & Push Delivery</h3>
                   <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                    Set up cron jobs to automatically send your health summaries at scheduled times. 
+                    Set up cron jobs to automatically send your health summaries via email and push notifications at scheduled times. 
                     Uses <span className="font-semibold text-orange-600 dark:text-orange-400">cron-job.org</span> for reliable delivery.
                   </p>
                 </div>
@@ -1234,6 +1234,62 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                 </button>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
                   This will create 3 cron jobs: Daily, Weekly, and Monthly summaries
+                </p>
+              </div>
+
+              {/* Push Notification Setup Button */}
+              <div className="mb-6">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!backendUrl) {
+                      alert('⚠️ Please enter your backend URL first');
+                      return;
+                    }
+                    if (!cronApiKey) {
+                      alert('⚠️ Please enter your Cron-Job.org API key first');
+                      return;
+                    }
+
+                    try {
+                      setCronJobsLoading(true);
+                      console.log('🚀 Setting up push notification reminder cron jobs...', { backendUrl, cronApiKeyLength: cronApiKey.length });
+                      const result = await cronJobsApi.setupPushRemindersJobs(backendUrl, cronApiKey);
+                      console.log('📱 Push reminder setup result:', result);
+                      
+                      if (result && result.jobs) {
+                        alert(`✅ Successfully created ${result.jobs.length} push notification reminder cron jobs!`);
+                        // Refresh the jobs list manually
+                        await loadCronJobs();
+                      } else {
+                        console.error('❌ Push reminder setup failed: No jobs returned');
+                        alert('❌ Failed to create push reminder cron jobs: No jobs returned');
+                      }
+                    } catch (error: any) {
+                      console.error('Push reminder cron job setup error:', error);
+                      const errorMsg = error?.message || error?.toString() || 'Unknown error';
+                      alert(`❌ Failed to create push reminder cron jobs: ${errorMsg}`);
+                    } finally {
+                      setCronJobsLoading(false);
+                    }
+                  }}
+                  disabled={!backendUrl || !cronApiKey || cronJobsLoading}
+                  className="w-full py-4 px-6 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-3 shadow-lg transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-blue-500/50"
+                >
+                  {cronJobsLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                      <span>Setting up push jobs...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-2xl">🔔</span>
+                      <span>Setup Push Notification Jobs</span>
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                  This will create cron jobs for your enabled push notification reminders
                 </p>
               </div>
 

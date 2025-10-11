@@ -436,6 +436,18 @@ export const cronJobsApi = {
       }),
     });
   },
+
+  // Setup push notification reminder cron jobs
+  setupPushRemindersJobs: async (backendUrl: string, apiKey: string): Promise<any> => {
+    return apiCall('/cron-jobs/setup-push-reminders', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        backendUrl, 
+        apiKey,
+        userId: DEFAULT_USER_ID 
+      }),
+    });
+  },
 };
 
 // Health check

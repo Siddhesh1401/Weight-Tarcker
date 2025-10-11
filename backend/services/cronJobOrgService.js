@@ -271,6 +271,61 @@ class CronJobOrgService {
       schedule: schedules[type]
     };
   }
+
+  // Create push notification reminder job
+  createPushNotificationJob(reminderType, backendUrl, apiKey, scheduleTime = '20:00', userId = null) {
+    // Convert time from HH:MM format to cron-job.org API format
+    const [hoursStr, minutesStr] = scheduleTime.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
+
+    console.log(`Creating ${reminderType} push notification job with schedule time ${scheduleTime}:`, {
+      originalTime: scheduleTime,
+      parsedHours: hours,
+      parsedMinutes: minutes,
+      userId: userId || 'default'
+    });
+
+    // For push notifications, we want them daily at the specified time
+    const schedule = {
+      timezone: 'Asia/Kolkata',  // Mumbai timezone
+      hours: [hours],        // Specific hour
+      minutes: [minutes],    // Specific minute
+      mdays: [-1],          // Every day of month
+      months: [-1],         // Every month
+      wdays: [-1]           // Every day of week
+    };
+
+    const titles = {
+      breakfast: 'Weight Tracker - Breakfast Reminder',
+      lunch: 'Weight Tracker - Lunch Reminder',
+      dinner: 'Weight Tracker - Dinner Reminder',
+      sleep: 'Weight Tracker - Sleep Reminder',
+      weight: 'Weight Tracker - Weight Reminder',
+      water: 'Weight Tracker - Water Reminder',
+      quotes: 'Weight Tracker - Motivational Quote'
+    };
+
+    return {
+      url: `${backendUrl}/api/push/send-reminder`,
+      enabled: true,
+      title: titles[reminderType] || `Weight Tracker - ${reminderType} Reminder`,
+      saveResponses: false,
+      requestMethod: 1, // 1 = POST
+      headers: [
+        {
+          key: 'Content-Type',
+          value: 'application/json'
+        }
+      ],
+      body: JSON.stringify({
+        reminderType,
+        userId: userId || 'user_001', // Default user ID
+        apiKey
+      }),
+      schedule: schedule
+    };
+  }
 }
 
 export default new CronJobOrgService();
