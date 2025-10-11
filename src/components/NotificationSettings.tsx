@@ -10,11 +10,20 @@ interface NotificationSettingsProps {
 export default function NotificationSettings({ settings, onUpdate }: NotificationSettingsProps) {
   const [notifSettings, setNotifSettings] = useState<NotifSettings>(settings);
 
-  const updateSettings = (newSettings: Partial<NotifSettings>) => {
+  const updateSettings = async (newSettings: Partial<NotifSettings>) => {
     const updated = { ...notifSettings, ...newSettings };
     setNotifSettings(updated);
     onUpdate(updated);
     notificationService.updateSettings(updated);
+    
+    // Also update server-side push notification settings
+    try {
+      const { pushNotificationService } = await import('../services/pushNotifications');
+      await pushNotificationService.updateSettings(updated);
+      console.log('✅ Updated push notification settings on server');
+    } catch (error) {
+      console.warn('⚠️ Failed to update server settings:', error);
+    }
   };
 
   const applyPreset = (preset: 'early' | 'standard' | 'night') => {
