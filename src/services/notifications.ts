@@ -3,6 +3,7 @@
 
 export interface NotificationSettings {
   enabled: boolean;
+  mealReminders: boolean;
   breakfastTime: string; // HH:MM format
   lunchTime: string;
   dinnerTime: string;
@@ -18,6 +19,7 @@ export interface NotificationSettings {
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   enabled: false,
+  mealReminders: true, // Enable meal reminders by default
   breakfastTime: '08:00',
   lunchTime: '13:00',
   dinnerTime: '20:00',

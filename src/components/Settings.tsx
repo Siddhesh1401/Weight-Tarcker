@@ -43,6 +43,8 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   const [saveEmailStatus, setSaveEmailStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [cronJobs, setCronJobs] = useState<any[]>([]);
   const [cronJobsLoading, setCronJobsLoading] = useState(false);
+  const [emailSetupLoading, setEmailSetupLoading] = useState(false);
+  const [pushSetupLoading, setPushSetupLoading] = useState(false);
   const [backendUrl, setBackendUrl] = useState('https://weight-tarcker.vercel.app');
   const [cronApiKey, setCronApiKey] = useState(savedSettings.cronApiKey || settings.cronApiKey || '');
   const [cronApiKeySaveTimeout, setCronApiKeySaveTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -1196,7 +1198,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                     }
 
                     try {
-                      setCronJobsLoading(true);
+                      setEmailSetupLoading(true);
                       console.log('🚀 Setting up email summary cron jobs...', { backendUrl, cronApiKeyLength: cronApiKey.length });
                       const result = await cronJobsApi.setupEmailSummaryJobs(backendUrl, cronApiKey);
                       console.log('📊 Cron setup result:', result);
@@ -1214,13 +1216,13 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                       const errorMsg = error?.message || error?.toString() || 'Unknown error';
                       alert(`❌ Failed to create email summary cron jobs: ${errorMsg}`);
                     } finally {
-                      setCronJobsLoading(false);
+                      setEmailSetupLoading(false);
                     }
                   }}
-                  disabled={!backendUrl || !cronApiKey || cronJobsLoading}
+                  disabled={!backendUrl || !cronApiKey || emailSetupLoading}
                   className="w-full py-4 px-6 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-3 shadow-lg transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-orange-500/50"
                 >
-                  {cronJobsLoading ? (
+                  {emailSetupLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                       <span>Setting up cron jobs...</span>
@@ -1252,7 +1254,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                     }
 
                     try {
-                      setCronJobsLoading(true);
+                      setPushSetupLoading(true);
                       console.log('🚀 Setting up push notification reminder cron jobs...', { backendUrl, cronApiKeyLength: cronApiKey.length });
                       const result = await cronJobsApi.setupPushRemindersJobs(backendUrl, cronApiKey);
                       console.log('📱 Push reminder setup result:', result);
@@ -1270,13 +1272,13 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                       const errorMsg = error?.message || error?.toString() || 'Unknown error';
                       alert(`❌ Failed to create push reminder cron jobs: ${errorMsg}`);
                     } finally {
-                      setCronJobsLoading(false);
+                      setPushSetupLoading(false);
                     }
                   }}
-                  disabled={!backendUrl || !cronApiKey || cronJobsLoading}
+                  disabled={!backendUrl || !cronApiKey || pushSetupLoading}
                   className="w-full py-4 px-6 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-3 shadow-lg transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-blue-500/50"
                 >
-                  {cronJobsLoading ? (
+                  {pushSetupLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                       <span>Setting up push jobs...</span>
@@ -1671,7 +1673,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
             {/* Help Card */}
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-5 border-2 border-blue-200 dark:border-blue-800">
               <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
-                <span className="text-xl">💡</span>
+                <span className="text-lg">💡</span>
                 Quick Setup Guide
               </h4>
               <ol className="space-y-2 text-sm text-gray-700 dark:text-gray-300 ml-7">

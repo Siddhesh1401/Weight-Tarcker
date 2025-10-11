@@ -248,56 +248,110 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
               <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                 🍽️ Meal Reminders
               </h4>
-              <span className="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-md">
-                Always active • Custom times
-              </span>
+              <div className="flex items-center gap-3">
+                <span className={`text-xs px-2 py-1 rounded-md ${
+                  notifSettings.mealReminders
+                    ? 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30'
+                    : 'text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800'
+                }`}>
+                  {notifSettings.mealReminders ? 'Enabled • Custom times' : 'Disabled'}
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={notifSettings.mealReminders}
+                    onChange={(e) => updateSettings({ mealReminders: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-500"></div>
+                </label>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Breakfast */}
-              <div className="p-3 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-2xl border-2 border-orange-200 dark:border-orange-700/50 hover:shadow-md transition-all">
+              <div className={`p-3 rounded-2xl border-2 hover:shadow-md transition-all ${
+                notifSettings.mealReminders
+                  ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-700/50'
+                  : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 opacity-60'
+              }`}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xl">🍳</span>
                   <div className="flex-1">
-                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-sm block">Breakfast</span>
+                    <span className={`font-semibold text-sm block ${
+                      notifSettings.mealReminders
+                        ? 'text-gray-800 dark:text-gray-200'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}>Breakfast</span>
                   </div>
                 </div>
                 <input
                   type="time"
                   value={notifSettings.breakfastTime}
                   onChange={(e) => updateSettings({ breakfastTime: e.target.value })}
-                  className="w-full px-3 py-2 border-2 border-orange-300 dark:border-orange-600 bg-white dark:bg-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all"
+                  disabled={!notifSettings.mealReminders}
+                  className={`w-full px-3 py-2 border-2 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all ${
+                    notifSettings.mealReminders
+                      ? 'border-orange-300 dark:border-orange-600 bg-white dark:bg-gray-700 dark:text-gray-200'
+                      : 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed'
+                  }`}
                 />
               </div>
 
               {/* Lunch */}
-              <div className="p-3 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-2xl border-2 border-emerald-200 dark:border-emerald-700/50 hover:shadow-md transition-all">
+              <div className={`p-3 rounded-2xl border-2 hover:shadow-md transition-all ${
+                notifSettings.mealReminders
+                  ? 'bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-700/50'
+                  : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 opacity-60'
+              }`}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xl">🥗</span>
                   <div className="flex-1">
-                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-sm block">Lunch</span>
+                    <span className={`font-semibold text-sm block ${
+                      notifSettings.mealReminders
+                        ? 'text-gray-800 dark:text-gray-200'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}>Lunch</span>
                   </div>
                 </div>
                 <input
                   type="time"
                   value={notifSettings.lunchTime}
                   onChange={(e) => updateSettings({ lunchTime: e.target.value })}
-                  className="w-full px-3 py-2 border-2 border-emerald-300 dark:border-emerald-600 bg-white dark:bg-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition-all"
+                  disabled={!notifSettings.mealReminders}
+                  className={`w-full px-3 py-2 border-2 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition-all ${
+                    notifSettings.mealReminders
+                      ? 'border-emerald-300 dark:border-emerald-600 bg-white dark:bg-gray-700 dark:text-gray-200'
+                      : 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed'
+                  }`}
                 />
               </div>
 
               {/* Dinner */}
-              <div className="p-3 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border-2 border-purple-200 dark:border-purple-700/50 hover:shadow-md transition-all">
+              <div className={`p-3 rounded-2xl border-2 hover:shadow-md transition-all ${
+                notifSettings.mealReminders
+                  ? 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-700/50'
+                  : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 opacity-60'
+              }`}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xl">🍽️</span>
                   <div className="flex-1">
-                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-sm block">Dinner</span>
+                    <span className={`font-semibold text-sm block ${
+                      notifSettings.mealReminders
+                        ? 'text-gray-800 dark:text-gray-200'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}>Dinner</span>
                   </div>
                 </div>
                 <input
                   type="time"
                   value={notifSettings.dinnerTime}
                   onChange={(e) => updateSettings({ dinnerTime: e.target.value })}
-                  className="w-full px-3 py-2 border-2 border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
+                  disabled={!notifSettings.mealReminders}
+                  className={`w-full px-3 py-2 border-2 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all ${
+                    notifSettings.mealReminders
+                      ? 'border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-700 dark:text-gray-200'
+                      : 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed'
+                  }`}
                 />
               </div>
             </div>

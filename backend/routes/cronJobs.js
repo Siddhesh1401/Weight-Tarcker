@@ -291,9 +291,9 @@ router.post('/cron-jobs/setup-push-reminders', async (req, res) => {
 
     // Create reminder jobs for enabled notifications
     const reminderTypes = [
-      { type: 'breakfast', time: settings.breakfastTime, enabled: settings.enabled },
-      { type: 'lunch', time: settings.lunchTime, enabled: settings.enabled },
-      { type: 'dinner', time: settings.dinnerTime, enabled: settings.enabled },
+      { type: 'breakfast', time: settings.breakfastTime, enabled: settings.mealReminders && settings.enabled },
+      { type: 'lunch', time: settings.lunchTime, enabled: settings.mealReminders && settings.enabled },
+      { type: 'dinner', time: settings.dinnerTime, enabled: settings.mealReminders && settings.enabled },
       { type: 'sleep', time: settings.sleepTime, enabled: settings.sleepReminder && settings.enabled },
       { type: 'weight', time: settings.weightTime, enabled: settings.weightReminder && settings.enabled },
       { type: 'water', time: settings.waterInterval ? `${new Date().getHours()}:${new Date().getMinutes()}` : null, enabled: settings.waterReminder && settings.enabled }, // Water reminders need special handling
