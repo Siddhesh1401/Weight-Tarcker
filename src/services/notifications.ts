@@ -21,13 +21,13 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   breakfastTime: '08:00',
   lunchTime: '13:00',
   dinnerTime: '20:00',
-  waterReminder: true,
+  waterReminder: false, // Start disabled - let user choose
   waterInterval: 2, // Every 2 hours
-  weightReminder: true,
+  weightReminder: false, // Start disabled - let user choose
   weightTime: '07:00', // Morning is best for weight
-  sleepReminder: true,
+  sleepReminder: false, // Start disabled - let user choose
   sleepTime: '22:00', // Bedtime reminder
-  motivationalQuotes: true,
+  motivationalQuotes: false, // Start disabled - let user choose
   quoteTime: '09:00', // Morning motivation
 };
 

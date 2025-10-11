@@ -225,13 +225,33 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
                 🌙 Night
               </button>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                // Disable all reminders except keeping times
+                updateSettings({
+                  waterReminder: false,
+                  weightReminder: false,
+                  sleepReminder: false,
+                  motivationalQuotes: false
+                });
+              }}
+              className="w-full mt-3 px-3 py-2 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-500 transition-all border border-gray-300 dark:border-gray-500"
+            >
+              🔄 Reset All Reminders
+            </button>
           </div>
 
           {/* Meal Reminders - Grid Layout */}
           <div className="space-y-3">
-            <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              🍽️ Meal Reminders
-            </h4>
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                🍽️ Meal Reminders
+              </h4>
+              <span className="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-md">
+                Always active • Custom times
+              </span>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Breakfast */}
               <div className="p-3 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-2xl border-2 border-orange-200 dark:border-orange-700/50 hover:shadow-md transition-all">
@@ -285,9 +305,14 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
 
           {/* Other Reminders */}
           <div className="space-y-3">
-            <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              ⏰ Other Reminders
-            </h4>
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                ⏰ Customize Your Reminders
+              </h4>
+              <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md">
+                Toggle on/off • Set times
+              </span>
+            </div>
 
             {/* Water Reminder */}
             <div className={`p-4 rounded-2xl border-2 transition-all hover:shadow-md ${
@@ -449,7 +474,18 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
 
           {/* Summary Card */}
           <div className="mt-6 p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-700 rounded-xl border border-gray-200 dark:border-gray-600">
-            <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">ACTIVE REMINDERS</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">ACTIVE REMINDERS</p>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                {[
+                  'breakfast', 'lunch', 'dinner',
+                  ...(notifSettings.waterReminder ? ['water'] : []),
+                  ...(notifSettings.weightReminder ? ['weight'] : []),
+                  ...(notifSettings.sleepReminder ? ['sleep'] : []),
+                  ...(notifSettings.motivationalQuotes ? ['quotes'] : [])
+                ].length} enabled
+              </span>
+            </div>
             <div className="flex flex-wrap gap-2">
               <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs font-medium rounded-md">🍳 Breakfast</span>
               <span className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-medium rounded-md">🥗 Lunch</span>
@@ -467,6 +503,9 @@ export default function NotificationSettings({ settings, onUpdate }: Notificatio
                 <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-md">✨ Motivation</span>
               )}
             </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 italic">
+              💡 Use the toggles above to enable/disable specific reminders. Only active reminders will create cron jobs.
+            </p>
           </div>
         </div>
       ) : (
