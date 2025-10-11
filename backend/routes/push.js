@@ -306,15 +306,6 @@ function setupScheduledNotifications() {
       global.waterJobs.push(job);
     });
   };
-          icon: '/favicon.svg',
-          badge: '/favicon.svg',
-          tag: 'water',
-        });
-      });
-
-      global.waterJobs.push(job);
-    });
-  };
 
   // Set up water reminders initially
   setupWaterReminders();
