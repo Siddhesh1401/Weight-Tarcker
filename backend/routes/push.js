@@ -230,6 +230,13 @@ function setupScheduledNotifications() {
   cron.schedule('0 * * * *', () => {
     console.log('🔄 Checking for notification updates...');
 
+    // Clear existing cron jobs before creating new ones to prevent memory leaks
+    if (global.cronJobs) {
+      console.log(`🧹 Cleaning up ${global.cronJobs.length} existing cron jobs...`);
+      global.cronJobs.forEach(job => job.destroy());
+      global.cronJobs = [];
+    }
+
     userSettings.forEach((settings, userId) => {
       if (!settings.enabled) return;
 

@@ -16,7 +16,7 @@ interface SettingsProps {
   onDeleteAllData?: () => void;
 }
 
-type SettingsTab = 'main' | 'notifications' | 'diet' | 'health' | 'data' | 'export' | 'email' | 'cron';
+type SettingsTab = 'main' | 'notifications' | 'diet' | 'health' | 'data' | 'export' | 'email' | 'cron' | 'app';
 
 export default function Settings({ settings, onSave, onCancel, onDeleteAllData }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('main');
@@ -48,6 +48,7 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
   const [cronApiKeySaveTimeout, setCronApiKeySaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [editingCronJob, setEditingCronJob] = useState<any | null>(null);
   const [editCronTime, setEditCronTime] = useState<string>('20:00');
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'updating' | 'updated' | 'error'>('idle');
 
   // API Usage Tracking
   const [apiUsage, setApiUsage] = useState(() => {
@@ -420,11 +421,65 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
     }
   };
 
+  const handleAppUpdate = async () => {
+    try {
+      setUpdateStatus('updating');
+      console.log('🔄 Starting app update...');
+
+      // Check if service worker is available
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        
+        // Skip waiting for any waiting service worker
+        if (registration.waiting) {
+          console.log('📦 Found waiting service worker, activating...');
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+
+        // Force update check
+        await registration.update();
+        console.log('✅ Service worker updated');
+
+        // Clear all caches to force fresh content
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+        console.log('🗑️ Cleared all caches');
+
+        setUpdateStatus('updated');
+
+        // Auto-refresh after a short delay
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+
+      } else {
+        // Fallback for browsers without service worker
+        console.log('🔄 No service worker, refreshing page...');
+        setUpdateStatus('updated');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+
+    } catch (error) {
+      console.error('❌ App update failed:', error);
+      setUpdateStatus('error');
+      
+      // Reset status after showing error
+      setTimeout(() => {
+        setUpdateStatus('idle');
+      }, 3000);
+    }
+  };
+
   const tabs = [
     { id: 'main' as SettingsTab, label: 'Settings', icon: SettingsIcon },
     { id: 'notifications' as SettingsTab, label: 'Notifications', icon: Bell },
     { id: 'email' as SettingsTab, label: 'Email', icon: Mail },
     { id: 'cron' as SettingsTab, label: 'Cron Jobs', icon: Timer },
+    { id: 'app' as SettingsTab, label: 'App Update', icon: Activity },
     { id: 'diet' as SettingsTab, label: 'Diet Plan', icon: BookOpen },
     { id: 'health' as SettingsTab, label: 'Health Calculator', icon: Activity },
     { id: 'data' as SettingsTab, label: 'Data', icon: Database },
@@ -1665,6 +1720,96 @@ export default function Settings({ settings, onSave, onCancel, onDeleteAllData }
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'app' && (
+          <div className="space-y-6 animate-fade-in">
+            {/* App Update Info Banner */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-3xl p-5 border-2 border-blue-200 dark:border-blue-800 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-blue-500 rounded-xl">
+                  <Activity className="text-white" size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">🚀 App Updates</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                    Keep your app up-to-date with the latest features and bug fixes. 
+                    No need to uninstall/reinstall - just tap the update button below!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Update Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-700">
+              <div className="text-center space-y-6">
+                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+                  <Activity className="text-white" size={32} />
+                </div>
+                
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Check for Updates</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    Refresh the app to get the latest version with improved push notifications and bug fixes.
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleAppUpdate}
+                  disabled={updateStatus === 'updating'}
+                  className="w-full max-w-xs mx-auto px-6 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100 transition-all duration-300 disabled:cursor-not-allowed"
+                >
+                  {updateStatus === 'updating' ? (
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Updating...</span>
+                    </div>
+                  ) : updateStatus === 'updated' ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-xl">✅</span>
+                      <span>Updated!</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-xl">🔄</span>
+                      <span>Update App</span>
+                    </div>
+                  )}
+                </button>
+
+                {updateStatus === 'updated' && (
+                  <p className="text-green-600 dark:text-green-400 text-sm font-medium">
+                    🎉 App updated successfully! The page will refresh automatically.
+                  </p>
+                )}
+
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-2xl p-4 text-left">
+                  <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                    <span className="text-lg">📱</span>
+                    What this does:
+                  </h4>
+                  <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500 mt-1">•</span>
+                      <span>Clears old cached files and downloads the latest version</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500 mt-1">•</span>
+                      <span>Updates push notification functionality</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500 mt-1">•</span>
+                      <span>Fixes any bugs and improves performance</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500 mt-1">•</span>
+                      <span>No data loss - your settings and logs are preserved</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

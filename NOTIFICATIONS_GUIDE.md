@@ -83,7 +83,33 @@ Your Weight Tracker is now a **Progressive Web App (PWA)** with **Smart Notifica
 
 ---
 
-## 📋 Notification Types
+## � App Updates (No More Uninstall/Reinstall!)
+
+Your Weight Tracker is a **Progressive Web App (PWA)** - you can update it instantly without uninstalling!
+
+### **How to Update:**
+1. **Open Settings** → **"App Update" tab**
+2. **Tap "Update App"** button
+3. **Wait 2-3 seconds** - app refreshes automatically!
+4. ✅ **Latest version with all fixes!**
+
+### **What Updates Include:**
+- 🔧 **Bug fixes** (like database timeout issues)
+- 🔔 **Push notification improvements**
+- ⚡ **Performance enhancements**
+- 📱 **New features**
+- 💾 **All your data is preserved!**
+
+### **Why This is Better:**
+- ❌ **No app store approvals needed**
+- ❌ **No uninstall/reinstall required**
+- ❌ **No data loss**
+- ✅ **Instant updates**
+- ✅ **Always latest version**
+
+---
+
+## �📋 Notification Types
 
 ### **1. Meal Reminders**
 **When:** At your set meal times

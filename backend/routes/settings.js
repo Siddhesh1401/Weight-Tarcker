@@ -83,14 +83,25 @@ router.get('/settings', async (req, res) => {
 
     let user = await User.findOne({ _id: user_id }).catch(() => null);
 
-    // If user doesn't exist, create default user
+    // Return default settings if user doesn't exist (don't auto-create during GET)
     if (!user) {
-      user = new User({
-        _id: user_id,
-        name: 'User',
-        goal_weight: 70
+      return res.json({
+        success: true,
+        data: {
+          _id: user_id,
+          name: 'User',
+          goal_weight: 70,
+          water_goal: 8,
+          sleep_goal: 8,
+          hidden_presets: {
+            breakfast: [],
+            lunch: [],
+            snacks: [],
+            dinner: []
+          },
+          cron_api_key: ''
+        }
       });
-      await user.save();
     }
 
     res.json({

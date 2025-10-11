@@ -1,5 +1,5 @@
 // Service Worker for Weight Tracker PWA
-const CACHE_VERSION = 'v2'; // Increment this when you want to force cache refresh
+const CACHE_VERSION = 'v3'; // Increment this when you want to force cache refresh
 const CACHE_NAME = `weight-tracker-${CACHE_VERSION}`;
 const STATIC_CACHE = `weight-tracker-static-${CACHE_VERSION}`;
 
@@ -175,6 +175,16 @@ self.addEventListener('sync', (event) => {
   
   if (event.tag === 'sync-logs') {
     event.waitUntil(syncLogs());
+  }
+});
+
+// Message event - handle update commands
+self.addEventListener('message', (event) => {
+  console.log('[SW] Message received:', event.data);
+  
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] Skipping waiting, activating new service worker...');
+    self.skipWaiting();
   }
 });
 
