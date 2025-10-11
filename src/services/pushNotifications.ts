@@ -92,7 +92,11 @@ class PushNotificationService {
         console.log('✅ Using existing push subscription');
       }
 
-      // Send subscription to server
+      // Get user's timezone
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      console.log('🌍 User timezone:', userTimezone);
+
+      // Send subscription to server with timezone
       const response = await fetch(`${API_URL}/push/subscribe`, {
         method: 'POST',
         headers: {
@@ -102,6 +106,7 @@ class PushNotificationService {
           userId: this.userId,
           subscription: subscription.toJSON(),
           settings,
+          timezone: userTimezone, // Include timezone
         }),
       });
 
@@ -218,6 +223,33 @@ class PushNotificationService {
       return subscription !== null;
     } catch (error) {
       console.error('Error checking subscription:', error);
+      return false;
+    }
+  }
+
+  // Validate current subscription with server
+  async validateSubscription(): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_URL}/push/validate-subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: this.userId,
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn('Subscription validation failed:', response.status);
+        return false;
+      }
+
+      const result = await response.json();
+      console.log('Subscription validation result:', result);
+      return result.valid === true;
+    } catch (error) {
+      console.error('Error validating subscription:', error);
       return false;
     }
   }
