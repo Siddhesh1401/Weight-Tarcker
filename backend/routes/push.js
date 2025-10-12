@@ -10,7 +10,7 @@ const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BHUxpw8ggEg1ONIp4_fKVT
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'rZnl2k2rB4VsDqWBxLHMXOTObUCxklfc4CWjGvewQvo';
 
 webpush.setVapidDetails(
-  'mailto:your-email@example.com',
+  process.env.VAPID_EMAIL || 'mailto:your-email@example.com',
   VAPID_PUBLIC_KEY,
   VAPID_PRIVATE_KEY
 );
