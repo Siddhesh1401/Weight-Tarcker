@@ -2,7 +2,7 @@
 // Handles server-side push notification subscriptions
 
 const API_URL = import.meta.env.PROD 
-  ? 'https://weight-tarcker.vercel.app/api'
+  ? ''  // Use relative URLs in production (same domain)
   : 'http://localhost:5000/api';
 
 class PushNotificationService {
@@ -125,6 +125,8 @@ class PushNotificationService {
   // Update notification settings on server
   async updateSettings(settings: any): Promise<boolean> {
     try {
+      console.log('🔄 Updating server settings:', settings);
+      
       const response = await fetch(`${API_URL}/push/update-settings`, {
         method: 'POST',
         headers: {
@@ -137,10 +139,13 @@ class PushNotificationService {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Server update failed:', response.status, errorText);
         throw new Error('Failed to update settings');
       }
 
-      console.log('✅ Updated notification settings on server');
+      const result = await response.json();
+      console.log('✅ Server update success:', result);
       return true;
     } catch (error) {
       console.error('❌ Failed to update settings:', error);

@@ -12,7 +12,8 @@
     "cron-daily": "node scripts/cron-jobs.js daily",
     "cron-weekly": "node scripts/cron-jobs.js weekly",
     "cron-monthly": "node scripts/cron-jobs.js monthly",
-    "test-push": "node scripts/test-push-setup.js"
+    "test-push": "node scripts/test-push-setup.js",
+    "fix-notifications": "node scripts/fix-notification-settings.js"
   },
   "keywords": [
     "weight-tracker",

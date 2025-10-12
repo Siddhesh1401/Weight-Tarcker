@@ -147,6 +147,14 @@ router.post('/update-settings', async (req, res) => {
   try {
     const { userId, settings } = req.body;
     
+    console.log('🔄 Update settings request:', {
+      userId,
+      settings,
+      sleepTime: settings?.sleepTime,
+      sleepReminder: settings?.sleepReminder,
+      mealReminders: settings?.mealReminders
+    });
+
     if (!userId || !settings) {
       return res.status(400).json({ error: 'Missing userId or settings' });
     }
@@ -169,6 +177,7 @@ router.post('/update-settings', async (req, res) => {
     // Also update in-memory cache for immediate effect
     userSettings.set(userId, settings);
     console.log(`✅ Updated and saved settings for user ${userId}`);
+    console.log('📋 New database settings:', user.push_notifications);
     
     res.json({ success: true });
   } catch (error) {
