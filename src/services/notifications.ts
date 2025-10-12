@@ -249,27 +249,29 @@ class NotificationService {
     this.clearAll();
     console.log('🧹 Cleared old notification timers');
 
-    // Schedule meal reminders
-    this.scheduleNotification(
-      'breakfast',
-      this.settings.breakfastTime,
-      '🍳 Breakfast Time!',
-      'Don\'t forget to log your breakfast'
-    );
+    // Schedule meal reminders (only if enabled)
+    if (this.settings.mealReminders) {
+      this.scheduleNotification(
+        'breakfast',
+        this.settings.breakfastTime,
+        '🍳 Breakfast Time!',
+        'Don\'t forget to log your breakfast'
+      );
 
-    this.scheduleNotification(
-      'lunch',
-      this.settings.lunchTime,
-      '🍽️ Lunch Time!',
-      'Remember to log your lunch'
-    );
+      this.scheduleNotification(
+        'lunch',
+        this.settings.lunchTime,
+        '🍽️ Lunch Time!',
+        'Remember to log your lunch'
+      );
 
-    this.scheduleNotification(
-      'dinner',
-      this.settings.dinnerTime,
-      '🍲 Dinner Time!',
-      'Time to log your dinner'
-    );
+      this.scheduleNotification(
+        'dinner',
+        this.settings.dinnerTime,
+        '🍲 Dinner Time!',
+        'Time to log your dinner'
+      );
+    }
 
     // Schedule water reminder
     if (this.settings.waterReminder) {
