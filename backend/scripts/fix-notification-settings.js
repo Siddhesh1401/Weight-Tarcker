@@ -29,7 +29,7 @@ async function fixNotificationSettings() {
           'push_notifications.lunchTime': '13:00',
           'push_notifications.dinnerTime': '20:00',
           'push_notifications.sleepReminder': true,   // Enable sleep reminder
-          'push_notifications.sleepTime': '13:41',    // Your desired sleep time (1:41 PM)
+          'push_notifications.sleepTime': '14:05',    // Your desired sleep time (2:05 PM)
           'push_notifications.weightReminder': false,
           'push_notifications.weightTime': '07:00',
           'push_notifications.waterReminder': false,
