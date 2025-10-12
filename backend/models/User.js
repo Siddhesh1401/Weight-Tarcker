@@ -113,6 +113,10 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: true
     },
+    mealReminders: {
+      type: Boolean,
+      default: true
+    },
     breakfastTime: {
       type: String,
       default: '08:00'

@@ -106,6 +106,16 @@ class CronJobOrgService {
         }
       };
 
+      // Add headers if provided (needed for push notifications)
+      if (jobData.headers && jobData.headers.length > 0) {
+        payload.job.requestHeaders = jobData.headers;
+      }
+
+      // Add body if provided (needed for push notifications)
+      if (jobData.body) {
+        payload.job.requestBody = jobData.body;
+      }
+
       console.log('Creating job with payload:', JSON.stringify(payload, null, 2));
 
       const response = await this.makeRequest('/jobs', {
