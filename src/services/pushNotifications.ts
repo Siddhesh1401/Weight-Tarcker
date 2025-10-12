@@ -2,7 +2,7 @@
 // Handles server-side push notification subscriptions
 
 const API_URL = import.meta.env.PROD 
-  ? ''  // Use relative URLs in production (same domain)
+  ? `${window.location.origin}/api`  // Use full URL in production
   : 'http://localhost:5000/api';
 
 class PushNotificationService {
