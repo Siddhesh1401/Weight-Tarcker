@@ -94,10 +94,7 @@ router.post('/subscribe', async (req, res) => {
         { _id: userId },
         {
           $set: {
-            push_notifications: {
-              ...settings,
-              enabled: true
-            }
+            push_notifications: settings // Save settings as-is
           }
         },
         {
@@ -159,10 +156,7 @@ router.post('/update-settings', async (req, res) => {
       { _id: userId },
       { 
         $set: { 
-          push_notifications: {
-            ...settings,
-            enabled: true // Always enable if they're updating settings
-          }
+          push_notifications: settings // Save settings as-is, don't force enabled
         }
       },
       { 
